@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(
     cors({
-        origin: `${process.env.Frontend_URL}`, // Replace with your frontend URL
+        origin: `${process.env.Frontend_URL}`, 
         credentials: true,
     })
 );

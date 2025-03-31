@@ -1,7 +1,7 @@
 import express from "express";
 import User from '../models/userModel.js';
 import bcrypt from 'bcrypt';
-
+import jwt from 'jsonwebtoken';
 const router = express.Router();
 
 router.post('/create', async (req,res)=>{
@@ -75,4 +75,35 @@ router.post('/usernameCheck', async (req,res)=>{
     }
     
 })
+
+
+router.post('/login',async (req,res)=>{
+    
+    let {username,password} = req.body;
+    console.log(username,password);
+    if(!username || !password) {
+        res.status(403).send({
+            "message":"not enough resource"
+        })
+        return;
+    }
+    let dbUser = await User.findOne({username}).select("-password");
+    
+    if(!dbUser){
+        res.status(404).send({
+            "message":"something went wrong"
+        })
+        return;
+    }
+
+    let token = jwt.sign({
+        username : dbUser.username,
+        email : dbUser.email
+    },process.env.jwt_Secret);
+
+    res.status(200).send(token);
+    
+})
+
+
 export default router;
