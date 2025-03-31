@@ -49,4 +49,24 @@ router.post('/create', async (req,res)=>{
     }
 })
 
+
+router.post('/usernameCheck', async (req,res)=>{
+    try{
+        let {username} = req.body;
+        let dbUser = await User.findOne({username:username});
+        if(dbUser) res.status(403).send({
+            "status":"0",
+            "message":"username not available"
+        })
+        else{
+            res.status(200).send({
+                "status":"1",
+                "message":"username available"
+            })
+        }
+    }catch(error){
+        res.status(500).send("something went wrong");
+    }
+    
+})
 export default router;

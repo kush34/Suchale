@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
+import axios from 'axios';
 
 const Register = () => {
     const [username,setUsername] = useState();
     const checkUserName = async ()=>{
         if(username.length <= 0) return;
         console.log(username);
+        const request = await axios.post(`${import.meta.env.VITE_URL}/user/usernameCheck`, {username});
+        console.log(request.data.status);
+
     }
 
   return (
