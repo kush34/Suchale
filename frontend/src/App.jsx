@@ -8,7 +8,9 @@ const App = () => {
           Suchale 
         </div>
         <button className='hover:scale-105 ease-in duration-150 bg-white px-4 py-2 rounded text-black m-2'>
-          Get Started
+          <a href="/register" rel="noopener noreferrer">
+            Get Started
+          </a>
         </button>
       </div>
     </div>

@@ -11,9 +11,9 @@ router.post('/create', async (req,res)=>{
         //password
         //profile pic
         
-        let {username,email,password,profilepic} = req.body;
+        let {username,email,password} = req.body;
 
-        if(!username || !email || !password || !profilepic ){
+        if(!username || !email || !password ){
             res.status(403).send("not enough data"); //missing information
             return;
         }
@@ -37,7 +37,6 @@ router.post('/create', async (req,res)=>{
                 username,
                 email,
                 password:hash,
-                profilePic:profilepic
             }) 
             console.log(createdUser);
             });
