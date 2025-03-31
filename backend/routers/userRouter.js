@@ -24,7 +24,10 @@ router.post('/create', async (req,res)=>{
         }
         let dbUserName = await User.findOne({username});
         if(dbUserName){
-            res.status(401).send("username already exits"); // userName already exist
+            res.status(401).send({
+                "status":"3",
+                "message":"username already taken"
+            }); // userName already exist
             return;
         }
 
@@ -41,7 +44,10 @@ router.post('/create', async (req,res)=>{
             console.log(createdUser);
             });
         });
-        res.status(200).send("user created");
+        res.status(200).send({
+            "status":"200",
+            "message":"user created"
+        });
     }
     catch(err){
         console.log(err.message);
@@ -54,7 +60,7 @@ router.post('/usernameCheck', async (req,res)=>{
     try{
         let {username} = req.body;
         let dbUser = await User.findOne({username:username});
-        if(dbUser) res.status(403).send({
+        if(dbUser) res.status(200).send({
             "status":"0",
             "message":"username not available"
         })
