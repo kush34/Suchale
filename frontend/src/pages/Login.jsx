@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
 import axios from 'axios';
+import {useNavigate} from 'react-router-dom';
 const Login = () => {
+  const navigate = useNavigate();
   const [username,setUsername] = useState();
   const [password,setPassword] = useState();
   const [flag1,setFlag1] = useState(false);
+  const [flag2,setFlag2] = useState(false);
+  const [flag3,setFlag3] = useState(false);
 
   const handleSubmit = async ()=>{
     if(!username || !password){
@@ -16,13 +20,20 @@ const Login = () => {
           password
         })
         .then(res =>{
-          if(res.data){
-            localStorage.setItem("token", res.data);
+          if(res.data.status == 1){
+            localStorage.setItem("token", res.data.token);
+            navigate('/home');
+          }else if(res.data.status == 2){
+            setFlag2(true);
+          }else{
+            setFlag3(true);
           }
+          
         })
         .catch(err => console.error(err));
     }
   }
+
   return (
     <div className='w-full h-screen flex justify-center items-center bg-zinc-300'>
       <div className="main w-full xl:w-1/3 h-3/4 rounded flex flex-col justify-center items-center bg-white ">
@@ -44,6 +55,18 @@ const Login = () => {
             flag1 && 
             <div className='text-red-600 font-bold text-sm mt-5'>
               Please enter your email and password
+            </div>
+          }
+          {
+            flag2 && 
+            <div className='text-red-600 font-bold text-sm mt-5'>
+              invalid credentials Pls try again
+            </div>
+          }
+          {
+            flag3 && 
+            <div className='text-red-600 font-bold text-sm mt-5'>
+              something went wrong
             </div>
           }
         </div>

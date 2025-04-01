@@ -80,14 +80,14 @@ router.post('/usernameCheck', async (req,res)=>{
 router.post('/login',async (req,res)=>{
     
     let {username,password} = req.body;
-    console.log(username,password);
+    // console.log(username,password);
     if(!username || !password) {
         res.status(403).send({
             "message":"not enough resource"
         })
         return;
     }
-    let dbUser = await User.findOne({username}).select("-password");
+    let dbUser = await User.findOne({username});
     
     if(!dbUser){
         res.status(404).send({
@@ -95,13 +95,26 @@ router.post('/login',async (req,res)=>{
         })
         return;
     }
+    bcrypt.compare(password, dbUser.password, (err, result) => {
+        if (err) throw err;
+        if(result){
+            let token = jwt.sign({
+                username : dbUser.username,
+                email : dbUser.email
+            },process.env.jwt_Secret);
+            res.status(200).send({
+                "status":"1",
+                "message":"login successful",
+                "token":token
+            });
+        }else{
+            res.send({
+                "status":"2",
+                "message":"invalid credentials"
+            })
+        }
+    });
 
-    let token = jwt.sign({
-        username : dbUser.username,
-        email : dbUser.email
-    },process.env.jwt_Secret);
-
-    res.status(200).send(token);
     
 })
 
