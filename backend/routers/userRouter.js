@@ -1,4 +1,5 @@
 import express from "express";
+import verifyToken from "../middlewares/verifyToken.js";
 import User from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -118,5 +119,19 @@ router.post('/login',async (req,res)=>{
     
 })
 
+router.get('/userList',verifyToken,async (req,res)=>{
+    let username = req.username;
+    let dbUser = await User.findOne({username});
+    if(!dbUser){
+        res.status(404).send({
+            "message":"user not found"
+        })
+    }
+    else{
+        res.status(200).send({
+            "contacts":dbUser.contacts
+        });
+    }
+})
 
 export default router;

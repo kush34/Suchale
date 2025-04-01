@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 
-const UserList = () => {
+const UserList = ({userChatList}) => {
   return (
     <div className='bg-white w-1/4 h-9.5/10 m-5 rounded'>
       <div className="top flex justify-between">
@@ -20,7 +20,16 @@ const UserList = () => {
         </div>
       </div>
       <div className="userlist flex flex-col gap-2 m-3">
-        <UserCard/>
+        {
+          userChatList.length > 0 ? 
+          <div>
+            chats found
+          </div>
+          :
+          <div className='text-center'>
+            No Chats Found
+          </div>
+        }
       </div>
     </div>
   )
