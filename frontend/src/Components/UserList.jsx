@@ -1,6 +1,7 @@
 import React from 'react'
 import { Settings } from 'lucide-react';
 import UserCard from './UserCard';
+import { Search } from 'lucide-react';
 
 const UserList = () => {
   return (
@@ -10,7 +11,12 @@ const UserList = () => {
           Suchale
         </div>
         <div className="settings flex justify-center items-center m-3">
-          <Settings />
+          <div className='cursor-pointer hover:scale-115 ease-in  duration-120 m-2'>
+            <Search />
+          </div>
+          <div className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
+            <Settings />
+          </div>
         </div>
       </div>
       <div className="userlist flex flex-col gap-2 m-3">
