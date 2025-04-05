@@ -7,6 +7,7 @@ import App from './App.jsx'
 import Home from './pages/Home.jsx';
 import Register from './pages/Register.jsx';
 import Login from "./pages/Login.jsx"
+import AddContacts from './pages/AddContacts.jsx';
 const root = document.getElementById("root");
 
 ReactDOM.createRoot(root).render(
@@ -16,6 +17,7 @@ ReactDOM.createRoot(root).render(
       <Route path="/home" element={<Home />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/addContacts" element={<AddContacts />} />
     </Routes>
   </BrowserRouter>
 );

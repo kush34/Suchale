@@ -12,7 +12,7 @@ const Home = () => {
     try{
       const response = await api.get('/user/userList');
       // console.log(response.data);
-      setUserChatList(response.data.contacts);
+      setUserChatList(response.data.response);
     }
     catch(err){
       console.log(err.message);

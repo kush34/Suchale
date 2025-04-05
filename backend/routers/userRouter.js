@@ -128,10 +128,70 @@ router.get('/userList',verifyToken,async (req,res)=>{
         })
     }
     else{
-        res.status(200).send({
-            "contacts":dbUser.contacts
-        });
+        // res.status(200).send({
+        //     "contacts":dbUser.contacts
+        // });
+        const contacts = dbUser.contacts;
+        const response = await User.find(
+            { _id: { $in: contacts } },
+            'username' // only select username field
+          );
+        res.send({response})  
     }
 })
+
+router.post("/search",verifyToken, async (req, res) => {
+    try {
+        const { query } = req.body;
+    
+        if (!query) return res.status(400).json({ message: "Query is required" });
+    
+        // Case-insensitive search for usernames starting with the query
+        const users = await User.find({ username: new RegExp("^" + query, "i") })
+          .limit(15)
+          .select("username email");
+    
+        res.json(users);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+      }
+});
+
+
+router.post('/addContact', verifyToken, async (req, res) => {
+    try {
+        const username = req.username;
+        const { contact } = req.body;
+
+        // Check if user to be added exists
+        const dbUser = await User.findOne({ username: contact });
+        if (!dbUser) return res.status(404).json({ message: "User does not exist" });
+
+        // Get current user
+        const curUser = await User.findOne({ username });
+        if (!curUser) return res.status(404).json({ message: "Current user not found" });
+
+        // Prevent adding oneself as a contact
+        if (username === contact) {
+            return res.status(400).json({ message: "Cannot add yourself as a contact" });
+        }
+
+        // Check if already a contact
+        if (curUser.contacts.includes(dbUser._id)) {
+            return res.status(400).json({ message: "User already in contacts" });
+        }
+
+        // Add to contacts
+        curUser.contacts.push(dbUser._id);
+        await curUser.save();
+
+        res.status(200).json({ message: "Contact added successfully" });
+
+    } catch (error) {
+        console.error("Error in /addContact:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 export default router;

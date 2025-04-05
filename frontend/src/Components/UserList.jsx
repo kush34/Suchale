@@ -2,8 +2,10 @@ import React from 'react'
 import { Settings } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
-
+import { Plus } from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
 const UserList = ({userChatList}) => {
+  const navigate = useNavigate();
   return (
     <div className='bg-white w-1/4 h-9.5/10 m-5 rounded'>
       <div className="top flex justify-between">
@@ -17,13 +19,22 @@ const UserList = ({userChatList}) => {
           <div className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
             <Settings />
           </div>
+          <div onClick={()=>navigate('/addContacts')} className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
+            <Plus />
+          </div>
         </div>
       </div>
       <div className="userlist flex flex-col gap-2 m-3">
         {
           userChatList.length > 0 ? 
           <div>
-            chats found
+            {userChatList?.map((user)=>{
+              return (
+                <div className='text-xl flex justify-center items-center mt-5 border-b border-zinc-500'>
+                  {user.username}
+                </div>
+              )
+            })}
           </div>
           :
           <div className='text-center'>
