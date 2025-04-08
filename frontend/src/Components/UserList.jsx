@@ -30,9 +30,7 @@ const UserList = ({userChatList}) => {
           <div>
             {userChatList?.map((user)=>{
               return (
-                <div className='text-xl flex justify-center items-center mt-5 border-b border-zinc-500'>
-                  {user.username}
-                </div>
+                <UserCard user={user}/>
               )
             })}
           </div>
