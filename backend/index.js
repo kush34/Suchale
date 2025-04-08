@@ -2,6 +2,7 @@ import express, { urlencoded } from "express";
 import 'dotenv/config'
 import connectDB from "./config/database.js";
 import userRouter from "./routers/userRouter.js";
+import messageRouter from "./routers/messageRouter.js";
 import cors from 'cors';
 const app = express();
 connectDB();
@@ -14,7 +15,7 @@ app.use(
     })
 );
 app.use('/user',userRouter);
-
+app.use('/message',messageRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 

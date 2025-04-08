@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
 import { ChatContext } from '../Store/ChatContext';
