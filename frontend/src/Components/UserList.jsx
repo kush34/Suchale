@@ -1,11 +1,14 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Settings } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
+
 const UserList = ({userChatList}) => {
   const navigate = useNavigate();
+  
+  
   return (
     <div className='bg-white w-1/4 h-9.5/10 m-5 rounded'>
       <div className="top flex justify-between">

@@ -1,8 +1,16 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
-
+import { ChatContext } from '../Store/ChatContext';
 const UserChat = () => {
+  const {chat} = useContext(ChatContext);
+  if(!chat){
+    return(
+      <div className='flex justify-center items-center w-3/4 text-zinc-500'>
+        Please select chat to view messages
+      </div>
+    )
+  }
   return (
     <div className='bg-white flex flex-col justify-between rounded-t-2xl w-3/4 m-5 h-9.5/10'>
         <div className='top py-3 px-5 flex items-center justify-between rounded-t-2xl font-medium text-2xl bg-black text-white'>
@@ -10,7 +18,7 @@ const UserChat = () => {
                 <img className='rounded-full w-15 h-15' src="https://placehold.co/400x400" alt="" />
             </div>
             <div className=" ">
-                Yash Chatt
+                {chat}
             </div>
         </div>
         <div className='flex justify-evenly m-3 '>
