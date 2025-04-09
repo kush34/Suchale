@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react'
 import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
 import { ChatContext } from '../Store/ChatContext';
+import MsgCard from './MsgCard';
 const UserChat = () => {
   const {chat,sendMsg,chatArr} = useContext(ChatContext);
   const [content,setContent] = useState();
@@ -27,7 +28,7 @@ const UserChat = () => {
           chatArr.map((msg)=>{
             return(
             <span className={`${chat!=msg.toUser ? "bg-zinc-700": "bg-black"}  w-1/2 text-white rounded m-2 px-2 py-1`}>
-              {msg.content}
+              <MsgCard msg={msg}/>
             </span>
             )
           })
