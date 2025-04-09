@@ -19,7 +19,7 @@ const UserList = ({userChatList}) => {
           <div className='cursor-pointer hover:scale-115 ease-in  duration-120 m-2'>
             <Search />
           </div>
-          <div className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
+          <div onClick={()=>navigate('/settings')} className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
             <Settings />
           </div>
           <div onClick={()=>navigate('/addContacts')} className='cursor-pointer m-2 hover:scale-115 ease-in duration-120'>
