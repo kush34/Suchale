@@ -4,7 +4,7 @@ import UserChat from '../Components/UserChat'
 import UserList from '../Components/UserList'
 import { useNavigate } from 'react-router-dom'
 import { ChatContextProvider } from '../Store/ChatContext';
-
+import {io} from "socket.io-client";
 const Home = () => {
   const navigate = useNavigate();
   const [userChatList,setUserChatList] = useState([]);
@@ -30,7 +30,19 @@ const Home = () => {
     const token = localStorage.getItem("token");
     if(!token) navigate("/login")
   },[])
-
+  // useEffect(() => {
+  //   const socket = io("http://localhost:3000");
+  
+  //   socket.on("connect", () => {
+  //     console.log("✅ Socket connected", socket.id);
+  //   });
+  
+  //   socket.on("disconnect", () => {
+  //     console.log("❌ Socket disconnected");
+  //   });
+  
+  //   return () => socket.disconnect();
+  // }, []);
   return (
     <ChatContextProvider>
       <div className='flex h-screen bg-zinc-300'>
