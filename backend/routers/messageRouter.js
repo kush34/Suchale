@@ -34,10 +34,16 @@ router.post('/getMessages',verifyToken,async (req,res)=>{
             res.status(400).send("not enough data");
             return;
         }
+        // const newMsg = await Message.find({
+        //     fromUser:username,
+        //     toUser,
+        // })  
         const newMsg = await Message.find({
-            fromUser:username,
-            toUser,
-        })  
+            $or: [
+                { fromUser: username, toUser: toUser },
+                { fromUser: toUser, toUser: username }
+            ]
+        })
         if(newMsg){
             res.status(200).send(newMsg);
         }
