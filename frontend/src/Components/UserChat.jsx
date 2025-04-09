@@ -3,7 +3,8 @@ import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
 import { ChatContext } from '../Store/ChatContext';
 const UserChat = () => {
-  const {chat} = useContext(ChatContext);
+  const {chat,sendMsg,chatArr} = useContext(ChatContext);
+  const [content,setContent] = useState();
   if(!chat){
     return(
       <div className='flex justify-center items-center w-3/4 text-zinc-500'>
@@ -21,12 +22,28 @@ const UserChat = () => {
                 {chat}
             </div>
         </div>
+        <div className='flex flex-col h-full w-full'>
+        {chatArr ? 
+          chatArr.map((msg)=>{
+            return(
+            <span className={`${chat!=msg.toUser ? "bg-zinc-700": "bg-black"}  w-1/2 text-white rounded m-2 px-2 py-1`}>
+              {msg.content}
+            </span>
+            )
+          })
+        
+        :
+        <div>
+          No messages found
+        </div>
+        }
+        </div>
         <div className='flex justify-evenly m-3 '>
           <div className='cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110'><ImagePlay /></div>
           <div className=' w-3/4'>
-            <input type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
+            <input onChange={(e)=>setContent(e.target.value)} type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
           </div>
-          <div className=' cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110'><SendHorizontal /></div>
+          <div onClick={()=>sendMsg(content)} className=' cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110'><SendHorizontal /></div>
         </div>
     </div>
   )
