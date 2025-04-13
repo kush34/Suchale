@@ -3,9 +3,32 @@ import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
 import { ChatContext } from '../Store/ChatContext';
 import MsgCard from './MsgCard';
+import { useUser } from '../Store/UserContext';
+import { useSocket } from '../Store/SocketContext';
 const UserChat = () => {
-  const {chat,sendMsg,chatArr} = useContext(ChatContext);
-  const [content,setContent] = useState();
+  // const {chat,sendMsg,chatArr} = useContext(ChatContext);
+  const {chat,chatArr} = useContext(ChatContext);
+  const [message,setmessage] = useState();
+  const {user} = useUser();
+  const socket = useSocket();
+
+  const sendMessage = () => {
+    if (!message.trim()) return;
+
+    const msgData = {
+      // from: user._id,
+      toUser: chat,
+      message: message,
+    };
+
+    // Emit the message to server
+    socket.emit("send-message", msgData);
+
+    // Optionally, update UI immediately
+    // updateMessages(msgData);
+
+    setMessage("");
+  };
   if(!chat){
     return(
       <div className='flex justify-center items-center w-3/4 text-zinc-500'>
@@ -42,9 +65,9 @@ const UserChat = () => {
         <div className='flex justify-evenly m-3 '>
           <div className='cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110'><ImagePlay /></div>
           <div className=' w-3/4'>
-            <input onChange={(e)=>setContent(e.target.value)} type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
+            <input onChange={(e)=>setmessage(e.target.value)} type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
           </div>
-          <div onClick={()=>sendMsg(content)} className=' cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110'><SendHorizontal /></div>
+          <div onClick={sendMessage} className=' cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110'><SendHorizontal /></div>
         </div>
     </div>
   )

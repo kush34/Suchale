@@ -194,4 +194,17 @@ router.post('/addContact', verifyToken, async (req, res) => {
     }
 });
 
+router.get("/userInfo", verifyToken,async (req, res) => {
+    try {
+        let username = req.username;
+        let dbUser = await User.findOne({username}).select('-password');
+        if(dbUser){
+            res.status(200).send(dbUser);
+        }
+    } catch (error) {
+        res.status(500).send("something went wrong");
+    }
+
+});
+
 export default router;
