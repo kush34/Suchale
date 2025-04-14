@@ -2,12 +2,12 @@ import express from 'express';
 import verifyToken from '../middlewares/verifyToken.js'
 const router = express.Router();
 import Message from '../models/messageModel.js';
+import {io, onlineUsers} from "../index.js"
 
 router.post('/send',verifyToken,async (req,res)=>{
     try {
         const username = req.username;
         const { toUser,content} = req.body;
-        // console.log(toUser,content);
         if(!toUser || !content) {
             res.status(400).send("not enough data");
             return;
@@ -17,11 +17,17 @@ router.post('/send',verifyToken,async (req,res)=>{
             toUser,
             content
         })  
-        if(newMsg){
-            
+        if (newMsg) {
+            const receiverSocketId = onlineUsers.get(toUser);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('sendMsg', newMsg);
+            }
+            // Add this so response is always sent
             res.status(200).send("msg sent");
         }
+        
     } catch (error) {
+        console.log(error.message);
         res.status(500).send("something went wrong")
     }
 })

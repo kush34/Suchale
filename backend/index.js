@@ -32,9 +32,24 @@ app.use('/message',messageRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 
+const onlineUsers = new Map();
+
 io.on('connection', (socket) => {
-    console.log('a user connected');
+  console.log('User connected', socket.id);
+
+  socket.on('addUser', (userId) => {
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on('disconnect', () => {
+    for (let [key, value] of onlineUsers.entries()) {
+      if (value === socket.id) onlineUsers.delete(key);
+    }
+  });
 });
+
+export { io,onlineUsers };
+
 server.listen(3000, () => {
     console.log('server running at http://localhost:3000');
 });
