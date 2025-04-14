@@ -1,34 +1,48 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { ImagePlay } from 'lucide-react';
 import { SendHorizontal } from 'lucide-react';
 import { ChatContext } from '../Store/ChatContext';
 import MsgCard from './MsgCard';
 import { useUser } from '../Store/UserContext';
-import { useSocket } from '../Store/SocketContext';
+import socket from '../utils/socketService';
+import api from '../utils/axiosConfig';
 const UserChat = () => {
-  // const {chat,sendMsg,chatArr} = useContext(ChatContext);
-  const {chat,chatArr} = useContext(ChatContext);
-  const [message,setmessage] = useState();
+
+  const {chat,chatArr,setChatArr} = useContext(ChatContext);
+  const [message,setMessage] = useState("");
   const {user} = useUser();
-  const socket = useSocket();
+  const messagesEndRef = useRef(null);
 
-  const sendMessage = () => {
-    if (!message.trim()) return;
-
-    const msgData = {
-      // from: user._id,
-      toUser: chat,
-      message: message,
-    };
-
-    // Emit the message to server
-    socket.emit("send-message", msgData);
-
-    // Optionally, update UI immediately
-    // updateMessages(msgData);
-
+  const sendMessage =async () => {
+    const response = await api.post("/message/send",{
+      toUser:chat,
+      content:message
+    });
+    if(response.status == 200){
+      setChatArr((prev)=>[...prev,{
+        fromUser:user.username,
+        toUser:chat,
+        content:message
+      }])
+    }
     setMessage("");
   };
+
+  useEffect(() => {
+    socket.emit('addUser', user?.username);
+  }, [user]);
+  useEffect(() => {
+    socket.on('sendMsg', (message) => {
+      // Append to chat window
+      // console.log('New message:', message);
+      setChatArr((prev)=>[...prev,message]);
+    });
+  
+    return () => socket.off('sendMsg');
+  }, []);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatArr]);
   if(!chat){
     return(
       <div className='flex justify-center items-center w-3/4 text-zinc-500'>
@@ -46,15 +60,18 @@ const UserChat = () => {
                 {chat}
             </div>
         </div>
-        <div className='flex flex-col h-full w-full'>
+        <div className='flex flex-col h-full w-full overflow-y-scroll'>
         {chatArr ? 
-          chatArr.map((msg)=>{
+        <>
+          {chatArr.map((msg)=>{
             return(
-            <span className={`${chat!=msg.toUser ? "bg-zinc-700": "bg-black"}  w-1/2 text-white rounded m-2 px-2 py-1`}>
+              <span key={msg?._id} className={`${chat!=msg.toUser ? "bg-zinc-700": "bg-black"}  w-1/2 text-white rounded m-2 px-2 py-1`}>
               <MsgCard msg={msg}/>
             </span>
             )
-          })
+          })}
+          <div ref={messagesEndRef} />
+        </>
         
         :
         <div>
@@ -65,7 +82,7 @@ const UserChat = () => {
         <div className='flex justify-evenly m-3 '>
           <div className='cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110'><ImagePlay /></div>
           <div className=' w-3/4'>
-            <input onChange={(e)=>setmessage(e.target.value)} type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
+            <input value={message} onChange={(e)=>setMessage(e.target.value)} type="text" className='focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2' placeholder='type your message here' name="" id="" />
           </div>
           <div onClick={sendMessage} className=' cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110'><SendHorizontal /></div>
         </div>

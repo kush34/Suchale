@@ -29,7 +29,7 @@ export const ChatContextProvider = ({children})=>{
         getMessages();
     },[chat])
     return(
-        <ChatContext.Provider value={{chat,setChat,sendMsg,chatArr}}>
+        <ChatContext.Provider value={{chat,setChat,sendMsg,chatArr,setChatArr}}>
             {children}
         </ChatContext.Provider>
     )

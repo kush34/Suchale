@@ -16,6 +16,8 @@ export const UserContextProvider = ({children})=>{
             navigate("/login");
         }else{
             const response = await api.get("/user/userInfo");
+            console.log(response.data);
+            setUser(response.data);
         }
     }
     useEffect(()=>{

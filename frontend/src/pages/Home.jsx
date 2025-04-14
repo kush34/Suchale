@@ -3,7 +3,6 @@ import api from '../utils/axiosConfig';
 import UserChat from '../Components/UserChat'
 import UserList from '../Components/UserList'
 import { useNavigate } from 'react-router-dom'
-import { useSocket } from '../Store/SocketContext';
 const Home = () => {
   const navigate = useNavigate();
   const [userChatList,setUserChatList] = useState([]);
@@ -23,14 +22,7 @@ const Home = () => {
   useEffect(()=>{
     getChatList();
   },[])
-  useEffect(() => {
-    if (socket) {
-      console.log('✅ Socket connected:', socket.id);
-
-      // Optional test emit
-      socket.emit('test', 'Hello from frontend');
-    }
-  }, [socket]);
+  
   return (
     <div className='flex h-screen bg-zinc-300'>
         <UserList userChatList= {userChatList}/>

@@ -11,7 +11,7 @@ import AddContacts from './pages/AddContacts.jsx';
 import Settings from './pages/Settings.jsx';
 
 import { UserContextProvider } from './Store/UserContext';
-import { SocketProvider } from './Store/SocketContext';
+// import { SocketProvider } from './Store/SocketContext';
 import { ChatContextProvider } from './Store/ChatContext';
 
 const root = document.getElementById('root');
@@ -19,11 +19,11 @@ const root = document.getElementById('root');
 function ProtectedRoutes({ children }) {
   return (
     <UserContextProvider>
-      <SocketProvider>
+      {/* <SocketProvider> */}
         <ChatContextProvider>
           {children}
         </ChatContextProvider>
-      </SocketProvider>
+      {/* </SocketProvider> */}
     </UserContextProvider>
   );
 }
