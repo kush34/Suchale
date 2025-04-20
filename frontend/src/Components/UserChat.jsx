@@ -58,7 +58,7 @@ const UserChat = () => {
         <div className="img">
           <img
             className="rounded-full w-15 h-15"
-            src={user?.profilePic || "https://placehold.co/400x400"}
+            src={chat?.profilePic || "https://placehold.co/400x400"}
             alt=""
           />
         </div>
