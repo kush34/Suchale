@@ -14,7 +14,7 @@ const UserChat = () => {
 
   const sendMessage = async () => {
     const response = await api.post("/message/send", {
-      toUser: chat,
+      toUser: chat?.username,
       content: message,
     });
     if (response.status == 200) {
@@ -22,7 +22,7 @@ const UserChat = () => {
         ...prev,
         {
           fromUser: user.username,
-          toUser: chat,
+          toUser: chat?.username,
           content: message,
         },
       ]);
@@ -58,11 +58,11 @@ const UserChat = () => {
         <div className="img">
           <img
             className="rounded-full w-15 h-15"
-            src="https://placehold.co/400x400"
+            src={user?.profilePic || "https://placehold.co/400x400"}
             alt=""
           />
         </div>
-        <div className=" ">{chat}</div>
+        <div className=" ">{chat?.username}</div>
       </div>
       <div className="flex flex-col h-full w-full overflow-y-scroll">
         {chatArr ? (

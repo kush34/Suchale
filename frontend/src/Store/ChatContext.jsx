@@ -11,7 +11,7 @@ export const ChatContextProvider = ({children})=>{
     const sendMsg =async (content)=>{
         if(!content) return;
         const resposne = await api.post('/message/send',{
-            toUser:chat,
+            toUser:chat?.username,
             content:content,
         })
         if(resposne.status == 200){
@@ -21,7 +21,7 @@ export const ChatContextProvider = ({children})=>{
     
     const getMessages = async ()=>{
         setLoading(true);
-        const response = await api.post('/message/getMessages',{toUser:chat});
+        const response = await api.post('/message/getMessages',{toUser:chat?.username});
         setChatArr(response.data);
         setLoading(false);
     }
