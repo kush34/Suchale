@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String, // URL to the profile picture
-      default: "",
+      default: "https://placehold.co/400x400",
     },
     status: {
       type: String,

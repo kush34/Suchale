@@ -3,6 +3,7 @@ import verifyToken from "../middlewares/verifyToken.js";
 import User from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import upload from "../middlewares/multer.js";
 const router = express.Router();
 
 router.post('/create', async (req,res)=>{
@@ -134,7 +135,7 @@ router.get('/userList',verifyToken,async (req,res)=>{
         const contacts = dbUser.contacts;
         const response = await User.find(
             { _id: { $in: contacts } },
-            'username' // only select username field
+            'username profilePic', // only select username field
           );
         res.send({response})  
     }
@@ -158,7 +159,22 @@ router.post("/search",verifyToken, async (req, res) => {
       }
 });
 
-
+router.post("/profilepic",verifyToken,upload.single('file'),async (req,res)=>{
+    try{
+        let username = req.username;
+        let DBuser = await User.findOneAndUpdate(
+            {username},
+            {
+            profilePic:req.file.path},
+            { new: true }
+        );
+        res.json({
+            url:req.file.path
+        })
+    }catch(error){
+        res.status(500).send("something went wrong");
+    }
+})
 router.post('/addContact', verifyToken, async (req, res) => {
     try {
         const username = req.username;
