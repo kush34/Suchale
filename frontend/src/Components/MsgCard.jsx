@@ -11,7 +11,7 @@ const MsgCard = ({msg}) => {
         <div className="msgContent text-xl">
             {msg.content}
         </div>
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-zinc-500 ml-5">
             {getDate(msg.createdAt)}
         </div>
     </div>
