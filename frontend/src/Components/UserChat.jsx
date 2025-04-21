@@ -13,8 +13,23 @@ const UserChat = () => {
   const [message, setMessage] = useState("");
   const { user } = useUser();
   const [showPicker, setShowPicker] = useState(false);
+  const [isTyping,setIsTyping] = useState(false);
   const mediaInpRef = useRef();
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const handleTyping = () => {
+    console.log("typing logger handleTyping function ...");
+    socket.emit("typing", { to: chat?.username });
+
+    // Optional: debounce so you're not emitting too frequently
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", { to: chat?.username });
+    }, 2000); // stop typing after 2s of inactivity
+  };
   const handleEmojiClick = (emojiData) => {
     setMessage((prev) => prev + emojiData);
   };
@@ -79,6 +94,21 @@ const UserChat = () => {
     return () => socket.off("sendMsg");
   }, []);
   useEffect(() => {
+    socket.on("typing", ({ from }) => {
+      setIsTyping(true);
+    });
+  
+    socket.on("stopTyping", ({ from }) => {
+      setIsTyping(false);
+    });
+  
+    return () => {
+      socket.off("typing");
+      socket.off("stopTyping");
+    };
+  }, []);
+  
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatArr]);
   if (!chat) {
@@ -98,7 +128,10 @@ const UserChat = () => {
             alt=""
           />
         </div>
-        <div className=" ">{chat?.username}</div>
+        <div className=" ">
+          {chat?.username}
+          {isTyping && <div className="text-green-500 text-sm">typing...</div>}
+          </div>
       </div>
       <div className="flex flex-col h-full w-full overflow-y-scroll">
         {chatArr ? (
@@ -155,7 +188,10 @@ const UserChat = () => {
         <div className=" w-3/4 flex items-center justify-center mb-2">
           <input
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) =>{
+               setMessage(e.target.value);
+               handleTyping();
+              }}
             type="text"
             className="focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-2 py-1"
             placeholder="type your message here"

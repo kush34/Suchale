@@ -39,8 +39,22 @@ io.on('connection', (socket) => {
 
   socket.on('addUser', (userId) => {
     onlineUsers.set(userId, socket.id);
+    socket.userId = userId; 
+  });
+  socket.on("typing", ({ to }) => {
+    // Forward "typing" event to recipient
+    const recipientSocketId = onlineUsers.get(to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("typing", { from: socket.userId });
+    }
   });
 
+  socket.on("stopTyping", ({ to }) => {
+    const recipientSocketId = onlineUsers.get(to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("stopTyping", { from: socket.userId });
+    }
+  });
   socket.on('disconnect', () => {
     for (let [key, value] of onlineUsers.entries()) {
       if (value === socket.id) onlineUsers.delete(key);
