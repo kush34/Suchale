@@ -10,6 +10,7 @@ const UserChat = () => {
   const { chat, chatArr, setChatArr } = useContext(ChatContext);
   const [message, setMessage] = useState("");
   const { user } = useUser();
+  const mediaInpRef = useRef();
   const messagesEndRef = useRef(null);
 
   const sendMessage = async () => {
@@ -29,6 +30,36 @@ const UserChat = () => {
     }
     setMessage("");
   };
+  const mediaTrigger = ()=>{
+    mediaInpRef.current.click();
+  }
+  const sendMedia = async (e) => {
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
+    formData.append("toUser", chat?.username); 
+  
+    try {
+      const res = await api.post("/message/media", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (res.status == 200) {
+        setChatArr((prev) => [
+          ...prev,
+          {
+            fromUser: user.username,
+            toUser: chat?.username,
+            content: res.data.url,
+          },
+        ]);
+      }
+      console.log("Uploaded URL:", res.data.url);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  
 
   useEffect(() => {
     socket.emit("addUser", user?.username);
@@ -80,7 +111,7 @@ const UserChat = () => {
                   <span
                     className={`${
                       msg.fromUser === user.username
-                        ? "bg-zinc-700"
+                        ? "bg-zinc-800"
                         : "bg-black"
                     } w-fit max-w-[75%] text-white rounded m-2 px-3 py-2`}
                   >
@@ -96,8 +127,9 @@ const UserChat = () => {
         )}
       </div>
       <div className="flex justify-evenly m-3 ">
-        <div className="cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
+        <div onClick={mediaTrigger} className="cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
           <ImagePlay />
+          <div><input ref={mediaInpRef} onChange={sendMedia} type="file" className="hidden" /></div>
         </div>
         <div className=" w-3/4">
           <input

@@ -3,6 +3,7 @@ import verifyToken from '../middlewares/verifyToken.js'
 const router = express.Router();
 import Message from '../models/messageModel.js';
 import {io, onlineUsers} from "../index.js"
+import upload from '../middlewares/multer.js';
 
 router.post('/send',verifyToken,async (req,res)=>{
     try {
@@ -58,5 +59,31 @@ router.post('/getMessages',verifyToken,async (req,res)=>{
     }
 })
 
+router.post('/media',verifyToken,upload.single('file'),async (req,res)=>{
+    try{
+        const username = req.username;
+        const { toUser } = req.body;
+        if (!req.file || !toUser) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+        let newMsg = await Message.create(
+            {
+                fromUser:username,
+                toUser,
+                content:req.file.path
+            }
+        );
+        if (newMsg) {
+            const receiverSocketId = onlineUsers.get(toUser);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('sendMsg', newMsg);
+            }
+            res.status(200).json({ url: req.file.path });
+        }
+    }catch(error){
+        console.log(error.message)
+        res.status(500).send("something went wrong");
+    }
+})
 
 export default router;  
