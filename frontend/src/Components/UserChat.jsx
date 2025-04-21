@@ -1,5 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { ImagePlay } from "lucide-react";
+import { SmilePlus } from 'lucide-react';
+import EmojiPicker from './EmojiPicker'
 import { SendHorizontal } from "lucide-react";
 import { ChatContext } from "../Store/ChatContext";
 import MsgCard from "./MsgCard";
@@ -10,9 +12,12 @@ const UserChat = () => {
   const { chat, chatArr, setChatArr } = useContext(ChatContext);
   const [message, setMessage] = useState("");
   const { user } = useUser();
+  const [showPicker, setShowPicker] = useState(false);
   const mediaInpRef = useRef();
   const messagesEndRef = useRef(null);
-
+  const handleEmojiClick = (emojiData) => {
+    setMessage((prev) => prev + emojiData);
+  };
   const sendMessage = async () => {
     const response = await api.post("/message/send", {
       toUser: chat?.username,
@@ -126,17 +131,33 @@ const UserChat = () => {
           <div>No messages found</div>
         )}
       </div>
-      <div className="flex justify-evenly m-3 ">
-        <div onClick={mediaTrigger} className="cursor-pointer text-zinc-900 w-1/4  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
-          <ImagePlay />
-          <div><input ref={mediaInpRef} onChange={sendMedia} type="file" className="hidden" /></div>
+      <div className="flex">
+        <div className="w-1/7 items-center flex justify-evenly">
+          <div onClick={mediaTrigger} className="cursor-pointer text-zinc-900  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
+            <ImagePlay />
+            <div><input ref={mediaInpRef} onChange={sendMedia} type="file" className="hidden" /></div>
+          </div>
+          <div className="relative">
+            {showPicker && (
+              <div className="absolute bottom-full mb-2 z-50">
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+            
+            <button
+              className="cursor-pointer text-zinc-900 flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110"
+              onClick={() => setShowPicker(!showPicker)}
+            >
+              <SmilePlus />
+            </button>
+          </div>
         </div>
-        <div className=" w-3/4">
+        <div className=" w-3/4 flex items-center justify-center mb-2">
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             type="text"
-            className="focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-3 py-2"
+            className="focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-2 py-1"
             placeholder="type your message here"
             name=""
             id=""
@@ -144,7 +165,7 @@ const UserChat = () => {
         </div>
         <div
           onClick={sendMessage}
-          className=" cursor-pointer text-zinc-900 flex  items-center justify-center w-1/4 hover:text-black ease-in duration-100 hover:scale-110"
+          className=" cursor-pointer text-zinc-900 flex  items-center justify-center w-1/10 hover:text-black ease-in duration-100 hover:scale-110"
         >
           <SendHorizontal />
         </div>
