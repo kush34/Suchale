@@ -1,4 +1,5 @@
 import React from 'react'
+import ChatImageViewer from './ChatImageViewer';
 
 const MsgCard = ({msg}) => {
     const getDate = ()=>{
@@ -10,7 +11,8 @@ const MsgCard = ({msg}) => {
     <div className=''>
         <div className="msgContent text-xl">
         {msg.content?.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-            <img src={msg.content} alt="uploaded" className="max-w-xs rounded-lg" />
+            // <img src={msg.content} alt="uploaded" className="max-w-xs rounded-lg" />
+            <ChatImageViewer src={msg.content}/>
         ) : (
         <div className='flex justify-center'>
             {msg.content}
