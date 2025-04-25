@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
+    const navigate = useNavigate();
     const [username,setUsername] = useState();
     const [flag1,setFlag1] = useState(true);
     const [flag2,setFlag2] = useState(true);
@@ -101,9 +103,9 @@ const Register = () => {
                     <p>Password should be more than 6 characters</p>
                 </div>
                 }
-            </div>
-            <div className="loginlink">
-
+                <div className="mt-2 loginlink hover:border-b ease-in duration-100 cursor-pointer" onClick={()=>navigate('/login')}>
+                    Already have an account
+                </div>
             </div>
         </div>
     </div>

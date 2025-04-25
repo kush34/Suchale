@@ -70,6 +70,9 @@ const Login = () => {
             </div>
           }
         </div>
+        <div className='mt-2 text-zinc-800 hover:border-b ease-in duration-100 cursor-pointer' onClick={()=>navigate('/register')}>
+          create an account
+        </div>
       </div>
     </div>
   )
