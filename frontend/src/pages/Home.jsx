@@ -3,6 +3,7 @@ import api from '../utils/axiosConfig';
 import UserChat from '../Components/UserChat'
 import UserList from '../Components/UserList'
 import { useNavigate } from 'react-router-dom'
+import socket from '../utils/socketService';
 const Home = () => {
   const navigate = useNavigate();
   const [userChatList,setUserChatList] = useState([]);
@@ -22,6 +23,33 @@ const Home = () => {
   useEffect(()=>{
     getChatList();
   },[])
+  useEffect(() => {
+    function friendOffline(username) {
+      setUserChatList(prevList => 
+        prevList.map(user => 
+          user.username === username 
+            ? { ...user, status: 'Offline' } 
+            : user
+        )
+      );
+    }
+    function friendOnline(username) {
+      setUserChatList(prevList => 
+        prevList.map(user => 
+          user.username === username 
+            ? { ...user, status: 'Online' } 
+            : user
+        )
+      );
+    }
+    socket.on("friendOffline", friendOffline);
+    socket.on("friendOnline", friendOnline);
+  
+    return () => {
+      socket.off("friendOffline", friendOffline);
+      socket.off("friendOffline", friendOnline);
+    };
+  }, []);
   
   return (
     <div className='flex h-screen bg-zinc-300'>

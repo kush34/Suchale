@@ -4,6 +4,7 @@ import User from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import upload from "../middlewares/multer.js";
+import { onlineUsers } from "../index.js";
 const router = express.Router();
 
 router.post('/create', async (req,res)=>{
@@ -137,6 +138,9 @@ router.get('/userList',verifyToken,async (req,res)=>{
             { _id: { $in: contacts } },
             'username profilePic', // only select username field
           );
+        response.forEach((contact) => {
+            contact.status = onlineUsers.has(contact.username) ? "Online" : "Offline";
+        });
         res.send({response})  
     }
 })

@@ -7,6 +7,7 @@ import userRouter from "./routers/userRouter.js";
 import messageRouter from "./routers/messageRouter.js";
 
 import cors from 'cors';
+import User from "./models/userModel.js";
 const app = express();
 const server = createServer(app);
 const io = new Server(server,{
@@ -33,13 +34,31 @@ app.get("/", (req, res) => res.send("Hello World!"));
 
 
 const onlineUsers = new Map();
+const socketToUsername = new Map();
 
 io.on('connection', (socket) => {
   console.log('User connected', socket.id);
 
-  socket.on('addUser', (userId) => {
+  socket.on('addUser', async (userId) => {
     onlineUsers.set(userId, socket.id);
+    socketToUsername.set( socket.id,userId);
     socket.userId = userId; 
+    const dbUser = await User.findOne({ username: userId }); // assuming userId == username
+  if (!dbUser) return;
+
+  const contacts = dbUser.contacts;
+
+  for (const contactId of contacts) {
+    const contactUser = await User.findById(contactId);
+    if (contactUser && onlineUsers.has(contactUser.username)) {
+      const contactSocketId = onlineUsers.get(contactUser.username);
+
+      if (contactSocketId) {
+        io.to(contactSocketId).emit('friendOnline', userId);
+        console.log(`Emitting friendOnline to ${contactUser.username}`);
+      }
+    }
+  }
   });
   socket.on("typing", ({ to }) => {
     // Forward "typing" event to recipient
@@ -55,11 +74,33 @@ io.on('connection', (socket) => {
       io.to(recipientSocketId).emit("stopTyping", { from: socket.userId });
     }
   });
-  socket.on('disconnect', () => {
-    for (let [key, value] of onlineUsers.entries()) {
-      if (value === socket.id) onlineUsers.delete(key);
+  socket.on('disconnect', async () => {
+    const username = socketToUsername.get(socket.id);
+    console.log('Disconnected user:', username);
+  
+    if (username) {
+      onlineUsers.delete(username);
+      socketToUsername.delete(socket.id);
+  
+      const dbUser = await User.findOne({ username });
+      if (!dbUser) return;
+  
+      const contacts = dbUser.contacts;
+  
+      for (const contactId of contacts) {
+        const contactUser = await User.findById(contactId);
+        if (contactUser && onlineUsers.has(contactUser.username)) {
+          const contactSocketId = onlineUsers.get(contactUser.username); // Fixed here
+  
+          if (contactSocketId) {
+            io.to(contactSocketId).emit('friendOffline', username);
+            console.log(`Emitting friendOffline to ${contactUser.username}`);
+          }
+        }
+      }
     }
   });
+  
 });
 
 export { io,onlineUsers };
