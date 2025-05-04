@@ -8,6 +8,7 @@ import messageRouter from "./routers/messageRouter.js";
 
 import cors from 'cors';
 import User from "./models/userModel.js";
+import Message from "./models/messageModel.js";
 const app = express();
 const server = createServer(app);
 const io = new Server(server,{
@@ -74,6 +75,14 @@ io.on('connection', (socket) => {
       io.to(recipientSocketId).emit("stopTyping", { from: socket.userId });
     }
   });
+  socket.on("readMessages", async ({ fromUser, toUser }) => {
+    await Message.updateMany(
+      { from: fromUser, to: toUser, read: false },
+      { $set: { read: true } }
+    );
+    io.to(fromUser).emit("messagesReadBy", { toUser });
+  });
+  
   socket.on('disconnect', async () => {
     const username = socketToUsername.get(socket.id);
     console.log('Disconnected user:', username);

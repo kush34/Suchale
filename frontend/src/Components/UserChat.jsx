@@ -79,19 +79,27 @@ const UserChat = () => {
       console.error(err);
     }
   };
-  
 
   useEffect(() => {
     socket.emit("addUser", user?.username);
+    socket.emit("readMessages",({fromUser:user?.username,toUser:chat?.username}));
   }, [user]);
   useEffect(() => {
     socket.on("sendMsg", (message) => {
-      // Append to chat window
-      // console.log('New message:', message);
       setChatArr((prev) => [...prev, message]);
     });
-
-    return () => socket.off("sendMsg");
+    socket.on("messagesRead", ({ fromUser }) => {
+      setChatArr((prev) =>
+        prev.map((msg) =>
+          msg.toUser === fromUser ? { ...msg, read: true } : msg
+        )
+      );
+    });
+    
+    return () => {
+      socket.off("sendMsg");
+      socket.off("messagesReadBy");
+    }
   }, []);
   useEffect(() => {
     socket.on("typing", ({ from }) => {

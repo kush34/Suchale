@@ -33,31 +33,40 @@ router.post('/send',verifyToken,async (req,res)=>{
     }
 })
 
-router.post('/getMessages',verifyToken,async (req,res)=>{
+router.post("/getMessages", verifyToken, async (req, res) => {
     try {
-        const username = req.username;
-        const { toUser } = req.body;
-        if(!toUser) {
-            res.status(400).send("not enough data");
-            return;
+      const username = req.username;
+      const { toUser } = req.body;
+      if (!toUser) {
+          return res.status(400).send("toUser is required");
         }
-        // const newMsg = await Message.find({
-        //     fromUser:username,
-        //     toUser,
-        // })  
-        const newMsg = await Message.find({
-            $or: [
-                { fromUser: username, toUser: toUser },
-                { fromUser: toUser, toUser: username }
-            ]
-        })
-        if(newMsg){
-            res.status(200).send(newMsg);
-        }
-    } catch (error) {
-        res.status(500).send("something went wrong")
+        console.log(`fromUser:${username} toUser: ${toUser}`)
+  
+      // Step 1: Fetch all messages between the users
+      const messages = await Message.find({
+        $or: [
+          { fromUser: username, toUser: toUser },
+          { fromUser: toUser, toUser: username }
+        ]
+      }).sort({ createdAt: 1 });
+      console.log(messages);
+      // Step 2: Mark unread messages sent *to* current user as read
+      const updateResult = await Message.updateMany(
+          { fromUser: toUser, toUser: username, read: false },
+          { $set: { read: true } }
+        );
+        console.log(updateResult);
+  
+      console.log(`Marked ${updateResult.modifiedCount} messages as read`);
+  
+      res.status(200).json(messages);
+    } catch (err) {
+      console.error("Error in /getMessages:", err);
+      res.status(500).send("Failed to fetch messages");
     }
-})
+  });
+  
+  
 
 router.post('/media',verifyToken,upload.single('file'),async (req,res)=>{
     try{

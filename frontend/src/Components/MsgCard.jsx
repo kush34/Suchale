@@ -1,5 +1,7 @@
 import React from 'react'
 import ChatImageViewer from './ChatImageViewer';
+import { Check } from 'lucide-react';
+import { CheckCheck } from 'lucide-react';
 
 const MsgCard = ({msg}) => {
     const getDate = ()=>{
@@ -8,8 +10,8 @@ const MsgCard = ({msg}) => {
         return formatted;
     }
   return (
-    <div className=''>
-        <div className="msgContent text-xl">
+    <div className='flex gap-2 items-center '>
+        <div className="msgContent text-xl ">
         {msg.content?.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
             // <img src={msg.content} alt="uploaded" className="max-w-xs rounded-lg" />
             <ChatImageViewer src={msg.content}/>
@@ -19,8 +21,13 @@ const MsgCard = ({msg}) => {
         </div>
         )}
         </div>
-        <div className="text-[10px] text-zinc-500 ml-5 flex justify-end">
-            {getDate(msg.createdAt)}
+        <div className="flex justify-end gap-2">
+            <div className='text-sm text-zinc-500'>
+                {getDate(msg.createdAt)}
+            </div>
+            <span className='text-white text-xl'>
+                {msg.read ? <CheckCheck />:<Check /> }
+            </span>
         </div>
     </div>
   )
