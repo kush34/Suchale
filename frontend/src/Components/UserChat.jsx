@@ -8,8 +8,9 @@ import MsgCard from "./MsgCard";
 import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
+import { useNavigate } from "react-router-dom";
 const UserChat = () => {
-  const { chat, chatArr, setChatArr } = useContext(ChatContext);
+  const { chat,setChat, chatArr, setChatArr } = useContext(ChatContext);
   const [message, setMessage] = useState("");
   const { user } = useUser();
   const [showPicker, setShowPicker] = useState(false);
@@ -127,8 +128,9 @@ const UserChat = () => {
     );
   }
   return (
-    <div className="bg-white flex flex-col justify-between rounded-t-2xl w-3/4 m-5 h-9.5/10">
-      <div className="top py-3 px-5 flex items-center justify-between rounded-t-2xl font-medium text-2xl bg-black text-white">
+    // <div className={`shadow-2xl bg-white flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-y-scroll `}>
+    <div className={`shadow-2xl bg-white flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-none`}>
+      <div className="profile-username-typingindicator-back_btn py-3 px-5 flex items-center justify-between md:rounded-t-2xl font-medium text-2xl bg-black text-white">
         <div className="img">
           <img
             className="rounded-full w-15 h-15"
@@ -140,8 +142,11 @@ const UserChat = () => {
           {chat?.username}
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
           </div>
+          <div className="md:hidden back_btn">
+            <button className="text-white text-sm cursor-pointer" onClick={()=>setChat(null)}>Back</button>
+          </div>
       </div>
-      <div className="flex flex-col h-full w-full overflow-y-scroll">
+      <div className="chats-msgs flex flex-col h-full w-full overflow-y-scroll">
         {chatArr ? (
           <>
             {chatArr.map((msg) => {
@@ -172,7 +177,7 @@ const UserChat = () => {
           <div>No messages found</div>
         )}
       </div>
-      <div className="flex">
+      <div className="flex media-emojis-textbar-sendbtn">
         <div className="w-1/7 items-center flex justify-evenly">
           <div onClick={mediaTrigger} className="cursor-pointer text-zinc-900  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
             <ImagePlay />
