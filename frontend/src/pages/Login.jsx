@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Loader1 from "../loaders/Loader1"
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
 const Login = () => {
@@ -8,12 +9,13 @@ const Login = () => {
   const [flag1,setFlag1] = useState(false);
   const [flag2,setFlag2] = useState(false);
   const [flag3,setFlag3] = useState(false);
-
+  const [loading,setLoading] = useState(false);
   const handleSubmit = async ()=>{
     if(!username || !password){
       setFlag1(true);
     }
     else{
+      setLoading(true);
       const request = await axios
         .post(`${import.meta.env.VITE_URL}/user/login`,{
           username,
@@ -31,9 +33,12 @@ const Login = () => {
           
         })
         .catch(err => console.error(err));
+        setLoading(false);
     }
   }
-
+  if(loading) return(
+    <Loader1/>
+  )
   return (
     <div className='w-full h-screen flex justify-center items-center bg-zinc-300'>
       <div className="main w-full xl:w-1/3 h-3/4 rounded flex flex-col justify-center items-center bg-white ">

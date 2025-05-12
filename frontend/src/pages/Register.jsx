@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import Loader1 from "../loaders/Loader1"
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const navigate = useNavigate();
+    const [loading,setLoading] = useState(false);
     const [username,setUsername] = useState();
     const [flag1,setFlag1] = useState(true);
     const [flag2,setFlag2] = useState(true);
@@ -42,6 +44,7 @@ const Register = () => {
     const handleSubmit = async ()=>{
         if(!validate()) return;
         else{
+            setLoading(true);
             const request = await axios.post(`${import.meta.env.VITE_URL}/user/create`,{
                 email,
                 username,
@@ -50,8 +53,12 @@ const Register = () => {
             if(request.data.status == 200){
                 setFlag4(true);
             }
+            setLoading(false);
         }
     }
+    if(loading) return(
+        <Loader1/>
+    )
   return (
     <div className={` w-full h-screen flex items-center justify-center bg-zinc-300`}>
         <div className={`main w-3/4 xl:w-1/3 h-3/4 bg-white rounded-xl ${flag3 ? "border border-red-600" : "border-none"} ${flag4 && "border border-green-600" }`}>

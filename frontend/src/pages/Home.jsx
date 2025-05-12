@@ -66,10 +66,12 @@ const Home = () => {
         <UserList userChatList= {userChatList}/>
     </div>
     {
-      chat &&
+      chat ?
       <div className='w-full md:w-3/4 h-screen md:h-9/10 md:m-3 md:mt-5 overflow-none'>
       <UserChat/>
       </div>
+      :
+      <div className="hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen md:h-9/10">Please select a chat to view messages</div>
     }
     </div>
   )
