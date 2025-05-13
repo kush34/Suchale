@@ -1,11 +1,16 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken.js";
 import User from '../models/userModel.js';
+import crypto from "crypto"
+import {createUser} from "../controllers/createUser.js"
+import { sendOtp } from "../controllers/sendOtp.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import upload from "../middlewares/multer.js";
 import { onlineUsers } from "../index.js";
 const router = express.Router();
+
+const EmailToOtp = new Map();
 
 router.post('/create', async (req,res)=>{
     try{
@@ -58,7 +63,59 @@ router.post('/create', async (req,res)=>{
     }
 })
 
-
+router.post("/sendOtp",async(req,res)=>{
+    try {
+        
+        const {email,username,password} = req.body;
+        if(!email || !username || !password){
+            res.status(401).send("not enough data");
+            return;
+        }
+        let DBuser = await User.findOne({
+            $or:[{username:username},{email:email}]
+        });
+        if(DBuser){
+            res.status(400).send("something went wrong");
+            return;
+        }
+        const OTP = crypto.randomInt(100000, 1000000);
+        EmailToOtp.set(email,OTP);
+        sendOtp(email,OTP);
+        console.log(OTP);
+        res.status(200).send(`OTP sent to user email:${email}`)
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(`something went wrong`)
+    }
+})
+router.post('/verifyOtp',async(req,res)=>{
+    try {
+        const {email,otp,password,username} = req.body;
+        if(!email || !otp || !password || !username){
+            res.status(401).send("not enough data");
+            return;
+        }
+        if(EmailToOtp.has(email)){
+            if(EmailToOtp.get(email) === Number(otp)){
+                let newUser = await createUser(username,email,password);
+                if(newUser){
+                    EmailToOtp.delete(email); // after account creation
+                    res.status(200).send("OTP verified successfully and Account created");
+                }else{
+                    res.status(400).send("Something went wrong! :(");
+                }
+            }
+            else{
+                res.status(400).send("invalid Otp");
+            }
+        }else{
+            res.status(400).send("unauthorized access");
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(400).send("something went wrong");
+    }
+})
 router.post('/usernameCheck', async (req,res)=>{
     try{
         let {username} = req.body;
