@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
+import Loader1 from '../loaders/Loader1'
 import { ImagePlay } from "lucide-react";
 import { SmilePlus } from 'lucide-react';
 import EmojiPicker from './EmojiPicker'
@@ -12,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 const UserChat = () => {
   const { chat,setChat, chatArr, setChatArr } = useContext(ChatContext);
   const [message, setMessage] = useState("");
+  const [loading,setLoading] = useState(false);
   const { user } = useUser();
   const [showPicker, setShowPicker] = useState(false);
   const [isTyping,setIsTyping] = useState(false);
@@ -19,7 +21,7 @@ const UserChat = () => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const handleTyping = () => {
-    console.log("typing logger handleTyping function ...");
+    // console.log("typing logger handleTyping function ...");
     socket.emit("typing", { to: chat?.username });
 
     // Optional: debounce so you're not emitting too frequently
@@ -35,6 +37,7 @@ const UserChat = () => {
     setMessage((prev) => prev + emojiData);
   };
   const sendMessage = async () => {
+    setLoading(true);
     const response = await api.post("/message/send", {
       toUser: chat?.username,
       content: message,
@@ -50,11 +53,13 @@ const UserChat = () => {
       ]);
     }
     setMessage("");
+    setLoading(false);
   };
   const mediaTrigger = ()=>{
     mediaInpRef.current.click();
   }
   const sendMedia = async (e) => {
+    setLoading(true);
     const formData = new FormData();
     formData.append("file", e.target.files[0]);
     formData.append("toUser", chat?.username); 
@@ -75,10 +80,11 @@ const UserChat = () => {
           },
         ]);
       }
-      console.log("Uploaded URL:", res.data.url);
+      // console.log("Uploaded URL:", res.data.url);
     } catch (err) {
       console.error(err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -176,6 +182,9 @@ const UserChat = () => {
         ) : (
           <div>No messages found</div>
         )}
+        {
+          loading && <Loader1/>
+        }
       </div>
       <div className="flex media-emojis-textbar-sendbtn">
         <div className="w-1/7 items-center flex justify-evenly">

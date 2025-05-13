@@ -31,9 +31,11 @@ const UserList = ({userChatList}) => {
         {
           userChatList.length > 0 ? 
           <div>
-            {userChatList?.map((user)=>{
+            {userChatList?.map((user,index)=>{
               return (
+                <div key = {index}>
                 <UserCard user={user}/>
+                </div>
               )
             })}
           </div>
