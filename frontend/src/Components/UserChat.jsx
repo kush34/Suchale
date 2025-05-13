@@ -134,7 +134,6 @@ const UserChat = () => {
     );
   }
   return (
-    // <div className={`shadow-2xl bg-white flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-y-scroll `}>
     <div className={`shadow-2xl bg-white flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-none`}>
       <div className="profile-username-typingindicator-back_btn py-3 px-5 flex items-center justify-between md:rounded-t-2xl font-medium text-2xl bg-black text-white">
         <div className="img">
@@ -152,7 +151,7 @@ const UserChat = () => {
             <button className="text-white text-sm cursor-pointer" onClick={()=>setChat(null)}>Back</button>
           </div>
       </div>
-      <div className="chats-msgs flex flex-col h-full w-full overflow-y-scroll">
+      <div className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
         {chatArr ? (
           <>
             {chatArr.map((msg) => {
@@ -214,6 +213,11 @@ const UserChat = () => {
                setMessage(e.target.value);
                handleTyping();
               }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
             type="text"
             className="focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-2 py-1"
             placeholder="type your message here"
