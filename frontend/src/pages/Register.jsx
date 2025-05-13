@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Loader1 from "../loaders/Loader1"
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import VerifyOtp from '../Components/VerifyOtp';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Register = () => {
     const [flag3,setFlag3] = useState(false);
     const [flag4,setFlag4] = useState(false);
     const [password,setPassword] = useState();
+    const [otpRequest,setOtpRequest] = useState(false);
     const [email,setEmail] = useState();
     const validateEmail = (email) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -42,25 +44,33 @@ const Register = () => {
 
     }
     const handleSubmit = async ()=>{
-        if(!validate()) return;
-        else{
-            setLoading(true);
-            const request = await axios.post(`${import.meta.env.VITE_URL}/user/create`,{
-                email,
-                username,
-                password
-            });
-            if(request.data.status == 200){
-                setFlag4(true);
+        try{
+            if(!validate()) return;
+            else{
+                setLoading(true);
+                const request = await axios.post(`${import.meta.env.VITE_URL}/user/sendOtp`,{
+                    email,
+                    username,
+                    password
+                });
+                if(request.status == 200){
+                    // setFlag4(true);
+                    setOtpRequest(true);
+                }
+                setLoading(false);
             }
-            setLoading(false);
+        }catch(error){
+            console.log(error);
         }
     }
     if(loading) return(
         <Loader1/>
     )
+    if(otpRequest) return(
+        <VerifyOtp email={email} password={password} username={username}/>
+    )
   return (
-    <div className={` w-full h-screen flex items-center justify-center bg-zinc-300`}>
+    <div className={` w-full h-screen items-center justify-center bg-zinc-300`}>
         <div className={`main w-3/4 xl:w-1/3 h-3/4 bg-white rounded-xl ${flag3 ? "border border-red-600" : "border-none"} ${flag4 && "border border-green-600" }`}>
             <div className="mt-5 head flex flex-col justify-center items-center h-1/4">
                 <h1 className='text-2xl font-bold'>
