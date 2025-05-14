@@ -93,7 +93,10 @@ const UserChat = () => {
   }, [user]);
   useEffect(() => {
     socket.on("sendMsg", (message) => {
-      setChatArr((prev) => [...prev, message]);
+      if(message.fromUser == chat.username){
+        setChatArr((prev) => [...prev, message]);
+        
+      }
     });
     socket.on("messagesRead", ({ fromUser }) => {
       setChatArr((prev) =>
@@ -110,6 +113,7 @@ const UserChat = () => {
   }, []);
   useEffect(() => {
     socket.on("typing", ({ from }) => {
+      if(from == chat.username)
       setIsTyping(true);
     });
   
