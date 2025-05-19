@@ -108,7 +108,7 @@ Suchale/
 ## ✅ Todo / Future Improvements
 
 * ✅ Add emojis and typing indicators
-* ⏳ Improve mobile responsiveness
+* ✅ Improve mobile responsiveness
 * ⏳ Add group chat functionality
 * ⏳ Message read receipts
 * ⏳ Deployment with Docker
