@@ -10,8 +10,10 @@ import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
+import { ThemeContext } from "../Store/ThemeContext";
 const UserChat = () => {
   const { chat,setChat, chatArr, setChatArr } = useContext(ChatContext);
+  const {theme} = useContext(ThemeContext);
   const [message, setMessage] = useState("");
   const [loading,setLoading] = useState(false);
   const { user } = useUser();
@@ -138,8 +140,8 @@ const UserChat = () => {
     );
   }
   return (
-    <div className={`shadow-2xl bg-white flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-none`}>
-      <div className="profile-username-typingindicator-back_btn py-3 px-5 flex items-center justify-between md:rounded-t-2xl font-medium text-2xl bg-black text-white">
+    <div className={`shadow-2xl ${theme ? "bg-white text-black" : "bg-zinc-900 text-white"} flex flex-col justify-between md:rounded-t-2xl md:w-full h-full overflow-none`}>
+      <div className={` ${theme ? "bg-black text-white" : "bg-zinc-500"} profile-username-typingindicator-back_btn py-3 px-5 flex items-center justify-between md:rounded-t-2xl font-medium text-2xl`}>
         <div className="img">
           <img
             className="rounded-full w-15 h-15"
@@ -152,7 +154,7 @@ const UserChat = () => {
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
           </div>
           <div className="md:hidden back_btn">
-            <button className="text-white text-sm cursor-pointer" onClick={()=>setChat(null)}>Back</button>
+            <button className="text-sm cursor-pointer" onClick={()=>setChat(null)}>Back</button>
           </div>
       </div>
       <div className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
@@ -191,7 +193,7 @@ const UserChat = () => {
       </div>
       <div className="flex media-emojis-textbar-sendbtn">
         <div className="w-1/7 items-center flex justify-evenly">
-          <div onClick={mediaTrigger} className="cursor-pointer text-zinc-900  flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110">
+          <div onClick={mediaTrigger} className="cursor-pointer text-zinc-700 flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110">
             <ImagePlay />
             <div><input ref={mediaInpRef} onChange={sendMedia} type="file" className="hidden" /></div>
           </div>
@@ -203,7 +205,7 @@ const UserChat = () => {
             )}
             
             <button
-              className="cursor-pointer text-zinc-900 flex items-center justify-center hover:text-black ease-in duration-100 hover:scale-110"
+              className="cursor-pointer text-zinc-700 flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110"
               onClick={() => setShowPicker(!showPicker)}
             >
               <SmilePlus />
@@ -223,7 +225,7 @@ const UserChat = () => {
               }
             }}
             type="text"
-            className="focus:bg-zinc-300 w-full bg-zinc-200 outline-none rounded px-2 py-1"
+            className={`${theme ? "bg-zinc-100 focus:bg-zinc-300":"bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
             placeholder="type your message here"
             name=""
             id=""
@@ -231,7 +233,7 @@ const UserChat = () => {
         </div>
         <div
           onClick={sendMessage}
-          className=" cursor-pointer text-zinc-900 flex  items-center justify-center w-1/10 hover:text-black ease-in duration-100 hover:scale-110"
+          className=" cursor-pointer text-zinc-700 flex  items-center justify-center w-1/10  ease-in duration-100 hover:scale-110"
         >
           <SendHorizontal />
         </div>

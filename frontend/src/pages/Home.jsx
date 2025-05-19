@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router-dom'
 import socket from '../utils/socketService';
 import { ChatContext } from '../Store/ChatContext';
 import Loader1 from "../loaders/Loader1.jsx"
+import { ThemeContext } from '../Store/ThemeContext.jsx';
 const Home = () => {
   const navigate = useNavigate();
   const [userChatList,setUserChatList] = useState([]);
   const [loading,setLoading] = useState(false);
   const {chat} = useContext(ChatContext);
+  const {theme} = useContext(ThemeContext);
   //list of contacts of user
   
   const getChatList = async ()=>{
@@ -61,18 +63,18 @@ const Home = () => {
   }
   return (
     // <div className='flex h-screen bg-zinc-300'>
-    <div className={`md:flex h-screen bg-zinc-100 overflow-none`}> 
-    <div className={`md:w-1/4 h-screen md:h-9/10 md:m-5 ${chat ? "hidden" : "block"} md:block`}>
-        <UserList userChatList= {userChatList}/>
-    </div>
-    {
-      chat ?
-      <div className='w-full md:w-3/4 h-screen md:h-9/10 md:m-3 md:mt-5 overflow-none'>
-      <UserChat/>
+    <div className={`md:flex h-screen ${theme ? "bg-zinc-300": "bg-black"} overflow-none`}> 
+      <div className={`md:w-1/4 h-screen md:h-9/10 md:m-5 ${chat ? "hidden" : "block"} md:block`}>
+          <UserList userChatList= {userChatList}/>
       </div>
-      :
-      <div className="hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen md:h-9/10">Please select a chat to view messages</div>
-    }
+      {
+        chat ?
+        <div className='w-full md:w-3/4 h-screen md:h-9/10 md:m-3 md:mt-5 overflow-none'>
+        <UserChat/>
+        </div>
+        :
+        <div className="hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen md:h-9/10 text-zinc-500">Please select a chat to view messages</div>
+      }
     </div>
   )
 }

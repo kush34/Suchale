@@ -4,16 +4,18 @@ import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
+import { ThemeContext } from '../Store/ThemeContext';
 
 const UserList = ({userChatList}) => {
   const navigate = useNavigate();
   const [isSearchOpen,setIsSearchOpen] = useState(false);
   const [searchBar ,setSearchBar] = useState();
+  const {theme} = useContext(ThemeContext)
   useEffect(()=>{
 
   },[searchBar])
   return (
-    <div className='p-4 shadow-2xl bg-white h-full rounded-t-2xl'>
+    <div className={`${theme ? "bg-white text-black":"bg-zinc-900 text-white"} p-4 shadow-2xl h-full rounded-t-2xl`}>
       <div className="top flex justify-between 1/6">
         <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2">
           Suchale

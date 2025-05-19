@@ -13,17 +13,19 @@ import Settings from './pages/Settings.jsx';
 import { UserContextProvider } from './Store/UserContext';
 // import { SocketProvider } from './Store/SocketContext';
 import { ChatContextProvider } from './Store/ChatContext';
-
+import {ThemeContextProvider} from './Store/ThemeContext.jsx';
 const root = document.getElementById('root');
 
 function ProtectedRoutes({ children }) {
   return (
     <UserContextProvider>
+      <ThemeContextProvider>
       {/* <SocketProvider> */}
         <ChatContextProvider>
           {children}
         </ChatContextProvider>
       {/* </SocketProvider> */}
+      </ThemeContextProvider>
     </UserContextProvider>
   );
 }
