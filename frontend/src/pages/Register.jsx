@@ -71,8 +71,8 @@ const Register = () => {
     )
   return (
     <div className={` w-full h-screen items-center justify-center bg-zinc-300`}>
-        <div className={`main w-3/4 xl:w-1/3 h-3/4 bg-white rounded-xl ${flag3 ? "border border-red-600" : "border-none"} ${flag4 && "border border-green-600" }`}>
-            <div className="mt-5 head flex flex-col justify-center items-center h-1/4">
+        <div className={`main sm:flex sm:flex-col md:flex-row w-3/4 xl:w-1/3 h-3/4 bg-white rounded-xl ${flag3 ? "border border-red-600" : "border-none"} ${flag4 && "border border-green-600" }`}>
+            <div className="mt-5 head flex flex-col justify-center items-center h-1/6 md:h-1/4">
                 <h1 className='text-2xl font-bold'>
                     Register 
                 </h1>
