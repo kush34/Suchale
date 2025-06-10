@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import api from "../utils/axiosConfig";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader1 from "../loaders/Loader1";
+import { ThemeContext } from "../Store/ThemeContext";
 const AddContacts = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState();
+  const {theme} = useContext(ThemeContext);
   const [contact, setContact] = useState();
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
@@ -30,13 +32,13 @@ const AddContacts = () => {
   //   getContacts();
   // }, [username]);
   return (
-    <div>
-      <div className="head flex justify-between items-center mt-5">
+    <div className={`${theme ? "bg-zinc-300": "bg-black"} h-screen text-zinc-500`}>
+      <div className={`head  flex justify-between items-center pt-5`}>
         <h1 className="text-2xl font-bold m-5">Add Contacts</h1>
         <div>
           <button
             onClick={() => navigate("/home")}
-            className="m-5 bg-black text-white rounded px-4 py-2 cursor-pointer"
+            className="m-5 bg-white text-black border rounded px-4 py-2 cursor-pointer"
           >
             Back
           </button>
@@ -60,7 +62,7 @@ const AddContacts = () => {
       {loading ? (
         <Loader1 />
       ) : (
-        <div className="search-results flex justify-center mt-5">
+        <div className={`search-results flex justify-center mt-5`}>
           {users.length == 0 ? (
             <div>No users found</div>
           ) : (
