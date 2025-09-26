@@ -59,11 +59,11 @@ const Home = () => {
     };
   }, []);
   if(loading){
-	return ( <Loader1/>);
+	return ( <Loader1 theme={theme}/>);
   }
   return (
     // <div className='flex h-screen bg-zinc-300'>
-    <div className={`md:flex h-screen ${theme ? "bg-zinc-300": "bg-black"} overflow-none`}> 
+    <div className={`md:flex h-screen ${theme ? "bg-zinc-100": "bg-black"} overflow-none`}> 
       <div className={`md:w-1/4 h-screen md:h-9/10 md:m-5 ${chat ? "hidden" : "block"} md:block`}>
           <UserList userChatList= {userChatList}/>
       </div>

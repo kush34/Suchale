@@ -6,7 +6,7 @@ import Loader1 from "../loaders/Loader1";
 import { ThemeContext } from "../Store/ThemeContext";
 const AddContacts = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState();
+  const [username, setUsername] = useState("");
   const {theme} = useContext(ThemeContext);
   const [contact, setContact] = useState();
   const [loading, setLoading] = useState(false);
@@ -28,11 +28,12 @@ const AddContacts = () => {
     });
     // console.log(response.data);
   };
-  // useEffect(() => {
-  //   getContacts();
-  // }, [username]);
+  useEffect(() => {
+    if(username.trim === "") return;
+    getContacts();
+  }, [username]);
   return (
-    <div className={`${theme ? "bg-zinc-300": "bg-black"} h-screen text-zinc-500`}>
+    <div className={`${theme ? "bg-zinc-300 text-black": "bg-black text-white"} h-screen`}>
       <div className={`head  flex justify-between items-center pt-5`}>
         <h1 className="text-2xl font-bold m-5">Add Contacts</h1>
         <div>
@@ -69,7 +70,7 @@ const AddContacts = () => {
             <div className="w-1/3 flex flex-col gap-5 justify-center">
               {users.map((user) => {
                 return (
-                  <div className="bg-black text-white p-5 rounded flex justify-between">
+                  <div className={`${ theme ? "bg-black text-white" : "bg-white text-black"} p-5 rounded flex justify-between`}>
                     <div>{user.username}</div>
                     <button
                       onClick={() => addContact(user.username)}

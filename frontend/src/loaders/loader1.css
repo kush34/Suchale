@@ -6,6 +6,14 @@
 	align-items:center;
    background-color: #ffffff;
 }
+.main-dark{
+	width:100%;
+	height:100vh;
+	display:flex;
+	justify-content:center;
+	align-items:center;
+   background-color: #000000;
+}
 .spinner {
    width: 56px;
    height: 56px;

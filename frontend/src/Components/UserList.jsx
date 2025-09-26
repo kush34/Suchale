@@ -17,7 +17,7 @@ const UserList = ({userChatList}) => {
   return (
     <div className={`${theme ? "bg-white text-black":"bg-zinc-900 text-white"} p-4 shadow-2xl h-full rounded-t-2xl`}>
       <div className="top flex justify-between 1/6">
-        <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2">
+        <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-tighter">
           Suchale
         </div>
         <div className="settings flex justify-center items-center xl:m-3">
@@ -36,7 +36,7 @@ const UserList = ({userChatList}) => {
         {
           isSearchOpen &&
           <div>
-            <input onChange={(e)=>setIsSearchOpen(e.target.value)} value={searchBar} className="bg-zinc-200 rounded outline-none w-full text-center py-1" placeholder='Search' type="text" name="" id="" />
+            <input onChange={(e)=>setIsSearchOpen(e.target.value)} value={searchBar} className={`${theme ? "bg-zinc-200":"bg-zinc-8 00"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
           </div>
         }
       </div>
