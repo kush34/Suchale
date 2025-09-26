@@ -9,7 +9,7 @@ const UserCard = ({user}) => {
         if(chat?.username != user?.username) setChat(user);
       }
   return (
-    <div onClick={()=>handleClick(user)} className={`${theme ? "bg-white text-black":" text-white"} flex gap-3 items-center pb-3 hover:bg-zinc-400 ease-in duration-150 rounded cursor-pointer`}>
+    <div onClick={()=>handleClick(user)} className={`${theme ? "bg-white text-black":" text-white"} flex gap-3 items-center pb-3  hover:scale-101 hover:bg-zinc-600 ease-in  duration-150 rounded cursor-pointer hover:shadow-xl`}>
         <div className="ml-2 userimg mt-2 flex items-end">
             <div>
                 <img className='w-12 h-12 rounded-full' src={user?.profilePic} alt="" />

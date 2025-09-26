@@ -11,29 +11,27 @@ import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../Store/ThemeContext";
+import LineLoader from "../loaders/LineLoader";
 const UserChat = () => {
-  const { chat,setChat, chatArr, setChatArr } = useContext(ChatContext);
-  const {theme} = useContext(ThemeContext);
+  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading } = useContext(ChatContext);
+  const { theme } = useContext(ThemeContext);
   const [message, setMessage] = useState("");
-  const [loading,setLoading] = useState(false);
   const { user } = useUser();
   const [showPicker, setShowPicker] = useState(false);
-  const [isTyping,setIsTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const mediaInpRef = useRef();
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const handleTyping = () => {
-    // console.log("typing logger handleTyping function ...");
     socket.emit("typing", { to: chat?.username });
 
-    // Optional: debounce so you're not emitting too frequently
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("stopTyping", { to: chat?.username });
-    }, 2000); // stop typing after 2s of inactivity
+    }, 2000);
   };
   const handleEmojiClick = (emojiData) => {
     setMessage((prev) => prev + emojiData);
@@ -57,15 +55,15 @@ const UserChat = () => {
     setMessage("");
     setLoading(false);
   };
-  const mediaTrigger = ()=>{
+  const mediaTrigger = () => {
     mediaInpRef.current.click();
   }
   const sendMedia = async (e) => {
     setLoading(true);
     const formData = new FormData();
     formData.append("file", e.target.files[0]);
-    formData.append("toUser", chat?.username); 
-  
+    formData.append("toUser", chat?.username);
+
     try {
       const res = await api.post("/message/media", formData, {
         headers: {
@@ -91,13 +89,13 @@ const UserChat = () => {
 
   useEffect(() => {
     socket.emit("addUser", user?.username);
-    socket.emit("readMessages",({fromUser:user?.username,toUser:chat?.username}));
+    socket.emit("readMessages", ({ fromUser: user?.username, toUser: chat?.username }));
   }, [user]);
   useEffect(() => {
     socket.on("sendMsg", (message) => {
-      if(message.fromUser == chat.username){
+      if (message.fromUser == chat.username) {
         setChatArr((prev) => [...prev, message]);
-        
+
       }
     });
     socket.on("messagesRead", ({ fromUser }) => {
@@ -107,7 +105,7 @@ const UserChat = () => {
         )
       );
     });
-    
+
     return () => {
       socket.off("sendMsg");
       socket.off("messagesReadBy");
@@ -115,22 +113,39 @@ const UserChat = () => {
   }, []);
   useEffect(() => {
     socket.on("typing", ({ from }) => {
-      if(from == chat.username)
-      setIsTyping(true);
+      if (from == chat.username)
+        setIsTyping(true);
     });
-  
+
     socket.on("stopTyping", ({ from }) => {
       setIsTyping(false);
     });
-  
+
     return () => {
       socket.off("typing");
       socket.off("stopTyping");
     };
   }, []);
-  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const div = chatDivRef.current;
+    if (!div) return;
+
+    const handleScroll = () => {
+      if (div.scrollTop === 0 && hasMore) {
+        const scrollHeightBefore = div.scrollHeight;
+        getMessages(true).then(() => {
+          setTimeout(() => {
+            div.scrollTop = div.scrollHeight - scrollHeightBefore;
+          }, 0);
+        });
+      }
+    };
+
+    div.addEventListener("scroll", handleScroll);
+    return () => div.removeEventListener("scroll", handleScroll);
+  }, [chatDivRef, hasMore, getMessages]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [chatArr]);
   if (!chat) {
     return (
@@ -152,30 +167,29 @@ const UserChat = () => {
         <div className=" ">
           {chat?.username}
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
-          </div>
-          <div className="md:hidden back_btn">
-            <button className="text-sm cursor-pointer" onClick={()=>setChat(null)}>Back</button>
-          </div>
+        </div>
+        <div className="md:hidden back_btn">
+          <button className="text-sm cursor-pointer" onClick={() => setChat(null)}>Back</button>
+        </div>
       </div>
-      <div className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
+      {loading && <LineLoader />}
+      <div ref={chatDivRef} className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
         {chatArr ? (
           <>
             {chatArr.map((msg) => {
               return (
                 <div
                   key={msg?._id}
-                  className={`w-full flex ${
-                    msg.fromUser === user.username
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
+                  className={`w-full flex ${msg.fromUser === user.username
+                    ? "justify-end"
+                    : "justify-start"
+                    }`}
                 >
                   <span
-                    className={`${
-                      msg.fromUser === user.username
-                        ? "bg-zinc-800"
-                        : "bg-black"
-                    } w-fit max-w-[75%] text-white rounded m-2 px-3 py-2`}
+                    className={`${msg.fromUser === user.username
+                      ? "bg-zinc-800"
+                      : "bg-black"
+                      } w-fit max-w-[75%] text-white rounded m-2 px-3 py-2`}
                   >
                     <MsgCard msg={msg} />
                   </span>
@@ -188,7 +202,7 @@ const UserChat = () => {
           <div>No messages found</div>
         )}
         {
-          loading && <Loader1/>
+          loading && <Loader1 />
         }
       </div>
       <div className="flex media-emojis-textbar-sendbtn">
@@ -203,7 +217,7 @@ const UserChat = () => {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
-            
+
             <button
               className="cursor-pointer text-zinc-700 flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110"
               onClick={() => setShowPicker(!showPicker)}
@@ -215,17 +229,17 @@ const UserChat = () => {
         <div className=" w-3/4 flex items-center justify-center mb-2">
           <input
             value={message}
-            onChange={(e) =>{
-               setMessage(e.target.value);
-               handleTyping();
-              }}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              handleTyping();
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
               }
             }}
             type="text"
-            className={`${theme ? "bg-zinc-100 focus:bg-zinc-300":"bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
+            className={`${theme ? "bg-zinc-100 focus:bg-zinc-300" : "bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
             placeholder="type your message here"
             name=""
             id=""

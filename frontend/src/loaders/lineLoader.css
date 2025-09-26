@@ -1,0 +1,25 @@
+.line-loader-outer{
+  position: relative;
+  overflow: hidden;
+  background: rgba(0,0,0,0.06); 
+}
+
+.line-loader-bar{
+  position: absolute;
+  left: -40%;            
+  top: 0;
+  bottom: 0;
+  width: 40%;            
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgb(81, 162, 255)
+  );
+  animation: line-slide 1.2s linear infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes line-slide {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(250%); } 
+}

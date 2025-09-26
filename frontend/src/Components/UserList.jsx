@@ -15,9 +15,9 @@ const UserList = ({userChatList}) => {
 
   },[searchBar])
   return (
-    <div className={`${theme ? "bg-white text-black":"bg-zinc-900 text-white"} p-4 shadow-2xl h-full rounded-t-2xl`}>
+    <div className={`${theme ? "bg-white text-black":"bg-zinc-900 text-white"} p-4 md:p-0  shadow-2xl h-full md:rounded-t-2xl`}>
       <div className="top flex justify-between 1/6">
-        <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-tighter">
+        <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide text-blue-400">
           Suchale
         </div>
         <div className="settings flex justify-center items-center xl:m-3">
