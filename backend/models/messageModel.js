@@ -9,6 +9,9 @@ const messageSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    groupId:{
+        type:mongoose.Schema.Types.ObjectId
+    },
     content:String,
     read: { type: Boolean, default: false }
 },{

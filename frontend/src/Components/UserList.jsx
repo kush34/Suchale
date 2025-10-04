@@ -1,10 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Settings } from 'lucide-react';
+import { Settings, UserRoundPlus } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
 import { ThemeContext } from '../Store/ThemeContext';
+import GroupCard from './GroupCard';
+import CreateGroupDialog from './CreateGroupDialog';
 
 const UserList = ({userChatList}) => {
   const navigate = useNavigate();
@@ -21,14 +23,17 @@ const UserList = ({userChatList}) => {
           Suchale
         </div>
         <div className="settings flex justify-center items-center xl:m-3">
-          <button onClick={()=>setIsSearchOpen((prev)=>!prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
+          {/* <button onClick={()=>setIsSearchOpen((prev)=>!prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
             <Search />
-          </button>
+          </button> */}
           <div onClick={()=>navigate('/settings')} className='cursor-pointer m-1 hover:scale-115 ease-in duration-120'>
             <Settings />
           </div>
           <div onClick={()=>navigate('/addContacts')} className='cursor-pointer m-1 hover:scale-115 ease-in duration-120'>
-            <Plus />
+            <UserRoundPlus />
+          </div>
+          <div className=''>
+            <CreateGroupDialog/>
           </div>
         </div>
       </div>
@@ -47,7 +52,14 @@ const UserList = ({userChatList}) => {
             {userChatList?.map((user,index)=>{
               return (
                 <div key = {index}>
-                  <UserCard user={user}/>
+                  {
+                    user.isGroup 
+                    ?
+                    
+                    <GroupCard group={user}/>
+                    :
+                    <UserCard user={user}/>
+                  }
                 </div>
               )
             })}

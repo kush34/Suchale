@@ -9,28 +9,29 @@ import messageRouter from "./routers/messageRouter.js";
 import cors from 'cors';
 import User from "./models/userModel.js";
 import Message from "./models/messageModel.js";
+import Group from "./models/groupModel.js";
 const app = express();
 const server = createServer(app);
-const io = new Server(server,{
-    cors: {
-      origin: process.env.Frontend_URL,
-      credentials: true,
-    },
-  });
+const io = new Server(server, {
+  cors: {
+    origin: process.env.Frontend_URL,
+    credentials: true,
+  },
+});
 
 connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(
-    cors({
-        origin: `${process.env.Frontend_URL}`, 
-        credentials: true,
-    })
+  cors({
+    origin: `${process.env.Frontend_URL}`,
+    credentials: true,
+  })
 );
 
 
-app.use('/user',userRouter);
-app.use('/message',messageRouter);
+app.use('/user', userRouter);
+app.use('/message', messageRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 
@@ -42,24 +43,30 @@ io.on('connection', (socket) => {
 
   socket.on('addUser', async (userId) => {
     onlineUsers.set(userId, socket.id);
-    socketToUsername.set( socket.id,userId);
-    socket.userId = userId; 
+    socketToUsername.set(socket.id, userId);
+    socket.userId = userId;
     const dbUser = await User.findOne({ username: userId }); // assuming userId == username
-  if (!dbUser) return;
+    if (!dbUser) return;
 
-  const contacts = dbUser.contacts;
+    const groups = await Group.find({ users: dbUser._id }).select("_id name");
 
-  for (const contactId of contacts) {
-    const contactUser = await User.findById(contactId);
-    if (contactUser && onlineUsers.has(contactUser.username)) {
-      const contactSocketId = onlineUsers.get(contactUser.username);
+    groups.forEach((group) => {
+      socket.join(group._id.toString());
+      console.log(`User: ${userId} joined group ${group.name} ${group._id}`);
+    })
+    const contacts = dbUser.contacts;
 
-      if (contactSocketId) {
-        io.to(contactSocketId).emit('friendOnline', userId);
-        console.log(`Emitting friendOnline to ${contactUser.username}`);
+    for (const contactId of contacts) {
+      const contactUser = await User.findById(contactId);
+      if (contactUser && onlineUsers.has(contactUser.username)) {
+        const contactSocketId = onlineUsers.get(contactUser.username);
+
+        if (contactSocketId) {
+          io.to(contactSocketId).emit('friendOnline', userId);
+          console.log(`Emitting friendOnline to ${contactUser.username}`);
+        }
       }
     }
-  }
   });
   socket.on("typing", ({ to }) => {
     // Forward "typing" event to recipient
@@ -75,6 +82,24 @@ io.on('connection', (socket) => {
       io.to(recipientSocketId).emit("stopTyping", { from: socket.userId });
     }
   });
+  
+  socket.on("sendGroupMessage", async ({ groupId, content }) => {
+    const message = await Message.create({
+      sender: socket.userId,
+      content,
+      chat: groupId,
+    });
+
+    await Group.findByIdAndUpdate(groupId, {
+      $push: { messages: message._id },
+    });
+
+    io.to(groupId).emit("newGroupMessage", {
+      groupId,
+      message,
+    });
+  });
+
   socket.on("readMessages", async ({ fromUser, toUser }) => {
     await Message.updateMany(
       { from: fromUser, to: toUser, read: false },
@@ -82,25 +107,25 @@ io.on('connection', (socket) => {
     );
     io.to(fromUser).emit("messagesReadBy", { toUser });
   });
-  
+
   socket.on('disconnect', async () => {
     const username = socketToUsername.get(socket.id);
     console.log('Disconnected user:', username);
-  
+
     if (username) {
       onlineUsers.delete(username);
       socketToUsername.delete(socket.id);
-  
+
       const dbUser = await User.findOne({ username });
       if (!dbUser) return;
-  
+
       const contacts = dbUser.contacts;
-  
+
       for (const contactId of contacts) {
         const contactUser = await User.findById(contactId);
         if (contactUser && onlineUsers.has(contactUser.username)) {
           const contactSocketId = onlineUsers.get(contactUser.username); // Fixed here
-  
+
           if (contactSocketId) {
             io.to(contactSocketId).emit('friendOffline', username);
             console.log(`Emitting friendOffline to ${contactUser.username}`);
@@ -109,11 +134,11 @@ io.on('connection', (socket) => {
       }
     }
   });
-  
+
 });
 
-export { io,onlineUsers };
+export { io, onlineUsers };
 
 server.listen(3000, () => {
-    console.log('server running at http://localhost:3000');
+  console.log('server running at http://localhost:3000');
 });
