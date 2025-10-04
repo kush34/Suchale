@@ -109,7 +109,7 @@ Suchale/
 
 * ✅ Add emojis and typing indicators
 * ✅ Improve mobile responsiveness
-* ⏳ Add group chat functionality
+* ✅ Add group chat functionality
 * ⏳ Message read receipts
 * ⏳ Deployment with Docker
 
