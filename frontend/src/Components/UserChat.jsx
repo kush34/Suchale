@@ -11,7 +11,7 @@ import { ThemeContext } from "../Store/ThemeContext";
 import LineLoader from "../loaders/LineLoader";
 
 const UserChat = () => {
-  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag,ViewChatInfo,infoWindow } = useContext(ChatContext);
+  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag,ViewChatInfo,infoWindow,sendMsg } = useContext(ChatContext);
   const { theme } = useContext(ThemeContext);
   const { user } = useUser();
 
@@ -46,22 +46,6 @@ const UserChat = () => {
 
   const handleEmojiClick = (emojiData) => setMessage((prev) => prev + emojiData);
 
-  const sendMessage = async () => {
-    if (!message.trim()) return;
-    setLoading(true);
-    const response = await api.post("/message/send", {
-      toUser: chat?.username,
-      content: message,
-    });
-    if (response.status === 200) {
-      setChatArr((prev) => [
-        ...prev,
-        { fromUser: user.username, toUser: chat?.username, content: message },
-      ]);
-    }
-    setMessage("");
-    setLoading(false);
-  };
 
   const mediaTrigger = () => mediaInpRef.current.click();
 
@@ -96,6 +80,9 @@ const UserChat = () => {
     socket.on("sendMsg", (message) => {
       if (message.fromUser === chat.username) setChatArr((prev) => [...prev, message]);
     });
+    socket.on("sendMsgGrp", (message) => {
+      if (message.groupId === chat._id && chat.isGroup) setChatArr((prev) => [...prev, message]);
+    });
     socket.on("messagesRead", ({ fromUser }) => {
       setChatArr((prev) =>
         prev.map((msg) => (msg.toUser === fromUser ? { ...msg, read: true } : msg))
@@ -104,6 +91,7 @@ const UserChat = () => {
     return () => {
       socket.off("sendMsg");
       socket.off("messagesReadBy");
+      socket.off("sendMsgGrp");
     };
   }, [chat]);
 
@@ -208,13 +196,18 @@ const UserChat = () => {
           <input
             value={message}
             onChange={(e) => { setMessage(e.target.value); handleTyping(); }}
-            onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
+            onKeyDown={(e) => { 
+              if (e.key === "Enter") {
+                sendMsg(message);
+                setMessage("");
+              }
+             }}
             type="text"
             className={`${theme ? "bg-zinc-100 focus:bg-zinc-300" : "bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
             placeholder="type your message here"
           />
         </div>
-        <div onClick={sendMessage} className="cursor-pointer text-zinc-700 flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
+        <div onClick={()=>{sendMsg(message); setMessage("");}} className="cursor-pointer text-zinc-700 flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
           <SendHorizontal />
         </div>
       </div>

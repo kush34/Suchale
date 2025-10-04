@@ -13,7 +13,7 @@ const verifyToken = (req,res,next)=>{
         req.username = result.username;
         req.email = result.email;
 
-        console.log(req.email,req.username);
+        // console.log(req.email,req.username);
         next();
     } catch (error) {
         console.log(error.message);

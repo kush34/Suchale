@@ -8,32 +8,52 @@ import Group from '../models/groupModel.js';
 import User from '../models/userModel.js';
 
 router.post('/send', verifyToken, async (req, res) => {
-    try {
-        const username = req.username;
-        const { toUser, content } = req.body;
-        if (!toUser || !content) {
-            res.status(400).send("not enough data");
-            return;
-        }
-        const newMsg = await Message.create({
-            fromUser: username,
-            toUser,
-            content
-        })
-        if (newMsg) {
-            const receiverSocketId = onlineUsers.get(toUser);
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit('sendMsg', newMsg);
-            }
-            // Add this so response is always sent
-            res.status(200).send("msg sent");
-        }
+  try {
+    const username = req.username;
+    const { toUser, content, isGroup = false, groupId } = req.body;
 
-    } catch (error) {
-        console.log(error.message);
-        res.status(500).send("something went wrong")
+    if (content.trim() === "")
+      return res.status(400).send({ error: "content is required" });
+    if (isGroup && !groupId)
+      return res.status(400).send({ error: "groupId required" });
+    if (!isGroup && !toUser)
+      return res.status(400).send({ error: "toUser required" });
+
+    console.log(`Group Msg: ${isGroup}, GroupId: ${groupId}, content: ${content}`);
+
+    const newMsg = await Message.create({
+      fromUser: username,
+      toUser,
+      content,
+      groupId
+    });
+
+    if (!newMsg)
+      return res.status(500).send("failed to create message");
+
+    if (!isGroup) {
+      const receiverSocketId = onlineUsers.get(toUser);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('sendMsg', newMsg);
+      }
+      return res.status(200).send(newMsg);
     }
-})
+
+    const senderSocketId = onlineUsers.get(username);
+    if (senderSocketId) {
+      const senderSocket = io.sockets.sockets.get(senderSocketId);
+      if (senderSocket) {
+        senderSocket.to(groupId).emit("sendMsgGrp", newMsg); 
+      }
+    }
+
+    res.status(200).send(newMsg);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("something went wrong");
+  }
+});
+
 
 router.post("/getMessages", verifyToken, async (req, res) => {
     try {
@@ -164,7 +184,7 @@ router.post("/createGroup", verifyToken, async (req, res) => {
 
 router.post("/getMembers/:groupId", verifyToken, async (req, res) => {
     try {
-        const username  = req.username;
+        const username = req.username;
         const { groupId } = req.params;
         console.log(username)
         if (!groupId) return res.status(400).send("groupId not found in request.")

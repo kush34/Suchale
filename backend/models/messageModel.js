@@ -7,7 +7,6 @@ const messageSchema = new mongoose.Schema({
     },
     toUser:{
         type:String,
-        required:true,
     },
     groupId:{
         type:mongoose.Schema.Types.ObjectId

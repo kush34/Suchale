@@ -13,22 +13,29 @@ export const ChatContextProvider = ({ children }) => {
     const [hasMore, setHasMore] = useState(false);
     const chatDivRef = useRef();
     const sendMsg = async (content) => {
-        if (!content || content.trim == "") return;
-        try {
-            const resposne = await api.post('/message/send', {
-                toUser: chat?.username,
-                content: content,
-            })
+        if (!content || content.trim() === "") return;
 
-            if (resposne.status == 200) {
-                setChatArr((prev) => [...prev, { toUser: chat, content }])
+        try {
+            console.log(`send MSG : ${groupFlag}`)
+            const payload = {
+                content,
+                isGroup: groupFlag,
+            };
+
+            if (groupFlag) payload.groupId = chat._id;
+            else payload.toUser = chat?.username;
+
+            const response = await api.post('/message/send', payload);
+
+            if (response.status === 200) {
+                setChatArr((prev) => [...(prev || []), { toUser: chat, content }]);
             }
         } catch (error) {
             console.log(error);
-        } finally {
-
+            res.send({error:"Something went wrong on the server while sending msg"})
         }
-    }
+    };
+
     const getMessages = async (loadMore = false) => {
         if (loadMore && !hasMore) return;
         setLoading(true);
@@ -74,7 +81,7 @@ export const ChatContextProvider = ({ children }) => {
         setInfoWindow([])
     }, [chat])
     return (
-        <ChatContext.Provider value={{ chat, setChat, sendMsg, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, setGroupFlag, groupFlag,infoWindow,setInfoWindow,ViewChatInfo }}>
+        <ChatContext.Provider value={{ chat, setChat, sendMsg, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, setGroupFlag, groupFlag, infoWindow, setInfoWindow, ViewChatInfo,sendMsg }}>
             {children}
         </ChatContext.Provider>
     )
