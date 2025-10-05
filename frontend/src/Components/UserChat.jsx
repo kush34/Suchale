@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Loader1 from '../loaders/Loader1';
-import { ImagePlay, SmilePlus, SendHorizontal } from "lucide-react";
+import { ImagePlay, SmilePlus, SendHorizontal, Undo2 } from "lucide-react";
 import EmojiPicker from './EmojiPicker';
 import { ChatContext } from "../Store/ChatContext";
 import MsgCard from "./MsgCard";
@@ -149,14 +149,14 @@ const UserChat = () => {
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
         </div>
         <div className="md:hidden back_btn">
-          <button className="text-sm cursor-pointer" onClick={() => setChat(null)}>Back</button>
+          <button className="text-sm cursor-pointer" onClick={() => setChat(null)}><Undo2 /></button>
         </div>
       </span>
 
       {loading && <LineLoader />}
 
       <div ref={chatDivRef} className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
-        {chatArr && chatArr.length > 0 && !loading ? (
+        {chatArr && chatArr.length > 0 && !loading && (
           <>
             {chatArr.map((msg) => (
               <div key={msg?._id} className={`w-full flex ${msg.fromUser === user.username ? "justify-end" : "justify-start"}`}>
@@ -167,7 +167,9 @@ const UserChat = () => {
             ))}
             <div ref={messagesEndRef} />
           </>
-        ) : (
+        ) }
+        {(
+          !loading &&  chatArr.length == 0 &&
           <div className="flex justify-center items-center mt-10 text-zinc-500">No messages found</div>
         )}
       </div>

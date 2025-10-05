@@ -17,7 +17,7 @@ const GroupCard = ({ group }) => {
     <div
       onClick={handleClick}
       className={`${theme ? "bg-white text-black" : "text-white"} 
-        flex gap-3 items-center pb-3 hover:scale-105 hover:bg-zinc-600 
+        flex gap-3 items-center pb-3 hover:bg-zinc-400 
         ease-in duration-150 rounded cursor-pointer hover:shadow-xl`}
     >
       <div className="ml-2 userimg mt-2 flex items-end">
