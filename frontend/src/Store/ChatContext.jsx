@@ -79,6 +79,7 @@ export const ChatContextProvider = ({ children }) => {
     useEffect(() => {
         if (chat) getMessages(false);
         setInfoWindow([])
+        console.log("chat",chat)
     }, [chat])
     return (
         <ChatContext.Provider value={{ chat, setChat, sendMsg, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, setGroupFlag, groupFlag, infoWindow, setInfoWindow, ViewChatInfo,sendMsg }}>

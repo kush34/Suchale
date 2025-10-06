@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button } from './Components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { Toaster } from 'sonner';
 
 const App = () => {
   const navigate = useNavigate();

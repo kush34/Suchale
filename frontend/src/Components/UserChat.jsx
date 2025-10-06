@@ -9,16 +9,17 @@ import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
 import { ThemeContext } from "../Store/ThemeContext";
 import LineLoader from "../loaders/LineLoader";
+import { toast } from "sonner";
 
 const UserChat = () => {
-  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag,ViewChatInfo,infoWindow,sendMsg } = useContext(ChatContext);
+  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag, ViewChatInfo, infoWindow, sendMsg } = useContext(ChatContext);
   const { theme } = useContext(ThemeContext);
   const { user } = useUser();
 
   const [message, setMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  
+
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [hoverTopbar, setHoverTopbar] = useState(false);
 
@@ -71,29 +72,6 @@ const UserChat = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    socket.emit("addUser", user?.username);
-    socket.emit("readMessages", { fromUser: user?.username, toUser: chat?.username });
-  }, [user]);
-
-  useEffect(() => {
-    socket.on("sendMsg", (message) => {
-      if (message.fromUser === chat.username) setChatArr((prev) => [...prev, message]);
-    });
-    socket.on("sendMsgGrp", (message) => {
-      if (message.groupId === chat._id && chat.isGroup) setChatArr((prev) => [...prev, message]);
-    });
-    socket.on("messagesRead", ({ fromUser }) => {
-      setChatArr((prev) =>
-        prev.map((msg) => (msg.toUser === fromUser ? { ...msg, read: true } : msg))
-      );
-    });
-    return () => {
-      socket.off("sendMsg");
-      socket.off("messagesReadBy");
-      socket.off("sendMsgGrp");
-    };
-  }, [chat]);
 
   useEffect(() => {
     socket.on("typing", ({ from }) => {
@@ -167,9 +145,9 @@ const UserChat = () => {
             ))}
             <div ref={messagesEndRef} />
           </>
-        ) }
+        )}
         {(
-          !loading &&  chatArr.length == 0 &&
+          !loading && chatArr?.length == 0 &&
           <div className="flex justify-center items-center mt-10 text-zinc-500">No messages found</div>
         )}
       </div>
@@ -198,18 +176,18 @@ const UserChat = () => {
           <input
             value={message}
             onChange={(e) => { setMessage(e.target.value); handleTyping(); }}
-            onKeyDown={(e) => { 
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMsg(message);
                 setMessage("");
               }
-             }}
+            }}
             type="text"
             className={`${theme ? "bg-zinc-100 focus:bg-zinc-300" : "bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
             placeholder="type your message here"
           />
         </div>
-        <div onClick={()=>{sendMsg(message); setMessage("");}} className="cursor-pointer text-zinc-700 flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
+        <div onClick={() => { sendMsg(message); setMessage(""); }} className="cursor-pointer text-zinc-700 flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
           <SendHorizontal />
         </div>
       </div>

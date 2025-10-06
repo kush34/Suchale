@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 
 import App from './App.jsx';
 import Home from './pages/Home.jsx';
@@ -14,17 +15,18 @@ import { UserContextProvider } from './Store/UserContext';
 // import { SocketProvider } from './Store/SocketContext';
 import { ChatContextProvider } from './Store/ChatContext';
 import {ThemeContextProvider} from './Store/ThemeContext.jsx';
+import { SocketProvider } from './Store/SocketContext';
 const root = document.getElementById('root');
 
 function ProtectedRoutes({ children }) {
   return (
     <UserContextProvider>
       <ThemeContextProvider>
-      {/* <SocketProvider> */}
+      <SocketProvider>
         <ChatContextProvider>
           {children}
         </ChatContextProvider>
-      {/* </SocketProvider> */}
+      </SocketProvider>
       </ThemeContextProvider>
     </UserContextProvider>
   );
@@ -32,6 +34,7 @@ function ProtectedRoutes({ children }) {
 
 ReactDOM.createRoot(root).render(
   <BrowserRouter>
+    <Toaster richColors closeButton position="top-right" />
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="/register" element={<Register />} />
