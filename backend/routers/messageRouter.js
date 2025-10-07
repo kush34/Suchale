@@ -6,13 +6,14 @@ import { io, onlineUsers } from "../index.js"
 import upload from '../middlewares/multer.js';
 import Group from '../models/groupModel.js';
 import User from '../models/userModel.js';
+import sendNotification from '../utils/webpush.js';
 
 router.post('/send', verifyToken, async (req, res) => {
   try {
-    const username = req.username;
+    const fromUser = req.username;
     const { toUser, content, isGroup = false, groupId } = req.body;
 
-    if (content.trim() === "")
+    if (!content || content.trim() === "")
       return res.status(400).send({ error: "content is required" });
     if (isGroup && !groupId)
       return res.status(400).send({ error: "groupId required" });
@@ -22,37 +23,51 @@ router.post('/send', verifyToken, async (req, res) => {
     console.log(`Group Msg: ${isGroup}, GroupId: ${groupId}, content: ${content}`);
 
     const newMsg = await Message.create({
-      fromUser: username,
+      fromUser,
       toUser,
       content,
       groupId
     });
-
-    if (!newMsg)
-      return res.status(500).send("failed to create message");
+    if (!newMsg) return res.status(500).send("failed to create message");
 
     if (!isGroup) {
       const receiverSocketId = onlineUsers.get(toUser);
+
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('sendMsg', newMsg);
+      } else {
+        const dbUser = await User.findOne({ username: toUser });
+        if (dbUser?.pushSubscription) {
+          console.log(`User OFFLINE: ${dbUser.username}. Sending Notification...`);
+          sendNotification.sendNotification(
+            dbUser.pushSubscription,
+            JSON.stringify({
+              title: "New Message",
+              body: `You received a message from ${fromUser}`,
+              icon: "/icon.png",
+              data: { url: `/chat/${fromUser}` }
+            })
+          );
+        }
       }
+
       return res.status(200).send(newMsg);
     }
 
-    const senderSocketId = onlineUsers.get(username);
+    const senderSocketId = onlineUsers.get(fromUser);
     if (senderSocketId) {
       const senderSocket = io.sockets.sockets.get(senderSocketId);
       if (senderSocket) {
-        senderSocket.to(groupId).emit("sendMsgGrp", newMsg); 
+        senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
       }
     }
-
     res.status(200).send(newMsg);
   } catch (error) {
-    console.log(error.message);
+    console.error(error);
     res.status(500).send("something went wrong");
   }
 });
+
 
 
 router.post("/getMessages", verifyToken, async (req, res) => {

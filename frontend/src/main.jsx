@@ -16,6 +16,7 @@ import { UserContextProvider } from './Store/UserContext';
 import { ChatContextProvider } from './Store/ChatContext';
 import {ThemeContextProvider} from './Store/ThemeContext.jsx';
 import { SocketProvider } from './Store/SocketContext';
+import { registerServiceWorker } from './utils/register-service-worker';
 const root = document.getElementById('root');
 
 function ProtectedRoutes({ children }) {
@@ -31,6 +32,8 @@ function ProtectedRoutes({ children }) {
     </UserContextProvider>
   );
 }
+
+registerServiceWorker();
 
 ReactDOM.createRoot(root).render(
   <BrowserRouter>

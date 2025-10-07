@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    pushSubscription: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     blockedUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,

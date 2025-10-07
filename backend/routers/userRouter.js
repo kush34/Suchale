@@ -297,4 +297,23 @@ router.get("/userInfo", verifyToken, async (req, res) => {
 
 });
 
+
+router.post("/subscribe",verifyToken, async (req, res) => {
+    try {
+        const {subscription } = req.body;
+        const username = req.username;
+        console.log(`API hit ${subscription.endpoint} from User :${username}`)
+        if(!subscription || !username) return res.status(400).send({error:"Subscription and Username required to enbable notification"})
+            
+        const dbUser = await User.findOneAndUpdate({username},{pushSubscription:subscription},{new:true});
+
+        if(!dbUser) return res.status(404).send({error:"User not found"})
+        res.status(201).json({message:"Updated Subscription"});
+        console.log(`Subscription Update:${dbUser}`)
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({error:"Something went wrong on the server while updating / creating notification subscription"})
+    }
+});
+
 export default router;
