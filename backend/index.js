@@ -10,6 +10,8 @@ import cors from 'cors';
 import User from "./models/userModel.js";
 import Message from "./models/messageModel.js";
 import Group from "./models/groupModel.js";
+import redis from "./utils/redis.js";
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -20,6 +22,7 @@ const io = new Server(server, {
 });
 
 connectDB();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(
@@ -35,54 +38,52 @@ app.use('/message', messageRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 
-const onlineUsers = new Map();
-const socketToUsername = new Map();
-
 io.on('connection', (socket) => {
   console.log('User connected', socket.id);
 
   socket.on('addUser', async (userId) => {
-    onlineUsers.set(userId, socket.id);
-    socketToUsername.set(socket.id, userId);
     socket.userId = userId;
-    const dbUser = await User.findOne({ username: userId }); // assuming userId == username
+
+    await redis.hset('onlineUsers', userId, socket.id);
+    await redis.hset('socketToUsername', socket.id, userId);
+
+    const dbUser = await User.findOne({ username: userId });
     if (!dbUser) return;
 
     const groups = await Group.find({ users: dbUser._id }).select("_id name");
-
     groups.forEach((group) => {
       socket.join(group._id.toString());
       console.log(`User: ${userId} joined group ${group.name} ${group._id}`);
-    })
+    });
+
     const contacts = dbUser.contacts;
 
     for (const contactId of contacts) {
       const contactUser = await User.findById(contactId);
-      if (contactUser && onlineUsers.has(contactUser.username)) {
-        const contactSocketId = onlineUsers.get(contactUser.username);
+      if (!contactUser) continue;
 
-        if (contactSocketId) {
-          io.to(contactSocketId).emit('friendOnline', userId);
-          console.log(`Emitting friendOnline to ${contactUser.username}`);
-        }
+      const contactSocketId = await redis.hget('onlineUsers', contactUser.username);
+      if (contactSocketId) {
+        io.to(contactSocketId).emit('friendOnline', userId);
+        console.log(`Emitting friendOnline to ${contactUser.username}`);
       }
     }
   });
-  socket.on("typing", ({ to }) => {
-    // Forward "typing" event to recipient
-    const recipientSocketId = onlineUsers.get(to);
+
+  socket.on("typing", async ({ to }) => {
+    const recipientSocketId = await redis.hget('onlineUsers', to);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("typing", { from: socket.userId });
     }
   });
 
-  socket.on("stopTyping", ({ to }) => {
-    const recipientSocketId = onlineUsers.get(to);
+  socket.on("stopTyping", async ({ to }) => {
+    const recipientSocketId = await redis.hget('onlineUsers', to);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("stopTyping", { from: socket.userId });
     }
   });
-  
+
   socket.on("sendGroupMessage", async ({ groupId, content }) => {
     const message = await Message.create({
       sender: socket.userId,
@@ -90,14 +91,8 @@ io.on('connection', (socket) => {
       chat: groupId,
     });
 
-    await Group.findByIdAndUpdate(groupId, {
-      $push: { messages: message._id },
-    });
-
-    io.to(groupId).emit("newGroupMessage", {
-      groupId,
-      message,
-    });
+    await Group.findByIdAndUpdate(groupId, { $push: { messages: message._id } });
+    io.to(groupId).emit("newGroupMessage", { groupId, message });
   });
 
   socket.on("readMessages", async ({ fromUser, toUser }) => {
@@ -105,16 +100,17 @@ io.on('connection', (socket) => {
       { from: fromUser, to: toUser, read: false },
       { $set: { read: true } }
     );
-    io.to(fromUser).emit("messagesReadBy", { toUser });
+    const fromSocketId = await redis.hget('onlineUsers', fromUser);
+    if (fromSocketId) io.to(fromSocketId).emit("messagesReadBy", { toUser });
   });
 
   socket.on('disconnect', async () => {
-    const username = socketToUsername.get(socket.id);
+    const username = await redis.hget('socketToUsername', socket.id);
     console.log('Disconnected user:', username);
 
     if (username) {
-      onlineUsers.delete(username);
-      socketToUsername.delete(socket.id);
+      await redis.hdel('onlineUsers', username);
+      await redis.hdel('socketToUsername', socket.id);
 
       const dbUser = await User.findOne({ username });
       if (!dbUser) return;
@@ -123,21 +119,20 @@ io.on('connection', (socket) => {
 
       for (const contactId of contacts) {
         const contactUser = await User.findById(contactId);
-        if (contactUser && onlineUsers.has(contactUser.username)) {
-          const contactSocketId = onlineUsers.get(contactUser.username); // Fixed here
+        if (!contactUser) continue;
 
-          if (contactSocketId) {
-            io.to(contactSocketId).emit('friendOffline', username);
-            console.log(`Emitting friendOffline to ${contactUser.username}`);
-          }
+        const contactSocketId = await redis.hget('onlineUsers', contactUser.username);
+        if (contactSocketId) {
+          io.to(contactSocketId).emit('friendOffline', username);
+          console.log(`Emitting friendOffline to ${contactUser.username}`);
         }
       }
     }
   });
-
 });
 
-export { io, onlineUsers };
+
+export { io };
 
 server.listen(3000, () => {
   console.log('server running at http://localhost:3000');

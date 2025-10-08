@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+#creaet app dir
+WORKDIR /app
+
+#install dependencies
+COPY package*.json ./
+
+RUN npm install
+
+#bundlle app source
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm","run","dev"]

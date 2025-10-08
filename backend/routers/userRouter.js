@@ -7,8 +7,8 @@ import { sendOtp } from "../controllers/sendOtp.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import upload from "../middlewares/multer.js";
-import { onlineUsers } from "../index.js";
 import Group from "../models/groupModel.js";
+import redis from "../utils/redis.js";
 const router = express.Router();
 
 const EmailToOtp = new Map();
@@ -202,9 +202,11 @@ router.get('/userList', verifyToken, async (req, res) => {
             'name profilePic'
         );
         // console.log(`Groups:${resGrp}`)
-        resUser.forEach((contact) => {
+        const onlineUsers = new Set(await redis.smembers("online_users"));
+        resUser.forEach(contact => {
             contact.status = onlineUsers.has(contact.username) ? "Online" : "Offline";
         });
+
         const updatedGroups = resGrp.map(grp => ({
             ...grp.toObject(),
             isGroup: true
@@ -298,21 +300,21 @@ router.get("/userInfo", verifyToken, async (req, res) => {
 });
 
 
-router.post("/subscribe",verifyToken, async (req, res) => {
+router.post("/subscribe", verifyToken, async (req, res) => {
     try {
-        const {subscription } = req.body;
+        const { subscription } = req.body;
         const username = req.username;
         console.log(`API hit ${subscription.endpoint} from User :${username}`)
-        if(!subscription || !username) return res.status(400).send({error:"Subscription and Username required to enbable notification"})
-            
-        const dbUser = await User.findOneAndUpdate({username},{pushSubscription:subscription},{new:true});
+        if (!subscription || !username) return res.status(400).send({ error: "Subscription and Username required to enbable notification" })
 
-        if(!dbUser) return res.status(404).send({error:"User not found"})
-        res.status(201).json({message:"Updated Subscription"});
+        const dbUser = await User.findOneAndUpdate({ username }, { pushSubscription: subscription }, { new: true });
+
+        if (!dbUser) return res.status(404).send({ error: "User not found" })
+        res.status(201).json({ message: "Updated Subscription" });
         console.log(`Subscription Update:${dbUser}`)
     } catch (error) {
         console.error(error);
-        res.status(500).send({error:"Something went wrong on the server while updating / creating notification subscription"})
+        res.status(500).send({ error: "Something went wrong on the server while updating / creating notification subscription" })
     }
 });
 

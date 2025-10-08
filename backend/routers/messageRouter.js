@@ -2,70 +2,72 @@ import express from 'express';
 import verifyToken from '../middlewares/verifyToken.js'
 const router = express.Router();
 import Message from '../models/messageModel.js';
-import { io, onlineUsers } from "../index.js"
+import { io } from "../index.js"
 import upload from '../middlewares/multer.js';
 import Group from '../models/groupModel.js';
 import User from '../models/userModel.js';
 import sendNotification from '../utils/webpush.js';
+import redis from '../utils/redis.js';
 
 router.post('/send', verifyToken, async (req, res) => {
-  try {
-    const fromUser = req.username;
-    const { toUser, content, isGroup = false, groupId } = req.body;
+    try {
+        const fromUser = req.username;
+        const { toUser, content, isGroup = false, groupId } = req.body;
 
-    if (!content || content.trim() === "")
-      return res.status(400).send({ error: "content is required" });
-    if (isGroup && !groupId)
-      return res.status(400).send({ error: "groupId required" });
-    if (!isGroup && !toUser)
-      return res.status(400).send({ error: "toUser required" });
+        if (!content || content.trim() === "")
+            return res.status(400).send({ error: "content is required" });
+        if (isGroup && !groupId)
+            return res.status(400).send({ error: "groupId required" });
+        if (!isGroup && !toUser)
+            return res.status(400).send({ error: "toUser required" });
 
-    console.log(`Group Msg: ${isGroup}, GroupId: ${groupId}, content: ${content}`);
+        console.log(`Group Msg: ${isGroup}, GroupId: ${groupId}, content: ${content}`);
 
-    const newMsg = await Message.create({
-      fromUser,
-      toUser,
-      content,
-      groupId
-    });
-    if (!newMsg) return res.status(500).send("failed to create message");
+        const newMsg = await Message.create({
+            fromUser,
+            toUser,
+            content,
+            groupId
+        });
+        if (!newMsg) return res.status(500).send("failed to create message");
 
-    if (!isGroup) {
-      const receiverSocketId = onlineUsers.get(toUser);
+        if (!isGroup) {
+            const receiverSocketId = await redis.hget('onlineUsers', toUser);
 
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('sendMsg', newMsg);
-      } else {
-        const dbUser = await User.findOne({ username: toUser });
-        if (dbUser?.pushSubscription) {
-          console.log(`User OFFLINE: ${dbUser.username}. Sending Notification...`);
-          sendNotification.sendNotification(
-            dbUser.pushSubscription,
-            JSON.stringify({
-              title: "New Message",
-              body: `You received a message from ${fromUser}`,
-              icon: "/icon.png",
-              data: { url: `/chat/${fromUser}` }
-            })
-          );
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('sendMsg', newMsg);
+            } else {
+                const dbUser = await User.findOne({ username: toUser });
+                if (dbUser?.pushSubscription) {
+                    console.log(`User OFFLINE: ${dbUser.username}. Sending Notification...`);
+                    sendNotification.sendNotification(
+                        dbUser.pushSubscription,
+                        JSON.stringify({
+                            title: "New Message",
+                            body: `You received a message from ${fromUser}`,
+                            icon: "/icon.png",
+                            data: { url: `/chat/${fromUser}` }
+                        })
+                    );
+                }
+            }
+
+            return res.status(200).send(newMsg);
         }
-      }
 
-      return res.status(200).send(newMsg);
-    }
+        const senderSocketId = await redis.hget('onlineUsers', fromUser);
+        if (senderSocketId) {
+            const senderSocket = io.sockets.sockets.get(senderSocketId);
+            if (senderSocket) {
+                senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
+            }
+        }
 
-    const senderSocketId = onlineUsers.get(fromUser);
-    if (senderSocketId) {
-      const senderSocket = io.sockets.sockets.get(senderSocketId);
-      if (senderSocket) {
-        senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
-      }
+        res.status(200).send(newMsg);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("something went wrong");
     }
-    res.status(200).send(newMsg);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("something went wrong");
-  }
 });
 
 
@@ -155,7 +157,9 @@ router.post('/media', verifyToken, upload.single('file'), async (req, res) => {
             }
         );
         if (newMsg) {
-            const receiverSocketId = onlineUsers.get(toUser);
+            const onlineUsers = await redis.hget("online_users");
+
+            const receiverSocketId = onlineUsers[toUser];
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit('sendMsg', newMsg);
             }
