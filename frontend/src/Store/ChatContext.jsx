@@ -38,7 +38,7 @@ export const ChatContextProvider = ({ children }) => {
 
     const getMessages = async (loadMore = false) => {
         if (loadMore && !hasMore) return;
-        setLoading(true);
+        if(loadMore) setLoading(true);
 
         try {
             const nextPage = loadMore ? page + 1 : 1;

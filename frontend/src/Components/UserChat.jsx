@@ -105,7 +105,7 @@ const UserChat = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [chatArr]);
+  }, []);
 
 
 

@@ -70,7 +70,10 @@ const AddContacts = () => {
             <div className="w-1/3 flex flex-col gap-5 justify-center">
               {users.map((user) => {
                 return (
-                  <div className={`${ theme ? "bg-black text-white" : "bg-white text-black"} p-5 rounded flex justify-between`}>
+                  <div className={`${ theme ? "bg-black text-white" : "bg-white text-black"} p-5 rounded flex items-center justify-between`}>
+                    <div>
+                      <img className="w-15 h-15 rounded-full" src={`${user.profilePic}`} alt="" />
+                    </div>
                     <div>{user.username}</div>
                     <button
                       onClick={() => addContact(user.username)}

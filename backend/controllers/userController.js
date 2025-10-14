@@ -191,7 +191,7 @@ export const search = async (req, res) => {
         // Case-insensitive search for usernames starting with the query
         const users = await User.find({ username: new RegExp("^" + query, "i") })
             .limit(15)
-            .select("username email");
+            .select("username email profilePic");
 
         res.json(users);
     } catch (error) {
