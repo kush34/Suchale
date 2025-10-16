@@ -277,3 +277,30 @@ export const subscribe = async (req, res) => {
         res.status(500).send({ error: "Something went wrong on the server while updating / creating notification subscription" })
     }
 }
+
+export const sendMail = async (req,res)=>{
+    try {
+        const { email, username, password } = req.body;
+        console.log(`POST /sendOtp Route Hit`)
+        console.log(`Email:${email} UserName:${username}, Password:${password}`)
+        if (!email || !username || !password) {
+            res.status(401).send("not enough data");
+            return;
+        }
+        let DBuser = await User.findOne({
+            $or: [{ username: username }, { email: email }]
+        });
+        if (DBuser) {
+            res.status(400).send("something went wrong");
+            return;
+        }
+        const OTP = crypto.randomInt(100000, 1000000);
+        EmailToOtp.set(email, OTP);
+        sendOtp(email, OTP);
+        console.log(OTP);
+        res.status(200).send(`OTP sent to user email:${email}`)
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(`something went wrong`)
+    }
+}

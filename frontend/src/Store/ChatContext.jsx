@@ -82,7 +82,7 @@ export const ChatContextProvider = ({ children }) => {
         console.log("chat",chat)
     }, [chat])
     return (
-        <ChatContext.Provider value={{ chat, setChat, sendMsg, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, setGroupFlag, groupFlag, infoWindow, setInfoWindow, ViewChatInfo,sendMsg }}>
+        <ChatContext.Provider value={{ chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, setGroupFlag, groupFlag, infoWindow, setInfoWindow, ViewChatInfo,sendMsg }}>
             {children}
         </ChatContext.Provider>
     )

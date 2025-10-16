@@ -1,7 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken.js";
-import { addContact, login, profilePic, register, search, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController.js";
-import { sendOtp } from "../controllers/sendOtp.js";
+import { addContact, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController.js";
 import upload from "../middlewares/multer.js";
 
 const router = express.Router();
@@ -9,7 +8,7 @@ const router = express.Router();
 
 router.post('/create', register)
 
-router.post("/sendOtp", sendOtp)
+router.post("/sendOtp", sendMail)
 
 router.post('/verifyOtp', verifyOtp)
 

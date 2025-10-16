@@ -22,4 +22,4 @@ export const sendOtp = (toEmail,otp)=>{
     })
 }
 
-// export default sendOtp;
+export default sendOtp;
