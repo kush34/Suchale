@@ -23,11 +23,11 @@ function ProtectedRoutes({ children }) {
   return (
     <UserContextProvider>
       <ThemeContextProvider>
-      <SocketProvider>
         <ChatContextProvider>
+      <SocketProvider>
           {children}
-        </ChatContextProvider>
       </SocketProvider>
+        </ChatContextProvider>
       </ThemeContextProvider>
     </UserContextProvider>
   );

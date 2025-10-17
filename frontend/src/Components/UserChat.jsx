@@ -134,7 +134,7 @@ const UserChat = () => {
       {loading && <LineLoader />}
 
       <div ref={chatDivRef} className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
-        {chatArr && chatArr.length > 0 && !loading && (
+        {chatArr && chatArr.length > 0 && (
           <>
             {chatArr.map((msg) => (
               <div key={msg?._id} className={`w-full flex ${msg.fromUser === user.username ? "justify-end" : "justify-start"}`}>

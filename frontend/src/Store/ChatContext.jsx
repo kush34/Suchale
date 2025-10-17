@@ -1,13 +1,15 @@
 import { Children, createContext, useEffect, useRef, useState } from "react";
-import api from '../utils/axiosConfig.js'
+import api from '../utils/axiosConfig.js';
+import { useUser } from './UserContext';
 
 export const ChatContext = createContext();
 
 export const ChatContextProvider = ({ children }) => {
+    const { user } = useUser();
     const [chat, setChat] = useState(null);
     const [groupFlag, setGroupFlag] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [chatArr, setChatArr] = useState();
+    const [chatArr, setChatArr] = useState([]);
     const [infoWindow, setInfoWindow] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
@@ -28,7 +30,14 @@ export const ChatContextProvider = ({ children }) => {
             const response = await api.post('/message/send', payload);
 
             if (response.status === 200) {
-                setChatArr((prev) => [...(prev || []), { toUser: chat, content }]);
+                const newMessage = {
+                    fromUser: user.username,
+                    toUser: chat.username,
+                    content,
+                    groupId: groupFlag ? chat._id : undefined,
+                    createdAt: new Date().toISOString()
+                };
+                setChatArr((prev) => [...(prev || []), newMessage]);
             }
         } catch (error) {
             console.log(error);
