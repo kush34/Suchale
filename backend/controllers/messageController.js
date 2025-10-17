@@ -29,7 +29,7 @@ export const sendMsg = async (req, res) => {
             groupId
         });
         if (!newMsg) return res.status(500).send("failed to create message");
-
+        console.log('--- DB Save Result (newMsg):', newMsg);
         if (!isGroup) {
             const receiverSocketId = await redis.hget('onlineUsers', toUser);
 
@@ -114,10 +114,10 @@ export const getMessages = async (req, res) => {
                     { fromUser: toUser, toUser: username }
                 ]
             })
-                .sort({ createdAt: 1 })
+                .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit);
-
+            messages.reverse();
             // Mark received messages as read
             const updateResult = await Message.updateMany(
                 { fromUser: toUser, toUser: username, read: false },
@@ -152,9 +152,8 @@ export const media = async (req, res) => {
             }
         );
         if (newMsg) {
-            const onlineUsers = await redis.hget("online_users");
+            const receiverSocketId = await redis.hget("onlineUsers",toUser);
 
-            const receiverSocketId = onlineUsers[toUser];
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit('sendMsg', newMsg);
             }
