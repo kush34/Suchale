@@ -160,7 +160,7 @@ export const media = async (req, res) => {
             res.status(200).json({ url: req.file.path });
         }
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         res.status(500).send("something went wrong");
     }
 }
