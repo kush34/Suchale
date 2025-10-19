@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { FileText, FileDown, FileType } from "lucide-react";
+import { FileText, FileType, ArrowUpRight } from "lucide-react";
 import { ThemeContext } from "@/Store/ThemeContext";
 
 const FileViewer = ({ src, filename }) => {
@@ -9,7 +9,7 @@ const FileViewer = ({ src, filename }) => {
   return (
     <>
       <div
-        className="flex items-center gap-3 bg-gray-100 dark:bg-gray-800 p-3 rounded cursor-pointer hover:bg-gray-200 transition"
+        className={`flex items-center gap-3 ${!theme && "bg-zinc-800"} dark:bg-gray-800 p-3 rounded cursor-pointer`}
         onClick={() => setIsOpen(true)}
       >
         {isPDF ? (
@@ -18,7 +18,7 @@ const FileViewer = ({ src, filename }) => {
           <FileType className="text-blue-500" size={28} />
         )}
         <div className="flex-1 truncate">{filename || src.split("/").pop()}</div>
-        <FileDown
+        <ArrowUpRight
           size={22}
           className="text-gray-500 hover:text-gray-700"
           onClick={(e) => {
