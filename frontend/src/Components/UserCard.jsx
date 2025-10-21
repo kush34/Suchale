@@ -29,7 +29,7 @@ const UserCard = ({ user }) => {
                     {user?.username}
                 </div>
                 <div className="lastmsg font-light text-sm">
-                    call you later
+                    {user?.lastMessage?.content.slice(0,10) || ""}
                 </div>
             </div>
         </div>

@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Group from "../models/groupModel.js";
 import redis from "../utils/redis.js";
-
+import Message from '../models/messageModel.js';
 const EmailToOtp = new Map();
 
 export const register = async (req, res) => {
@@ -31,7 +31,6 @@ export const register = async (req, res) => {
         if (dbUserName) {
             res.status(401).send({
                 "status": "3",
-                "message": "username already taken"
             }); // userName already exist
             return;
         }
@@ -51,11 +50,9 @@ export const register = async (req, res) => {
         });
         res.status(200).send({
             "status": "200",
-            "message": "user created"
         });
     }
     catch (err) {
-        console.log(err.message);
         res.status(500).send("something went wrong")
     }
 }
@@ -65,7 +62,6 @@ export const login = async (req, res) => {
     // console.log(username,password);
     if (!username || !password) {
         res.status(403).send({
-            "message": "not enough resource"
         })
         return;
     }
@@ -73,7 +69,6 @@ export const login = async (req, res) => {
 
     if (!dbUser) {
         res.status(404).send({
-            "message": "something went wrong"
         })
         return;
     }
@@ -86,13 +81,11 @@ export const login = async (req, res) => {
             }, process.env.jwt_Secret);
             res.status(200).send({
                 "status": "1",
-                "message": "login successful",
                 "token": token
             });
         } else {
             res.send({
                 "status": "2",
-                "message": "invalid credentials"
             })
         }
     });
@@ -133,60 +126,115 @@ export const usernameCheck = async (req, res) => {
         let dbUser = await User.findOne({ username: username });
         if (dbUser) res.status(200).send({
             "status": "0",
-            "message": "username not available"
         })
         else {
             res.status(200).send({
                 "status": "1",
-                "message": "username available"
             })
         }
     } catch (error) {
         res.status(500).send("something went wrong");
     }
 }
+
+
 export const userList = async (req, res) => {
-    let username = req.username;
-    let dbUser = await User.findOne({ username });
-    if (!dbUser) {
-        res.status(404).send({
-            "message": "user not found"
-        })
-    }
-    else {
-        // res.status(200).send({
-        //     "contacts":dbUser.contacts
-        // });
+    try {
+        const username = req.username;
+        const dbUser = await User.findOne({ username });
+        if (!dbUser) {
+            return res.status(404).send({ error: "user not found!" })
+        }
+
         const contacts = dbUser.contacts;
         const resUser = await User.find(
             { _id: { $in: contacts } },
-            'username profilePic',
+            'username profilePic'
         );
+        
         const groups = dbUser.groups;
+        console.log("Groupd of User",groups)
         const resGrp = await Group.find(
             { users: dbUser._id },
             'name profilePic'
         );
-        // console.log(`Groups:${resGrp}`)
-        const onlineUsers = new Set(await redis.smembers("online_users"));
+        const onlineUsers = new Map(Object.entries(await redis.hgetall("onlineUsers")));
         resUser.forEach(contact => {
             contact.status = onlineUsers.has(contact.username) ? "Online" : "Offline";
         });
 
+        const lastMessages = await Message.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { fromUser: username, toUser: { $in: resUser.map(u => u.username) } },
+                        { toUser: username, fromUser: { $in: resUser.map(u => u.username) } }
+                    ]
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: {
+                        $cond: [
+                            { $eq: ["$fromUser", username] },
+                            "$toUser",
+                            "$fromUser"
+                        ]
+                    },
+                    lastMessage: { $first: "$$ROOT" }
+                }
+            }
+        ]);
+        const lastGroupMessage = await Message.aggregate([
+            {
+                $match: {
+                    groupId: { $in: groups }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$groupId",
+                    lastMessage: { $first: "$$ROOT" }
+                }
+            }
+        ]);
+        console.log("lastGroupMessage",lastGroupMessage)
+
+        const lastMsgMap = {};
+        lastMessages.forEach(m => {
+            lastMsgMap[m._id] = m.lastMessage;
+        });
+
+        const lastGroupMsgMap = {};
+        lastGroupMessage.forEach(g => {
+            lastGroupMsgMap[g._id.toString()] = g.lastMessage;
+        });
+
+        const updatedContacts = resUser.map(contact => ({
+            ...contact.toObject(),
+            lastMessage: lastMsgMap[contact.username] || null
+        }));
+
         const updatedGroups = resGrp.map(grp => ({
             ...grp.toObject(),
-            isGroup: true
+            isGroup: true,
+            lastMessage: lastGroupMsgMap[grp._id.toString()] || null
         }));
-        let response = [...updatedGroups, ...resUser]
-        res.send({ response })
+
+        const response = [...updatedGroups, ...updatedContacts];
+
+        res.json({ response });
+    } catch (error) {
+        console.error(error);
     }
-}
+};
 
 export const search = async (req, res) => {
     try {
         const { query } = req.body;
 
-        if (!query) return res.status(400).json({ message: "Query is required" });
 
         // Case-insensitive search for usernames starting with the query
         const users = await User.find({ username: new RegExp("^" + query, "i") })
@@ -196,7 +244,6 @@ export const search = async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server Error" });
     }
 }
 
@@ -224,27 +271,21 @@ export const addContact = async (req, res) => {
         const { contact } = req.body;
 
         const dbUser = await User.findOne({ username: contact });
-        if (!dbUser) return res.status(404).json({ message: "User does not exist" });
 
         const curUser = await User.findOne({ username });
-        if (!curUser) return res.status(404).json({ message: "Current user not found" });
 
         if (username === contact) {
-            return res.status(400).json({ message: "Cannot add yourself as a contact" });
         }
 
         if (curUser.contacts.includes(dbUser._id)) {
-            return res.status(400).json({ message: "User already in contacts" });
         }
 
         curUser.contacts.push(dbUser._id);
         await curUser.save();
 
-        res.status(200).json({ message: "Contact added successfully" });
 
     } catch (error) {
         console.error("Error in /addContact:", error);
-        res.status(500).json({ message: "Internal server error" });
     }
 }
 
@@ -270,7 +311,6 @@ export const subscribe = async (req, res) => {
         const dbUser = await User.findOneAndUpdate({ username }, { pushSubscription: subscription }, { new: true });
 
         if (!dbUser) return res.status(404).send({ error: "User not found" })
-        res.status(201).json({ message: "Updated Subscription" });
         console.log(`Subscription Update:${dbUser}`)
     } catch (error) {
         console.error(error);
@@ -278,7 +318,7 @@ export const subscribe = async (req, res) => {
     }
 }
 
-export const sendMail = async (req,res)=>{
+export const sendMail = async (req, res) => {
     try {
         const { email, username, password } = req.body;
         console.log(`POST /sendOtp Route Hit`)

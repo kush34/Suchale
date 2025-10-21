@@ -26,7 +26,7 @@ const GroupCard = ({ group }) => {
 
       <div className="mx-2">
         <div className="userName text-xl font-medium">{group?.name}</div>
-        <div className="lastmsg font-light text-sm">call you later</div>
+        <div className="lastmsg font-light text-sm">{group?.lastMessage?.content || " "}</div>
       </div>
     </div>
   );
