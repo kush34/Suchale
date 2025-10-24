@@ -6,78 +6,57 @@ import { Toaster } from 'sonner';
 const App = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen w-full relative">
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `
-        linear-gradient(to right, #e7e5e4 1px, transparent 1px),
-        linear-gradient(to bottom, #e7e5e4 1px, transparent 1px)
-      `,
-          backgroundSize: "20px 20px",
-          backgroundPosition: "0 0, 0 0",
-          maskImage: `
-          repeating-linear-gradient(
-              to right,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            repeating-linear-gradient(
-              to bottom,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)
-      `,
-          WebkitMaskImage: `
-    repeating-linear-gradient(
-              to right,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            repeating-linear-gradient(
-              to bottom,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)
-      `,
-          maskComposite: "intersect",
-          WebkitMaskComposite: "source-in",
-        }}
-      />
-      <main className='w-full h-screen'>
+    <div className="min-h-screen w-full relative text-white">
+      <div className="min-h-screen w-full relative">
+        {/* Dark Dot Matrix */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundColor: '#0a0a0a',
+            backgroundImage: `
+       radial-gradient(circle at 25% 25%, #222222 0.5px, transparent 1px),
+       radial-gradient(circle at 75% 75%, #111111 0.5px, transparent 1px)
+     `,
+            backgroundSize: '10px 10px',
+            imageRendering: 'pixelated',
+          }}
+        />
+      <main className='w-full h-screen z-10'>
         <nav className='z-10 p-10 flex justify-around'>
-          <div className='text-2xl text-blue-400 font-bold'>
+          <div className='z-10 text-2xl tracking-wider font-bold'>
             Suchale
           </div>
+          <div className='z-10'>
+            <ul className='flex gap-5'>
+              <li><a href="#">Home</a></li>
+              <li>Features</li>
+              <li>Pricing</li>
+              <li>Contact</li>
+            </ul>
+          </div>
           <div className='flex gap-10'>
-            <Button onClick={()=>navigate("/login")} className={'z-10 hover:scale-105 cursor-pointer'}>Sign In</Button>
+            <Button onClick={() => navigate("/login")} className={'z-10 hover:scale-105 cursor-pointer'}>Sign In</Button>
           </div>
         </nav>
-        <landing className="flex justify-center items-center mt-36">
-          <div className='z-10 flex flex-col '>
-            <span className='text-5xl font-bold'>
+        <landing className="z-10 flex justify-center gap-20 items-center mt-24">
+          <div className='z-10 w-1/2 h-1/3'>
+            <img src="image.png" className='z-10 w-full h-full rounded shadow-2xl' alt="mockup image" />
+          </div>
+          <div className='w-1/3 z-10 flex flex-col justify-center'>
+            <span className='text-4xl font-light'>
               Blazing Fast Messaging
             </span>
-            <span className='text-2xl font-light'>
+            <span className='text-2xl font-bold'>
               with Security and privacy
             </span>
             <span className='mt-5'>
-              <Button onClick={()=>navigate("/register")} className={'z-10 hover:scale-105 ease-in duration-75 cursor-pointer'}>Join Now</Button>
+              <Button onClick={() => navigate("/register")} className={'z-10 hover:scale-105 bg-sky-600 ease-in duration-75 cursor-pointer'}>Join Now</Button>
             </span>
           </div>
         </landing>
       </main>
     </div>
+    </div >
 
   )
 }

@@ -80,7 +80,7 @@ const Settings = () => {
     };
 
     return (
-        <div className={`${theme ? "bg-zinc-100 text-black" : "bg-zinc-900 text-white"} h-screen`}>
+        <div className={`${theme ? "bg-zinc-100 text-black" : "bg-black text-white"} h-screen`}>
             <div className={`head flex items-center justify-between`}>
                 <div className="title text-lg md:text-4xl m-4 font-bold">
                     Settings
