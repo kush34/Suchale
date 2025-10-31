@@ -29,25 +29,20 @@ export const register = async (req, res) => {
         }
         let dbUserName = await User.findOne({ username });
         if (dbUserName) {
-            res.status(401).send({
+            return res.status(401).send({
                 "status": "3",
             }); // userName already exist
-            return;
         }
 
         //hashing password and storing it in db
-        bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(password, salt, async (err, hash) => {
-                if (err) throw err;
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-                let createdUser = await User.create({
-                    username,
-                    email,
-                    password: hash,
-                })
-                console.log(createdUser);
-            });
+        const createdUser = await User.create({
+            username,
+            email,
+            password: hashedPassword,
         });
+
         res.status(200).send({
             "status": "200",
         });
@@ -151,9 +146,9 @@ export const userList = async (req, res) => {
             { _id: { $in: contacts } },
             'username profilePic'
         );
-        
+
         const groups = dbUser.groups;
-        console.log("Groupd of User",groups)
+        console.log("Groupd of User", groups)
         const resGrp = await Group.find(
             { users: dbUser._id },
             'name profilePic'
@@ -200,7 +195,7 @@ export const userList = async (req, res) => {
                 }
             }
         ]);
-        console.log("lastGroupMessage",lastGroupMessage)
+        console.log("lastGroupMessage", lastGroupMessage)
 
         const lastMsgMap = {};
         lastMessages.forEach(m => {
@@ -270,7 +265,13 @@ export const addContact = async (req, res) => {
         const username = req.username;
         const { contact } = req.body;
 
+        if (!contact) {
+            return res.status(400).send({ error: "contact which is username of the friend you want to add to your contact is required." })
+        }
         const dbUser = await User.findOne({ username: contact });
+        if (!dbUser) {
+            return res.status(404).send({ error: "Could not find the contact to be added to your contacts" })
+        }
 
         const curUser = await User.findOne({ username });
 
@@ -283,7 +284,7 @@ export const addContact = async (req, res) => {
         curUser.contacts.push(dbUser._id);
         await curUser.save();
 
-
+        res.send({ message: "User added successfully" })
     } catch (error) {
         console.error("Error in /addContact:", error);
     }
@@ -305,13 +306,14 @@ export const subscribe = async (req, res) => {
     try {
         const { subscription } = req.body;
         const username = req.username;
+        if (!subscription || !username || typeof subscription !== 'object') return res.status(400).send({ error: "Subscription and Username required to enbable notification" })
         console.log(`API hit ${subscription.endpoint} from User :${username}`)
-        if (!subscription || !username) return res.status(400).send({ error: "Subscription and Username required to enbable notification" })
 
         const dbUser = await User.findOneAndUpdate({ username }, { pushSubscription: subscription }, { new: true });
 
         if (!dbUser) return res.status(404).send({ error: "User not found" })
         console.log(`Subscription Update:${dbUser}`)
+        return res.status(200).json({ success: true, message: "Subscription updated" });
     } catch (error) {
         console.error(error);
         res.status(500).send({ error: "Something went wrong on the server while updating / creating notification subscription" })
