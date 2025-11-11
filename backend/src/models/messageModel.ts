@@ -1,14 +1,15 @@
 import mongoose from 'mongoose';
+import type { Document } from 'mongoose';
 
 
-export interface IMessage extends Document {
-  fromUser: string;                            
-  toUser?: string;                             
-  groupId?: mongoose.Types.ObjectId;           
-  content: string;                             
-  read: boolean;                               
-  createdAt: Date;
-  updatedAt: Date;
+export interface IMessage extends Document{
+    fromUser: string;
+    toUser?: string;
+    groupId?: mongoose.Types.ObjectId;
+    content: string;
+    read: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const messageSchema = new mongoose.Schema({

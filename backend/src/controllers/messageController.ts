@@ -1,18 +1,15 @@
-
-import sendNotification from '../utils/webpush';
-import Message, { IMessage } from '../models/messageModel';
-import { io } from "../index"
-import upload from '../middlewares/multer';
-import Group from '../models/groupModel';
 import User from '../models/userModel';
-import redis from '../utils/redis';
+import { Request, Response } from 'express';
+import * as messageService from "../services/messageService"
 
-
-export const sendMsg = async (req, res) => {
+export const sendMsg = async (req: Request, res: Response) => {
     try {
         const fromUser = req.username;
+        if (!fromUser) return res.status(401).send({ error: "Unauthorized" });
+
         const { toUser, content, isGroup = false, groupId } = req.body;
 
+        // Validation
         if (!content || content.trim() === "")
             return res.status(400).send({ error: "content is required" });
         if (isGroup && !groupId)
@@ -20,201 +17,75 @@ export const sendMsg = async (req, res) => {
         if (!isGroup && !toUser)
             return res.status(400).send({ error: "toUser required" });
 
-        console.log(`Group Msg: ${isGroup}, GroupId: ${groupId}, content: ${content}`);
+        const newMsg = await messageService.sendMessage({ fromUser, toUser, content, isGroup, groupId });
 
-        const newMsg = await Message.create({
-            fromUser,
-            toUser,
-            content,
-            groupId
-        });
-        if (!newMsg) return res.status(500).send("failed to create message");
-        console.log('--- DB Save Result (newMsg):', newMsg);
-        if (!isGroup) {
-            const receiverSocketId = await redis.hget('onlineUsers', toUser);
-
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit('sendMsg', newMsg);
-            } else {
-                const dbUser = await User.findOne({ username: toUser });
-                if (dbUser?.pushSubscription) {
-                    console.log(`User OFFLINE: ${dbUser.username}. Sending Notification...`);
-                    sendNotification.sendNotification(
-                        dbUser.pushSubscription,
-                        JSON.stringify({
-                            title: "New Message",
-                            body: `You received a message from ${fromUser}`,
-                            icon: "/icon.png",
-                            data: { url: `/chat/${fromUser}` }
-                        })
-                    );
-                }
-            }
-
-            return res.status(200).send(newMsg);
-        }
-
-        const senderSocketId = await redis.hget('onlineUsers', fromUser);
-        if (senderSocketId) {
-            const senderSocket = io.sockets.sockets.get(senderSocketId);
-            if (senderSocket) {
-                senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
-            }
-        }
-
-        res.status(200).send(newMsg);
+        res.status(200).json(newMsg);
     } catch (error) {
         console.error(error);
         res.status(500).send("something went wrong");
     }
-}
+};
 
-export const getMessages = async (req, res) => {
+
+export const getMessages = async (req: Request, res: Response) => {
     try {
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-
         const username = req.username;
+        if (!username) return res.status(401).send({ error: "Unauthorized" });
+
         const { toUser, groupId, isGroup } = req.body;
-        if (isGroup && !groupId) {
-            return res.status(400).json({ error: "groupId is required for group messages." });
-        }
-        if (!isGroup && !toUser) {
-            return res.status(400).json({ error: "toUser is required for direct messages." });
-        }
+        const page: number = parseInt(req.query.page as string) || 1;
+        const limit: number = parseInt(req.query.limit as string) || 20;
 
-        let messages:any= [];
-        let countMsgs = 0;
-
-        if (isGroup) {
-            const group = await Group.findById(groupId);
-            if (!group) {
-                return res.status(404).json({ error: "Group not found." });
-            }
-
-            countMsgs = await Message.countDocuments({ groupId: group._id });
-
-            messages = await Message.find({ groupId: group._id })
-                .sort({ createdAt: 1 })
-                .skip(skip)
-                .limit(limit);
-
-        } else {
-            countMsgs = await Message.countDocuments({
-                $or: [
-                    { fromUser: username, toUser },
-                    { fromUser: toUser, toUser: username }
-                ]
-            });
-
-            messages = await Message.find({
-                $or: [
-                    { fromUser: username, toUser },
-                    { fromUser: toUser, toUser: username }
-                ]
-            })
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit);
-            messages.reverse();
-            // Mark received messages as read
-            const updateResult = await Message.updateMany(
-                { fromUser: toUser, toUser: username, read: false },
-                { $set: { read: true } }
-            );
-
-            console.log(`Marked ${updateResult.modifiedCount} messages as read`);
-        }
-
-        res.status(200).json({
-            messages,
-            hasMore: countMsgs > page * limit
-        });
-    } catch (err) {
-        console.error("Error in /getMessages:", err);
-        res.status(500).json({ error: "Failed to fetch messages" });
+        const result = await messageService.getMessagesService({ username, toUser, groupId, isGroup, page, limit });
+        res.status(200).json(result);
+    } catch (err: any) {
+        res.status(400).json({ error: err.message || "Failed to fetch messages" });
     }
-}
+};
 
-export const media = async (req, res) => {
+export const media = async (req: Request, res: Response) => {
     try {
         const username = req.username;
+        if (!username) return res.status(401).send({ error: "Unauthorized" });
+
         const { toUser } = req.body;
-        if (!req.file || !toUser) {
-            return res.status(400).json({ error: "No file uploaded" });
-        }
-        let newMsg = await Message.create(
-            {
-                fromUser: username,
-                toUser,
-                content: req.file.path
-            }
-        );
-        if (newMsg) {
-            const receiverSocketId = await redis.hget("onlineUsers",toUser);
+        if (!req.file || !toUser) return res.status(400).json({ error: "No file uploaded" });
 
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit('sendMsg', newMsg);
-            }
-            res.status(200).json({ url: req.file.path });
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send("something went wrong");
+        const result = await messageService.sendMediaService(username, toUser, req.file.path);
+        res.status(200).json(result);
+    } catch (err: any) {
+        res.status(500).send({ error: err.message || "Something went wrong" });
     }
-}
+};
 
-export const createGroup = async (req, res) => {
+export const createGroup = async (req: Request, res: Response) => {
     try {
         const username = req.username;
+        if (!username) return res.status(401).send({ error: "Unauthorized" });
+
         const { name, photoURL, users } = req.body;
-        if (!name) return res.status(400).send({ error: "group name is required for group creation." });
 
         const dbUser = await User.findOne({ username });
-        if (!dbUser) return res.status(400).send({ error: "user not found. pls login again or retry" });
-        const newGroup = await Group.create({
-            name,
-            photoURL,
-            users: [...users, dbUser._id],
-            admin: dbUser._id
-        });
-        await User.updateMany(
-            { _id: { $in: users } },
-            { $addToSet: { groups: newGroup._id } }
-        );
-        await User.updateOne(
-            { _id: { $in: dbUser._id } },
-            { $addToSet: { groups: newGroup._id } }
-        );
-        res.send({ newGroup });
-    } catch (error) {
-        console.error(`ERROR:${error}`)
-        return res.status(500).send({ error: "Something went wrong on the server." });
-    }
-}
+        if (!dbUser) return res.status(400).json({ error: "User not found" });
 
-export const getMembersByGroupId = async (req, res) => {
+        const newGroup = await messageService.createGroupService({ name, photoURL, users, adminId: dbUser._id.toString() });
+        res.status(200).json({ newGroup });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message || "Something went wrong" });
+    }
+};
+
+export const getMembersByGroupId = async (req: Request, res: Response) => {
     try {
         const username = req.username;
+        if (!username) return res.status(401).send({ error: "Unauthorized" });
+
         const { groupId } = req.params;
-        console.log(username)
-        if (!groupId) return res.status(400).send("groupId not found in request.")
+        if (!groupId) return res.status(400).json({ error: "groupId missing" });
 
-        const [userDB, groupDB] = await Promise.all([
-            User.findOne({ username }),
-            Group.findById({ _id: groupId })
-        ])
-
-        if (!groupDB) return res.status(404).send("group not found.")
-        if (!userDB) return res.status(404).send("user not found.")
-        if (!groupDB.users.includes(userDB._id)) return res.status(400).send(`user not member of ${groupDB.name}.`)
-
-        const members = await User.find({ _id: { $in: groupDB.users } }).select("username profilePic");
-
-        res.send(members);
-    } catch (error) {
-        console.log(error)
-        res.send({ error: "Something went wrong on the Server" });
+        const members = await messageService.getMembersByGroupIdService(username, groupId);
+        res.status(200).json(members);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message || "Something went wrong" });
     }
-}
+};

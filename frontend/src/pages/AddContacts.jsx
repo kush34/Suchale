@@ -19,7 +19,7 @@ const AddContacts = () => {
     };
     const response = await api.post("/user/search", { query: username });
     // console.log(response.data);
-    setUsers(response.data);
+    setUsers(response.data.users);
     setLoading(false);
   };
   const addContact = async (usernameToAdd) => {

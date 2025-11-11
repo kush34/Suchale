@@ -22,7 +22,7 @@ const Login = () => {
           password
         })
         .then(res => {
-          if (res.data.status == 1) {
+          if (res.status === 200) {
             localStorage.setItem("token", res.data.token);
             navigate('/home');
           } else if (res.data.status == 2) {

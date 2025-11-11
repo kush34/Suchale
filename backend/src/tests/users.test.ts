@@ -2,6 +2,8 @@
 import request from 'supertest';
 import server from '../index'; // adjust path
 import mongoose from 'mongoose';
+import { IMessage } from '../models/messageModel';
+import { IGroup } from '../models/groupModel';
 
 interface IUser { username: string; email: string; password: string; _id?: string }
 
@@ -45,7 +47,7 @@ describe('User Routes', () => {
             });
         expect(res2.statusCode).toBe(200);
         console.log(res.body)
-        fromUser = (res2.body)
+        // fromUser = (res2.body)
         const res1 = await request(server)
             .post('/user/create')
             .send({
@@ -53,7 +55,7 @@ describe('User Routes', () => {
                 email: 'test@example.com',
                 password: 'password123'
             });
-        fromUser = (res1.body)
+        // fromUser = (res1.body)
 
         console.log("second request", res1.body)
         expect(res1.statusCode).toBe(401);
@@ -98,7 +100,7 @@ describe('User Routes', () => {
 
         console.log(res.body[0])
         expect(res.statusCode).toBe(200);
-        toUser = res.body[0]
+        // toUser = res.body[0]
     });
     it('GET User Profile / INFO', async () => {
         const res = await request(server)
@@ -107,7 +109,7 @@ describe('User Routes', () => {
 
         console.log(res.body)
         expect(res.statusCode).toBe(200);
-        fromUser = res.body
+        // fromUser = res.body
     });
     it('POST User Add contact', async () => {
         const res = await request(server)
@@ -147,9 +149,9 @@ describe('User Routes', () => {
 
 });
 
-let sentMsg;
+let sentMsg: IMessage;
 let groupName = 'NewGroup';
-let createdGroup;
+let createdGroup: IGroup;
 describe('Message Routes', () => {
     it('POST /send : create Message, error for not all required fields', async () => {
         const res = await request(server)
