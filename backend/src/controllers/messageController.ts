@@ -1,11 +1,11 @@
 
-import sendNotification from '../utils/webpush.js';
-import Message from '../models/messageModel.js';
-import { io } from "../index.js"
-import upload from '../middlewares/multer.js';
-import Group from '../models/groupModel.js';
-import User from '../models/userModel.js';
-import redis from '../utils/redis.js';
+import sendNotification from '../utils/webpush';
+import Message, { IMessage } from '../models/messageModel';
+import { io } from "../index"
+import upload from '../middlewares/multer';
+import Group from '../models/groupModel';
+import User from '../models/userModel';
+import redis from '../utils/redis';
 
 
 export const sendMsg = async (req, res) => {
@@ -84,7 +84,7 @@ export const getMessages = async (req, res) => {
             return res.status(400).json({ error: "toUser is required for direct messages." });
         }
 
-        let messages = [];
+        let messages:any= [];
         let countMsgs = 0;
 
         if (isGroup) {

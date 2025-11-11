@@ -1,4 +1,15 @@
 import mongoose from "mongoose";
+import { Document, Types } from "mongoose";
+
+export interface IGroup extends Document {
+    name: string;
+    admin: Types.ObjectId;
+    profilePic: string;
+    users: Types.ObjectId[];
+    messages: Types.ObjectId[];
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 const groupSchema = new mongoose.Schema({
     name: {
@@ -17,9 +28,9 @@ const groupSchema = new mongoose.Schema({
     },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
-},{timestamps:true});
+}, { timestamps: true });
 
 
-const Group = mongoose.model('Group',groupSchema)
+const Group = mongoose.model('Group', groupSchema)
 
 export default Group;

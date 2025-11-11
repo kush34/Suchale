@@ -1,16 +1,16 @@
 import express, { urlencoded } from "express";
 import { createServer } from 'node:http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import 'dotenv/config'
-import connectDB from "./config/database.js";
-import userRouter from "./routers/userRouter.js";
-import messageRouter from "./routers/messageRouter.js";
+import connectDB from "./config/database";
+import userRouter from "./routers/userRouter";
+import messageRouter from "./routers/messageRouter";
 
 import cors from 'cors';
-import User from "./models/userModel.js";
-import Message from "./models/messageModel.js";
-import Group from "./models/groupModel.js";
-import redis from "./utils/redis.js";
+import User from "./models/userModel";
+import Message from "./models/messageModel";
+import Group from "./models/groupModel";
+import redis from "./utils/redis";
 
 const app = express();
 const server = createServer(app);
@@ -38,7 +38,9 @@ app.use('/message', messageRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 
-io.on('connection', (socket) => {
+type ExtendedSocket = Socket & { userId?: string };
+
+io.on('connection', (socket: ExtendedSocket) => {
   console.log('User connected', socket.id);
 
   socket.on('addUser', async (userId) => {

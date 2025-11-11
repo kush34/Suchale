@@ -1,18 +1,24 @@
+// src/tests/users.test.ts
 import request from 'supertest';
-import server from '../index.js';
+import server from '../index'; // adjust path
 import mongoose from 'mongoose';
 
+interface IUser { username: string; email: string; password: string; _id?: string }
+
+let fromUser: IUser;
+let toUser: IUser;
+let jwt_token: string;
+
 beforeAll(async () => {
-    await mongoose.connect(process.env.MONGO_URI_TEST);
+    await mongoose.connect(process.env.MONGO_URI_TEST!);
 });
 
-let jwt_token;
-let fromUser = {
+fromUser = {
     username: 'TestUser',
     email: 'test@example.com',
     password: 'password123'
 };
-let toUser = {
+toUser = {
     username: 'TestUser2',
     email: 'test2@example.com',
     password: 'password123'
@@ -196,6 +202,6 @@ describe('Message Routes', () => {
 
 });
 afterAll(async () => {
-    await mongoose.connection.db.dropDatabase();
+    await mongoose?.connection?.db?.dropDatabase();
     await mongoose.connection.close();
 });

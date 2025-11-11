@@ -1,7 +1,7 @@
 import express from 'express';
-import verifyToken from '../middlewares/verifyToken.js'
-import upload from '../middlewares/multer.js';
-import { createGroup, getMembersByGroupId, getMessages, media, sendMsg } from '../controllers/messageController.js';
+import verifyToken from '../middlewares/verifyToken'
+import upload from '../middlewares/multer';
+import { createGroup, getMembersByGroupId, getMessages, media, sendMsg } from '../controllers/messageController';
 
 
 const router = express.Router();
