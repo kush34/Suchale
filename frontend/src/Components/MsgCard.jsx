@@ -8,7 +8,7 @@ import {
     ContextMenuContent,
     ContextMenuItem,
     ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+} from "@/Components/ui/context-menu";
 import {
     Dialog,
     DialogContent,
