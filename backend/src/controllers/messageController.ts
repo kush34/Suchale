@@ -26,6 +26,26 @@ export const sendMsg = async (req: Request, res: Response) => {
     }
 };
 
+export const reactToMsg = async (req: Request, res: Response) => {
+    try {
+        const username = req.username;
+        if (!username) return res.status(401).send({ error: "Unauthorized" });
+
+        const { emoji, messageId } = req.body;
+
+        if (!emoji || !messageId)
+            return res.status(400).send({ error: "messageId and emoji is required" });
+
+        const result = await messageService.reactToMsg(username,messageId, emoji);
+
+        if (result.status != "success") return res.status(Number(result.code)).send(result);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("something went wrong");
+    }
+};
+
 export const updateMsgById = async (req: Request, res: Response) => {
     try {
         const username = req.username;

@@ -139,7 +139,7 @@ const UserChat = () => {
             {chatArr.map((msg) => (
               <div key={msg?._id} className={`w-full flex ${msg.fromUser === user.username ? "justify-end" : "justify-start"}`}>
                 <span className={`${msg.fromUser === user.username ? "bg-zinc-800" : "bg-black"} w-fit max-w-[75%] text-white rounded m-2 px-3 py-2`}>
-                  <MsgCard msg={msg} />
+                  <MsgCard msg={msg} currentUser={user.username} />
                 </span>
               </div>
             ))}

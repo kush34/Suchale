@@ -60,6 +60,38 @@ export const sendMessage = async ({
   return newMsg;
 };
 
+export const reactToMsg = async (username: string, messageId: string, emoji: string) => {
+  const dbMsg = await Message.findById(messageId);
+  if (!dbMsg) {
+    return { status: "error", code: 404, message: "Message does not exist." };
+  }
+
+  const dbUser = await User.findOne({ username });
+  if (!dbUser) {
+    return { status: "error", code: 404, message: `User does not exist : ${username}` };
+  }
+
+  if (dbMsg.fromUser.toString() === dbUser._id.toString()) {
+    return { status: "error", code: 400, message: "You cannot react to your own message." };
+  }
+
+  // Remove previous reaction (if any)
+  await Message.updateOne(
+    { _id: messageId },
+    { $pull: { reactions: { userId: dbUser._id } } }
+  );
+
+  // Add new one
+  const updatedMsg = await Message.findByIdAndUpdate(
+    messageId,
+    { $addToSet: { reactions: { userId: dbUser._id, emoji } } },
+    { new: true }
+  );
+
+  return { status: true, code: 200, message: "Reaction added/updated", data: updatedMsg };
+};
+
+
 
 export const updateMsgById = async (username: string, messageId: string, udpatedContent: string) => {
 
@@ -70,7 +102,7 @@ export const updateMsgById = async (username: string, messageId: string, udpated
 
   dbMsg.content = udpatedContent;
   dbMsg.isEdited = true;
-  
+
   await dbMsg.save();
   return { status: "success", code: 200, message: "Msg Udpated Successfully.", data: dbMsg }
 }
@@ -84,7 +116,7 @@ export const deletedMsgById = async (username: string, messageId: string) => {
 
   dbMsg.isDeleted = true;
   dbMsg.content = "Msg Deleted By User";
-  
+
   await dbMsg.save();
   return { status: "success", code: 200, message: "Msg Udpated Successfully.", data: dbMsg }
 }
