@@ -61,6 +61,34 @@ export const sendMessage = async ({
 };
 
 
+export const updateMsgById = async (username: string, messageId: string, udpatedContent: string) => {
+
+  const dbMsg = await Message.findById(messageId);
+  if (!dbMsg) return { status: "error", code: 404, message: "Msg Does not exist." }
+
+  if (dbMsg.fromUser !== username) return { status: "error", code: 400, Message: "You can only udpate Msg which belong to you." }
+
+  dbMsg.content = udpatedContent;
+  dbMsg.isEdited = true;
+  
+  await dbMsg.save();
+  return { status: "success", code: 200, message: "Msg Udpated Successfully.", data: dbMsg }
+}
+
+export const deletedMsgById = async (username: string, messageId: string) => {
+
+  const dbMsg = await Message.findById(messageId);
+  if (!dbMsg) return { status: "error", code: 404, message: "Msg Does not exist." }
+
+  if (dbMsg.fromUser !== username) return { status: "error", code: 400, Message: "You can only udpate Msg which belong to you." }
+
+  dbMsg.isDeleted = true;
+  dbMsg.content = "Msg Deleted By User";
+  
+  await dbMsg.save();
+  return { status: "success", code: 200, message: "Msg Udpated Successfully.", data: dbMsg }
+}
+
 // Types
 interface GetMessagesPayload {
   username: string;

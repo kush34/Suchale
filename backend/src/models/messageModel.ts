@@ -1,11 +1,14 @@
 import mongoose from 'mongoose';
 import type { Document } from 'mongoose';
 
+const emojiRegex = /\p{Emoji}/u;
 
-export interface IMessage extends Document{
+export interface IMessage extends Document {
     fromUser: string;
     toUser?: string;
     groupId?: mongoose.Types.ObjectId;
+    isEdited: boolean;
+    isDeleted: boolean;
     content: string;
     read: boolean;
     createdAt: Date;
@@ -24,7 +27,31 @@ const messageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId
     },
     content: String,
-    read: { type: Boolean, default: false }
+    isEdited: {
+        type: Boolean,
+        default: false,
+    },
+    read: { type: Boolean, default: false },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
+    reactions: [
+        {
+            userId: {
+                type: mongoose.Types.ObjectId,
+                required: true,
+                ref: 'User'
+            },
+            emoji: {
+                type: String,
+                validate: {
+                    validator: (v: string) => emojiRegex.test(v),
+                    message: "Only emojis are allowed",
+                },
+            },
+        }
+    ]
 }, {
     timestamps: true,
 })

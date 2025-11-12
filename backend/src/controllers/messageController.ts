@@ -26,6 +26,37 @@ export const sendMsg = async (req: Request, res: Response) => {
     }
 };
 
+export const updateMsgById = async (req: Request, res: Response) => {
+    try {
+        const username = req.username;
+        if (!username) return res.status(401).send({ error: "unauthorized" })
+
+        const { messageId, udpatedContent } = req.body;
+
+        if (!messageId || !udpatedContent) return res.status(400).send({ error: "messsgeId and updatedContent is required to edit/update any message" })
+        const result = await messageService.updateMsgById(username, messageId, udpatedContent);
+
+        return res.status(Number(result.code)).json(result)
+    } catch (error: any) {
+        res.status(500).send({ error: error.message || "Something went wrong" });
+    }
+}
+
+export const deletedMsgById = async (req: Request, res: Response) => {
+    try {
+        const username = req.username;
+        if (!username) return res.status(401).send({ error: "unauthorized" })
+
+        const { messageId } = req.params;
+
+        if (!messageId) return res.status(400).send({ error: "messsgeId is required to delete any message" })
+        const result = await messageService.deletedMsgById(username, messageId);
+
+        return res.status(Number(result.code)).json(result)
+    } catch (error: any) {
+        res.status(500).send({ error: error.message || "Something went wrong" });
+    }
+}
 
 export const getMessages = async (req: Request, res: Response) => {
     try {

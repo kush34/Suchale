@@ -1,11 +1,17 @@
 import express from 'express';
 import verifyToken from '../middlewares/verifyToken'
 import upload from '../middlewares/multer';
-import { createGroup, getMembersByGroupId, getMessages, media, sendMsg } from '../controllers/messageController';
+import { createGroup, deletedMsgById, getMembersByGroupId, getMessages, media, sendMsg, updateMsgById } from '../controllers/messageController';
 
 
 const router = express.Router();
+
+router.delete('/deleteMsg/:messageId', verifyToken, deletedMsgById);
+
+// POST routes
 router.post('/send', verifyToken, sendMsg);
+
+router.post('/updateMsg', verifyToken, updateMsgById);
 
 router.post("/getMessages", verifyToken, getMessages);
 

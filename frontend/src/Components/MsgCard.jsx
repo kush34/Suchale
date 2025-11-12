@@ -22,13 +22,14 @@ const MsgCard = ({ msg }) => {
                     ) : msg.content?.match(/\.(pdf|docx|txt|rtf|odt)$/i) ? (
                         <FileViewer src={msg.content} />
                     ) : (
-                        <div className="flex justify-center text-lg">{msg.content}</div>
+                        <div className={`flex justify-start text-lg ${msg.isDeleted && "opacity-60 italic text-red-100"}`}>{msg.content}</div>
                     )
                 }
 
             </div>
             <div className="flex text-[10px] justify-end gap-2">
                 <div className=' text-zinc-500'>
+                    {msg.isEdited && <span className='mx-3'>Edited</span>}
                     {getDate(msg.createdAt)}
                 </div>
                 <span className='text-white'>
