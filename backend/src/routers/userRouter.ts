@@ -1,7 +1,7 @@
 import express from "express";
-import verifyToken from "../middlewares/verifyToken.js";
-import { addContact, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController.js";
-import upload from "../middlewares/multer.js";
+import verifyToken from "../middlewares/verifyToken";
+import { addContact, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import upload from "../middlewares/multer";
 
 const router = express.Router();
 

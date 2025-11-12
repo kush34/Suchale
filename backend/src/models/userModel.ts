@@ -1,4 +1,22 @@
 import mongoose from "mongoose";
+import { IMessage } from "./messageModel";
+
+export interface IContact {
+  userId: mongoose.Types.ObjectId;
+  lastMessage: IMessage | null;
+}
+
+export interface IUser extends Document {
+  username: string;
+  email: string;
+  password: string;
+  profilePic: string;
+  status: "online" | "offline" | "away" | "busy";
+  contacts: IContact[];
+  pushSubscription?: Record<string, any> | null;
+  blockedUsers?: mongoose.Types.ObjectId[];
+  groups?: mongoose.Types.ObjectId[];
+}
 
 const userSchema = new mongoose.Schema(
   {
@@ -73,6 +91,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model<IUser>('User', userSchema);
 
 export default User;

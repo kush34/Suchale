@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import User from "../models/userModel.js";
+import User from "../models/userModel";
 
 export const createUser = async (username,email,password)=>{
     try{

@@ -17,7 +17,7 @@ export const UserContextProvider = ({children})=>{
         }else{
             const response = await api.get("/user/userInfo");
             // console.log(response.data);
-            setUser(response.data);
+            setUser(response.data.user);
         }
     }
     useEffect(()=>{

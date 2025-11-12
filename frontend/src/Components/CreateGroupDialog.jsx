@@ -19,7 +19,7 @@ const CreateGroupDialog = () => {
       try {
         setLoading(true);
         const res = await api.post(`/user/search`,{query:searchUser});
-        setResults(res.data || []);
+        setResults(res.data.users || []);
       } catch (err) {
         console.error("Search failed:", err);
       } finally {

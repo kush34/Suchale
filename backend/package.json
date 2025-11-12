@@ -2,10 +2,8 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "dev": "npx nodemon index.js",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
+    "dev": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,15 +28,23 @@
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.10.0",
+    "@types/nodemailer": "^7.0.3",
+    "@types/supertest": "^6.0.3",
     "babel-jest": "^30.2.0",
     "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^10.2.3",
     "nodemon": "^3.1.10",
-    "supertest": "^7.1.4"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "transform": {}
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
