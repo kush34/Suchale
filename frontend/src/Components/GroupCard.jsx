@@ -2,10 +2,58 @@ import React, { useContext } from 'react';
 import { ChatContext } from '../Store/ChatContext';
 import { ThemeContext } from '../Store/ThemeContext';
 
+
+export function formatChatTime(dateString) {
+  if (!dateString) {
+    return '';
+  }
+
+  const messageDate = new Date(dateString);
+  const now = new Date();
+  const diffInMilliseconds = now - messageDate;
+  const diffInHours = diffInMilliseconds / (1000 * 60 * 60);
+
+  const format12Hour = (date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minuteString = minutes < 10 ? '0' + minutes : minutes;
+
+    return `${hours}:${minuteString} ${ampm}`;
+  };
+
+  if (diffInHours < 24) {
+    return format12Hour(messageDate);
+  }
+
+  const isYesterday = (date) => {
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+
+    return date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear();
+  };
+
+  if (diffInHours >= 24 && diffInHours < (24 * 7)) {
+    if (isYesterday(messageDate)) {
+      return 'Yesterday';
+    }
+
+    return messageDate.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+
+  return messageDate.toLocaleDateString('en-US');
+}
+
 const GroupCard = ({ group }) => {
   const { chat, setChat, setGroupFlag } = useContext(ChatContext);
   const { theme } = useContext(ThemeContext);
-
+  const dateString = group?.lastMessage?.createdAt;
+  const formattedTime = formatChatTime(dateString);
   const handleClick = () => {
     if (chat?._id !== group?._id) {
       setChat(group);
@@ -16,17 +64,30 @@ const GroupCard = ({ group }) => {
   return (
     <div
       onClick={handleClick}
-      className={`${theme ? "bg-white text-black" : "text-white"} 
-        flex gap-3 items-center pb-3 hover:bg-zinc-400 
-        ease-in duration-150 rounded cursor-pointer hover:shadow-xl`}
+      className={`${theme ? "bg-white text-black border-zinc-100" : "text-white border-zinc-800"} 
+        flex gap-3 items-center pb-3 hover:bg-zinc-700 
+        ease-in duration-150 rounded cursor-pointer justify-between hover:shadow-xl border-b`}
     >
-      <div className="ml-2 userimg mt-2 flex items-end">
-        <img className="w-12 h-12 rounded-full" src={group?.profilePic} alt="" />
-      </div>
+      <div className='flex gap-3'>
+        <div className="ml-2 userimg mt-2 flex items-end">
+          <img className="w-12 h-12 rounded-full" src={group?.profilePic} alt="" />
+        </div>
 
-      <div className="mx-2">
-        <div className="userName text-xl font-medium">{group?.name}</div>
-        <div className="lastmsg font-light text-sm">{group?.lastMessage?.content || " "}</div>
+        <div className="mx-2">
+          <div className="userName text-xl font-medium">{group?.name}</div>
+          <div className="lastmsg font-light text-sm text-zinc-500">{group?.lastMessage?.content || " "}</div>
+        </div>
+      </div>
+      <div className='flex items-start text-zinc-500 text-sm'>
+        {group?.lastMessage?.createdAt ?
+          <span >
+            {formattedTime}
+          </span>
+          :
+          <span>
+            <Infinity size={16} strokeWidth={1} />
+          </span>
+        }
       </div>
     </div>
   );

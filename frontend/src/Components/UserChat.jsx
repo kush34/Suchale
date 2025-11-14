@@ -112,12 +112,12 @@ const UserChat = () => {
   if (!chat) return <div className="flex justify-center items-center w-3/4 text-zinc-500">Please select chat to view messages</div>;
 
   return (
-    <div className={`shadow-2xl ${theme ? "bg-white text-black" : "bg-zinc-900 text-white"} flex flex-col justify-between md:rounded-2xl md:w-full h-full overflow-none`}>
+    <div className={`shadow-2xl ${theme ? "bg-white text-black" : "bg-zinc-900 text-white"} flex flex-col justify-between md:w-full h-full overflow-none`}>
       <span
         onClick={ViewChatInfo}
         onMouseEnter={() => setHoverTopbar(true)}
         onMouseLeave={() => setHoverTopbar(false)}
-        className={`${theme ? "bg-black text-white" : "bg-zinc-500"} profile-username-typingindicator-back_btn py-3 px-5 flex items-center justify-between md:rounded-t-2xl font-medium text-2xl`}
+        className={`${theme ? "bg-zinc-800 text-white" : "bg-zinc-800"} profile-username-typingindicator-back_btn py-3 px-5 flex items-center gap-2 font-medium text-2xl`}
       >
         <div className="img">
           <img className="rounded-full w-15 h-15" src={chat?.profilePic || "https://placehold.co/400x400"} alt="" />
@@ -152,9 +152,9 @@ const UserChat = () => {
         )}
       </div>
 
-      <div className="flex media-emojis-textbar-sendbtn">
+      <div className={`flex media-emojis-textbar-sendbtn ${theme ? "bg-zinc-200 text-black":"text-white bg-zinc-700"} py-2`}>
         <div className="w-1/7 items-center flex justify-evenly">
-          <div onClick={mediaTrigger} className="cursor-pointer text-zinc-700 flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110">
+          <div onClick={mediaTrigger} className="cursor-pointer flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110">
             <ImagePlay />
             <input ref={mediaInpRef} onChange={sendMedia} type="file" className="hidden" />
           </div>
@@ -165,7 +165,7 @@ const UserChat = () => {
               </div>
             )}
             <button
-              className="cursor-pointer text-zinc-700 flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110"
+              className="cursor-pointer flex items-center justify-center ease-in duration-100 hover:scale-110"
               onClick={() => setShowPicker(!showPicker)}
             >
               <SmilePlus />
@@ -183,11 +183,11 @@ const UserChat = () => {
               }
             }}
             type="text"
-            className={`${theme ? "bg-zinc-100 focus:bg-zinc-300" : "bg-zinc-800 focus:bg-zinc-800"} w-full outline-none rounded px-2 py-1`}
+            className={` w-full outline-none rounded px-2 py-1`}
             placeholder="type your message here"
           />
         </div>
-        <div onClick={() => { sendMsg(message); setMessage(""); }} className="cursor-pointer text-zinc-700 flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
+        <div onClick={() => { sendMsg(message); setMessage(""); }} className="cursor-pointer flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110">
           <SendHorizontal />
         </div>
       </div>

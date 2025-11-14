@@ -20,6 +20,7 @@ import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { toast } from 'sonner';
 import api from '@/utils/axiosConfig';
+import { formatChatTime } from './GroupCard';
 
 const MsgCard = ({ msg, currentUser }) => {
     const [showMenu, setShowMenu] = useState(false);
@@ -136,7 +137,7 @@ const MsgCard = ({ msg, currentUser }) => {
                         <div className="flex text-[10px] justify-end gap-2">
                             <div className="text-zinc-500">
                                 {msg.isEdited && <span className="mx-3">Edited</span>}
-                                {getDate(msg.createdAt)}
+                                {formatChatTime(msg.createdAt)}
                             </div>
                             <span className="text-white">
                                 {msg.read ? <CheckCheck size={16} /> : <Check size={16} />}
