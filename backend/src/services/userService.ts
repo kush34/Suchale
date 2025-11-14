@@ -283,5 +283,5 @@ export const sendMailService = async (email: string, username: string, password:
 
   sendOtp(email, OTP);
 
-  return { status: "success", code: 200, message: `OTP sent to user email: ${email}`, otp: OTP };
+  return { status: "success", code: 200, message: `OTP sent to user email: ${email}` };
 };

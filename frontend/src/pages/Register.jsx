@@ -1,145 +1,313 @@
-import React, { useState } from 'react'
-import Loader1 from "../loaders/Loader1"
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, User, AlertTriangle } from 'lucide-react';
+import Loader1 from '@/loaders/Loader1';
 import { useNavigate } from 'react-router-dom';
-import VerifyOtp from '../Components/VerifyOtp';
+import axios from 'axios';
+import { toast } from 'sonner';
+import VerifyOtp from '@/Components/VerifyOtp';
+
+
+
+const Input = ({ id, type = 'text', placeholder, icon: Icon, children, className = '', value, onChange, onBlur }) => (
+    <div className={`relative flex items-center h-10 w-full rounded-lg border border-gray-700 bg-black/30 px-3 py-2 text-sm shadow-inner transition-colors focus-within:ring-1 focus-within:ring-blue-400 focus-within:border-blue-400 ${className}`}>
+        {Icon && <Icon className="mr-2 h-4 w-4 text-gray-400" />}
+        <input
+            id={id}
+            type={type}
+            placeholder={placeholder}
+            className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 focus:bg-transparent"
+            value={value}
+            onChange={onChange}
+            onBlur={onBlur}
+        />
+        {children}
+    </div>
+);
+
+const Button = ({ children, variant = 'default', size = 'default', className = '', icon: Icon, onClick, disabled, type = "button" }) => {
+    let baseClasses = "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+
+    if (size === 'default') {
+        baseClasses += ' h-10 px-4 py-2';
+    }
+
+    let variantClasses = '';
+    switch (variant) {
+        case 'default':
+            variantClasses = 'bg-blue-600 text-white shadow-xl shadow-blue-600/30 hover:bg-blue-700 active:scale-[0.99] transition-transform duration-100 ease-in-out';
+            break;
+        case 'link':
+            variantClasses = 'text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline';
+            break;
+        default:
+            variantClasses = 'bg-white/10 text-white hover:bg-white/20';
+    }
+
+    return (
+        <button type={type} className={`${baseClasses} ${variantClasses} ${className}`} onClick={onClick} disabled={disabled}>
+            {Icon && <Icon className="mr-2 h-4 w-4" />}
+            {children}
+        </button>
+    );
+};
+
+const ErrorMessage = ({ message }) => (
+    <div className="flex items-center p-3 mt-4 text-sm font-medium text-red-400 bg-red-900/30 rounded-lg border border-red-700/50">
+        <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
+        {message}
+    </div>
+);
+
 
 const Register = () => {
     const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
-    const [username, setUsername] = useState();
+    const [username, setUsername] = useState('');
     const [flag1, setFlag1] = useState(true);
     const [flag2, setFlag2] = useState(true);
     const [flag3, setFlag3] = useState(false);
     const [flag4, setFlag4] = useState(false);
-    const [password, setPassword] = useState();
+    const [password, setPassword] = useState('');
     const [otpRequest, setOtpRequest] = useState(false);
-    const [email, setEmail] = useState();
+    const [email, setEmail] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
     const validateEmail = (email) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return emailRegex.test(email);
     };
+
     const checkUserName = async () => {
-        if (username.length <= 0) return;
-        // console.log(username);
-        const request = await axios.post(`${import.meta.env.VITE_URL}/user/usernameCheck`, { username });
-        // console.log(typeof request.data.status, request.data.status);
-        if (request.data.status === "1") {
-            setFlag2(false);
-            setFlag1(true);
-        }
-        else {
-            setFlag1(false);
+        if (!username || username.length <= 0) {
             setFlag2(true);
-        }
-    }
-    const validate = () => {
-        if (!username || !password || !email || password.length < 6 || !validateEmail(email)) {
-            setFlag3(true);
-            return false;
-        } else {
-            setFlag3(false);
-            return true;
+            return;
         }
 
-    }
-    const handleSubmit = async () => {
+        setLoading(true);
         try {
-            if (!validate()) return;
-            else {
-                setLoading(true);
-                const request = await axios.post(`${import.meta.env.VITE_URL}/user/sendOtp`, {
-                    email,
-                    username,
-                    password
-                });
-                if (request.status == 200) {
-                    // setFlag4(true);
-                    setOtpRequest(true);
-                }
-                setLoading(false);
+            const request = await axios.post(`${import.meta.env.VITE_URL}/user/usernameCheck`, { username });
+
+            if (request.data.status === "1") {
+                setFlag1(true);  // Available
+                setFlag2(false); // Check initiated/passed
+            } else {
+                setFlag1(false); // Not available
+                setFlag2(false); // Check initiated/failed
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
+            setFlag1(false); // Assume unavailable or error
+            setFlag2(false);
+        } finally {
+            setLoading(false);
         }
     }
-    if (loading) return (
-        <Loader1 />
-    )
-    if (otpRequest) return (
-        <VerifyOtp email={email} password={password} username={username} />
-    )
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (username.length > 0) {
+                checkUserName();
+            } else {
+                setFlag1(true);
+                setFlag2(true);
+            }
+        }, 800);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [username]);
+
+    const validate = () => {
+        let valid = true;
+        setFlag3(false);
+
+        if (!username || !password || !email || password.length < 6 || !validateEmail(email) || !flag1 || flag2) {
+            valid = false;
+        }
+
+        if (!valid) {
+            setFlag3(true);
+        }
+        return valid;
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (flag2 || !flag1) {
+            setFlag3(true);
+            return;
+        }
+
+        if (!validate()) return;
+
+        setLoading(true);
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_URL}/user/sendOtp`, {
+                email,
+                username,
+                password
+            });
+            console.log(res)
+            if (res.status === 200) {
+                setOtpRequest(true);
+            } else {
+                toast(`${res.data.message}`)
+            }
+        } catch (error) {
+            console.error(error);
+
+            const backendMsg = error?.response?.data?.message;
+            if (backendMsg) {
+                toast(backendMsg);
+            } else {
+                toast(error.message || "Could not register your account. Pls Retry");
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) return <Loader1 />;
+    if (otpRequest) return <VerifyOtp email={email} password={password} username={username} />;
+
+
+    const getValidationMessages = () => {
+        if (!flag3) return null;
+
+        const messages = [];
+        if (!username || !password || !email) messages.push("Please fill all required details.");
+        if (email && !validateEmail(email)) messages.push("Please enter a valid email address.");
+        if (password && password.length < 6) messages.push("Password should be more than 6 characters.");
+        if (!flag1 && !flag2) messages.push("Username is not available. Please choose another.");
+        if (flag2 && username.length > 0) messages.push("Please wait for username availability check.");
+
+        return messages.length > 0 ? messages.map((msg, i) => <p key={i}>{msg}</p>) : null;
+    }
+
+    const isUsernameAvailable = !flag2 && flag1 && username.length > 0;
+    const isUsernameUnavailable = !flag2 && !flag1 && username.length > 0;
+
     return (
-        <div className={` w-full h-screen items-center justify-center bg-zinc-300`}>
-            <div className="min-h-screen w-full relative">
-                <div
-                    className="absolute inset-0 z-0"
-                    style={{
-                        backgroundColor: '#0a0a0a',
-                        backgroundImage: `
-       radial-gradient(circle at 25% 25%, #222222 0.5px, transparent 1px),
-       radial-gradient(circle at 75% 75%, #111111 0.5px, transparent 1px)
-     `,
-                        backgroundSize: '10px 10px',
-                        imageRendering: 'pixelated',
-                    }}
-                />
-                <div className={`z-10 main flex flex-col md:flex-row w-3/4 xl:w-1/3 h-3/4 bg-white rounded-xl ${flag3 ? "border border-red-600" : "border-none"} ${flag4 && "border border-green-600"}`}>
-                    <div className="z-10 mt-5 head flex flex-col justify-center items-center h-1/6 md:h-1/4">
-                        <h1 className='z-10 text-white text-2xl font-bold'>
-                            Register
-                        </h1>
-                        <p className='z-10 text-sm text-zinc-500'>create your account</p>
-                    </div>
-                    <div className="z-10 form mt-5 flex flex-col justify-center items-center">
-                        <div className='z-10 flex flex-col justify-center'>
-                            <div className='flex justify-center'>
-                                <input type="text" onChange={(e) => setUsername(e.target.value)} className='outline-none rounded border px-2 py-1 text-zinc-600 placeholder-zinc-500' placeholder='choose your username' name="" id="" />
-                                <button onClick={checkUserName} className='bg-white px-2 py-1 rounded ml-2 text-black cursor-pointer hover:text-zinc-900 ease-in duration-150 hover:scale-105'>Check</button>
-                            </div>
-                            <div className={`${flag1 ? "hidden" : "flex"} text-red-500  justify-center`}>
-                                <p>username not availabe</p>
-                            </div>
-                            <div className={`${flag2 ? 'hidden' : 'flex'} text-green-500  justify-center`}>
-                                <p>username availabe</p>
-                            </div>
-                        </div>
-                        <div className="email flex justify-center mt-5">
-                            <input onChange={(e) => setEmail(e.target.value)} type="text" className='outline-none rounded border px-2 py-1 text-zinc-600 placeholder-zinc-500' placeholder='enter your email' />
-                        </div>
-                        <div className="password flex justify-center mt-5">
-                            <input onChange={(e) => setPassword(e.target.value)} type="password" className='outline-none rounded border px-2 py-1 text-zinc-600 placeholder-zinc-500' placeholder='choose your password' />
-                        </div>
-                        <div className="submit">
-                            <button onClick={handleSubmit} className='bg-white mt-5 px-4 py-1 rounded text-black cursor-pointer hover:text-zinc-300 ease-in duration-100 hover:scale-105'>
-                                Submit
-                            </button>
-                        </div>
-                        {
-                            flag4 &&
-                            <div className='cursor-pointer mt-5 hover:text-sky-500'>
-                                <a href="/login">
-                                    <p>Account created, Pls login here</p>
-                                </a>
-                            </div>
-                        }
-                        {
-                            flag3 &&
-                            <div className="flag3 text-sm text-red-500 mt-5 text-center">
-                                <p>Pls fill all the details</p>
-                                <p>Enter valid email address</p>
-                                <p>Pls check username before submitting</p>
-                                <p>Password should be more than 6 characters</p>
-                            </div>
-                        }
-                        <div className="mt-2 text-zinc-500 loginlink hover:border-b ease-in duration-100 cursor-pointer" onClick={() => navigate('/login')}>
-                            Already have an account
-                        </div>
-                    </div>
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-950 font-sans"
+            style={{
+                backgroundImage: 'radial-gradient(circle at 50% 120%, rgba(50, 80, 200, 0.45) 0%, rgba(10, 10, 10, 1) 50%)',
+                backgroundSize: 'cover'
+            }}>
+
+            {/* The main card container - Matching Login design */}
+            <div
+                className="w-full max-w-sm p-8 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/10"
+                style={{
+                    backgroundColor: 'rgba(20, 20, 20, 0.7)',
+                    boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 0 8px rgba(70, 130, 180, 0.1)'
+                }}>
+
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
+                        Register
+                    </h1>
+                    <p className="text-sm text-gray-400">
+                        Create your account to start managing your projects and ideas seamlessly.
+                    </p>
                 </div>
+
+                {/* Registration Form */}
+                <form className="space-y-4" onSubmit={handleSubmit}>
+
+                    {/* Username Input with Check Status */}
+                    <div className="relative">
+                        <Input
+                            id="username"
+                            type="text"
+                            placeholder="Choose your username"
+                            icon={User}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        // onBlur={checkUserName} // Auto-check handled by useEffect debounce
+                        />
+                        {isUsernameAvailable && (
+                            <p className="text-xs text-green-400 mt-1">Username available!</p>
+                        )}
+                        {isUsernameUnavailable && (
+                            <p className="text-xs text-red-400 mt-1">Username not available.</p>
+                        )}
+                    </div>
+
+                    {/* Email Input */}
+                    <Input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email address"
+                        icon={Mail}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+
+                    {/* Password Input - Connected to state and visibility toggle */}
+                    <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Choose your password (min 6 chars)"
+                        icon={Lock}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    >
+                        <div
+                            className="cursor-pointer text-gray-500 hover:text-gray-300"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43-.01.639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+
+                        </div>
+                    </Input>
+
+                    <Button
+                        variant="default"
+                        className="w-full mt-6"
+                        type="submit"
+                        disabled={loading || !flag1 || flag2}
+                    >
+                        Register & Send OTP
+                    </Button>
+                </form>
+
+                {/* Success Message (Re-using flag4 for success link as per original logic) */}
+                {flag4 && (
+                    <div className="flex justify-center mt-5 text-green-400">
+                        <p>Account created, please{' '}
+                            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/login')}>
+                                login here
+                            </Button>
+                        </p>
+                    </div>
+                )}
+
+
+                {/* Error Messages */}
+                {flag3 && (
+                    <ErrorMessage>
+                        {getValidationMessages()}
+                    </ErrorMessage>
+                )}
+
+
+                {/* Login Link */}
+                <p className="mt-8 text-center text-sm text-gray-500">
+                    Already have an account?{' '}
+                    <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/login')}>
+                        Log in
+                    </Button>
+                </p>
+
             </div>
         </div>
     )
 }
 
-export default Register
+export default Register;
