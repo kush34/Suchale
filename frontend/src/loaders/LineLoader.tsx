@@ -1,4 +1,3 @@
-import React from "react";
 import "./lineLoader.css"; 
 
 const LineLoader = ({ width = "100%", height = 4, radius = 9999 }) => {

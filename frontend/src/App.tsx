@@ -1,4 +1,3 @@
-import React from 'react'
 import { Button } from './Components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { Toaster } from 'sonner';
@@ -38,7 +37,7 @@ const App = () => {
             <Button onClick={() => navigate("/login")} className={'z-10 hover:scale-105 cursor-pointer'}>Sign In</Button>
           </div>
         </nav>
-        <landing className="z-10 flex justify-center gap-20 items-center mt-24">
+        <div className="z-10 flex justify-center gap-20 items-center mt-24">
           <div className='z-10 w-1/2 h-1/3'>
             <img src="image.png" className='z-10 w-full h-full rounded shadow-2xl' alt="mockup image" />
           </div>
@@ -53,7 +52,7 @@ const App = () => {
               <Button onClick={() => navigate("/register")} className={'z-10 hover:scale-105 bg-sky-600 ease-in duration-75 cursor-pointer'}>Join Now</Button>
             </span>
           </div>
-        </landing>
+        </div>
       </main>
     </div>
     </div >
