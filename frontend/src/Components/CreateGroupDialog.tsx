@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import api from "../utils/axiosConfig";
 import { Plus } from "lucide-react";
+import { User } from "@/types";
 
 const CreateGroupDialog = () => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [searchUser, setSearchUser] = useState("");
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +31,7 @@ const CreateGroupDialog = () => {
     return () => clearTimeout(delayDebounce);
   }, [searchUser]);
 
-  const toggleUser = (user) => {
+  const toggleUser = (user:User) => {
     const exists = users.find((u) => u._id === user._id);
     if (exists) setUsers(users.filter((u) => u._id !== user._id));
     else setUsers([...users, user]);
@@ -101,7 +102,7 @@ const CreateGroupDialog = () => {
               {loading ? (
                 <p className="text-sm text-gray-500 text-center">Searching...</p>
               ) : results.length > 0 ? (
-                results.map((user) => (
+                results.map((user:User) => (
                   <div
                     key={user._id}
                     onClick={() => toggleUser(user)}

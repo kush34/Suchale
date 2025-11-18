@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../utils/axiosConfig";
-import type { User } from "types/index"
+import api from "@/utils/axiosConfig";
+import type { User } from "@/types/index.d.ts"
 
 export type UserContextType = {
     user: User | null;

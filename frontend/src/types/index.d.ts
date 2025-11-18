@@ -40,3 +40,13 @@ export interface Message {
     updatedAt: string,
     __v: number
 }
+
+export interface Chat {
+    _id: string;
+    name: string;
+    status: "online" | "offline" | "away" | "busy";
+    username: string;
+    profilePic: string;
+    isGroup: boolean;
+    lastMessage: Message;
+}

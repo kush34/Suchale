@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import ChatImageViewer from './ChatImageViewer';
 import VideoViewer from './VideoViewer';
 import FileViewer from './FileViewer';
@@ -21,18 +21,24 @@ import { Input } from "@/Components/ui/input";
 import { toast } from 'sonner';
 import api from '@/utils/axiosConfig';
 import { formatChatTime } from './GroupCard';
+import { Message } from '@/types';
 
-const MsgCard = ({ msg, currentUser }) => {
+type MsgCardProps = {
+    msg: Message;
+    currentUser: string
+}
+
+const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [newContent, setNewContent] = useState(msg.content);
-    const holdTimer = useRef(null);
+    const holdTimer = useRef<number | null>(null);
 
-    const getDate = (iso) => {
+    const getDate = (iso: string) => {
         const date = new Date(iso);
         return date.toISOString().split("T")[0];
     };
-    const onEdit = async (messageId, udpatedContent) => {
+    const onEdit = async (messageId: string, udpatedContent: string) => {
         console.log(messageId, udpatedContent);
         if (msg.isDeleted) {
             toast.error("Cannot Edit Deleted Msg.")
@@ -45,12 +51,12 @@ const MsgCard = ({ msg, currentUser }) => {
                 msg.isEdited = true;
                 toast.success("Edited the message.")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log(error)
             toast.error(error.message || "Could not edit the message.")
         }
     }
-    const onDelete = async (messageId) => {
+    const onDelete = async (messageId: string) => {
         if (msg.isDeleted) {
             toast.error("This is already deleted Msg.")
             return;
@@ -63,31 +69,35 @@ const MsgCard = ({ msg, currentUser }) => {
                 msg.isDeleted = true;
                 toast.success("Deleted the message.")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log(error)
             toast.error(error.message || "Could not delete the message.")
         }
     }
     const handleMouseDown = () => {
         if (msg.fromUser !== currentUser) return;
-        holdTimer.current = setTimeout(() => {
+        if (holdTimer === null) return;
+        holdTimer.current = window.setTimeout(() => {
             setShowMenu(true);
         }, 300);
     };
-    const reactToMessage = async (emoji) => {
+    const reactToMessage = async (emoji: string) => {
         try {
             const res = await api.post(`/message/reactToMsg`, {
                 messageId: msg._id,
                 emoji,
             });
             console.log("Reaction sent:", res.data);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to react:", err.response?.data || err.message);
             toast.error("Could not React to the Msg")
         }
     };
     const handleMouseUp = () => {
-        clearTimeout(holdTimer.current);
+        if (holdTimer.current) {
+            clearTimeout(holdTimer.current);
+            holdTimer.current = null;
+        }
     };
 
     const handleCloseMenu = () => setShowMenu(false);
@@ -126,7 +136,7 @@ const MsgCard = ({ msg, currentUser }) => {
                                 ) : msg.content?.match(/\.(mp4)$/i) ? (
                                     <VideoViewer src={msg.content} />
                                 ) : msg.content?.match(/\.(pdf|docx|txt|rtf|odt)$/i) ? (
-                                    <FileViewer src={msg.content} />
+                                    <FileViewer src={msg.content} filename={msg.content} />
                                 ) : (
                                     <div className={`flex justify-start text-lg ${msg.isDeleted && "opacity-60 italic text-red-100"}`}>
                                         {msg.content}

@@ -1,15 +1,20 @@
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { ChatContext } from '../Store/ChatContext';
 import { ThemeContext } from '../Store/ThemeContext';
 import { Infinity } from 'lucide-react';
 import { formatChatTime } from './GroupCard';
+import { Chat, User } from '@/types';
 
-const UserCard = ({ user }) => {
-    const { chat, setChat, setGroupFlag } = useContext(ChatContext);
-    const { theme } = useContext(ThemeContext);
+
+const UserCard = ({ user }: { user: Chat }) => {
+    const userCtx = useContext(ChatContext);
+    if (!userCtx) return null;
+    const { chat, setChat, setGroupFlag } = userCtx;
+    const themeCtx = useContext(ThemeContext);
+    const theme = themeCtx?.theme;
     const dateString = user?.lastMessage?.createdAt;
     const formattedTime = formatChatTime(dateString);
-    const handleClick = (user) => {
+    const handleClick = (user: Chat) => {
         if (chat?.username != user?.username) {
             setChat(user);
             setGroupFlag(false);
@@ -24,7 +29,7 @@ const UserCard = ({ user }) => {
                         <img className='w-12 h-12 rounded-full' src={user?.profilePic} alt="" />
                     </div>
                     {
-                        user.status == "Online" &&
+                        user.status == "online" &&
                         <div className='bg-green-500 w-2 h-2 rounded-full'>
                         </div>
                     }

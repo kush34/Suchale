@@ -1,15 +1,15 @@
 import { createContext, useEffect, useRef, useState } from "react";
 import api from '../utils/axiosConfig.js';
 import { UserContextType, useUser } from './UserContext.js';
-import { Group, Message, User } from "@/types/index.js";
+import { Chat, Group, Message, User } from "@/types/index.js";
 
 type SendMessagePayload =
     | { content: string; isGroup: true; groupId: string }
     | { content: string; isGroup: false; toUser: string };
 
 type ChatContextType = {
-    chat: User | Group | null;
-    setChat: React.Dispatch<React.SetStateAction<User | Group | null>>;
+    chat: Chat | null;
+    setChat: React.Dispatch<React.SetStateAction<Chat | null>>;
 
     chatArr: Message[];
     setChatArr: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -38,7 +38,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
     const userCtx = useUser() as UserContextType | null;
     const user = userCtx?.user;
 
-    const [chat, setChat] = useState<User | Group | null>(null);
+    const [chat, setChat] = useState<Chat | null>(null);
     const [groupFlag, setGroupFlag] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [chatArr, setChatArr] = useState<Message[]>([]);

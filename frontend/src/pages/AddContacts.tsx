@@ -4,13 +4,15 @@ import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader1 from "../loaders/Loader1";
 import { ThemeContext } from "../Store/ThemeContext";
+import { User } from "@/types";
 const AddContacts = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>("");
-  const { theme } = useContext(ThemeContext);
+  const themeCtx = useContext(ThemeContext);
+  const theme = themeCtx?.theme;
   const [contact, setContact] = useState();
   const [loading, setLoading] = useState<boolean>(false);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const getContacts = async () => {
     setLoading(true);
     if (username == "") {
@@ -22,14 +24,14 @@ const AddContacts = () => {
     setUsers(response.data.users);
     setLoading(false);
   };
-  const addContact = async (usernameToAdd:string) => {
+  const addContact = async (usernameToAdd: string) => {
     const response = await api.post("/user/addContact", {
       contact: usernameToAdd,
     });
     // console.log(response.data);
   };
   useEffect(() => {
-    if (username.trim === "") return;
+    if (username.trim() === "") return;
     getContacts();
   }, [username]);
   return (
@@ -61,7 +63,7 @@ const AddContacts = () => {
         />
       </div>
       {loading ? (
-        <Loader1 theme={theme} />
+        <Loader1 theme={theme || true} />
       ) : (
         <div className={`search-results flex justify-center mt-5`}>
           {users.length == 0 ? (

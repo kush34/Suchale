@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function ChatImageViewer({ src }) {
+export default function ChatImageViewer({ src }: { src: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

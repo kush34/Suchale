@@ -1,60 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { Mail, Lock, User, AlertTriangle } from 'lucide-react';
 import Loader1 from '@/loaders/Loader1';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import VerifyOtp from '@/Components/VerifyOtp';
+import { Button, Input } from './Login';
 
 
-
-const Input = ({ id, type = 'text', placeholder, icon: Icon, children, className = '', value, onChange, onBlur }) => (
-    <div className={`relative flex items-center h-10 w-full rounded-lg border border-gray-700 bg-black/30 px-3 py-2 text-sm shadow-inner transition-colors focus-within:ring-1 focus-within:ring-blue-400 focus-within:border-blue-400 ${className}`}>
-        {Icon && <Icon className="mr-2 h-4 w-4 text-gray-400" />}
-        <input
-            id={id}
-            type={type}
-            placeholder={placeholder}
-            className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 focus:bg-transparent"
-            value={value}
-            onChange={onChange}
-            onBlur={onBlur}
-        />
-        {children}
-    </div>
-);
-
-const Button = ({ children, variant = 'default', size = 'default', className = '', icon: Icon, onClick, disabled, type = "button" }) => {
-    let baseClasses = "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
-
-    if (size === 'default') {
-        baseClasses += ' h-10 px-4 py-2';
-    }
-
-    let variantClasses = '';
-    switch (variant) {
-        case 'default':
-            variantClasses = 'bg-blue-600 text-white shadow-xl shadow-blue-600/30 hover:bg-blue-700 active:scale-[0.99] transition-transform duration-100 ease-in-out';
-            break;
-        case 'link':
-            variantClasses = 'text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline';
-            break;
-        default:
-            variantClasses = 'bg-white/10 text-white hover:bg-white/20';
-    }
-
-    return (
-        <button type={type} className={`${baseClasses} ${variantClasses} ${className}`} onClick={onClick} disabled={disabled}>
-            {Icon && <Icon className="mr-2 h-4 w-4" />}
-            {children}
-        </button>
-    );
-};
-
-const ErrorMessage = ({ message }) => (
+const ErrorMessage = ({ children }: { children: ReactNode }) => (
     <div className="flex items-center p-3 mt-4 text-sm font-medium text-red-400 bg-red-900/30 rounded-lg border border-red-700/50">
         <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-        {message}
+        <div>{children}</div>
     </div>
 );
 
@@ -73,7 +30,7 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    const validateEmail = (email) => {
+    const validateEmail = (email: string) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return emailRegex.test(email);
     };
@@ -131,7 +88,7 @@ const Register = () => {
         return valid;
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (flag2 || !flag1) {
@@ -154,7 +111,7 @@ const Register = () => {
             } else {
                 toast(`${res.data.message}`)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
 
             const backendMsg = error?.response?.data?.message;
@@ -168,7 +125,7 @@ const Register = () => {
         }
     }
 
-    if (loading) return <Loader1 />;
+    if (loading) return <Loader1 theme={true} />;
     if (otpRequest) return <VerifyOtp email={email} password={password} username={username} />;
 
 

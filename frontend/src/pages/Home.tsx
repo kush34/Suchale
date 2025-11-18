@@ -7,12 +7,16 @@ import socket from '../utils/socketService';
 import { ChatContext } from '../Store/ChatContext';
 import Loader1 from "../loaders/Loader1.js"
 import { ThemeContext } from '../Store/ThemeContext.jsx';
+import { Chat } from '@/types';
 const Home = () => {
   const navigate = useNavigate();
-  const [userChatList, setUserChatList] = useState([]);
+  const [userChatList, setUserChatList] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
-  const { chat } = useContext(ChatContext);
-  const { theme } = useContext(ThemeContext);
+  const chatCtx = useContext(ChatContext)
+  if (!chatCtx) return null;
+  const chat = chatCtx?.chat;
+  const themeCtx = useContext(ThemeContext);
+  const theme = themeCtx?.theme || true;
   //list of contacts of user
 
   const getChatList = async () => {
@@ -23,7 +27,7 @@ const Home = () => {
       setUserChatList(response.data.response);
       setLoading(false);
     }
-    catch (err) {
+    catch (err: any) {
       console.log(err.message);
     }
   }
@@ -32,20 +36,20 @@ const Home = () => {
     getChatList();
   }, [])
   useEffect(() => {
-    function friendOffline(username:string) {
+    function friendOffline(username: string) {
       setUserChatList(prevList =>
         prevList.map(user =>
           user.username === username
-            ? { ...user, status: 'Offline' }
+            ? { ...user, status: 'offline' }
             : user
         )
       );
     }
-    function friendOnline(username) {
+    function friendOnline(username: string) {
       setUserChatList(prevList =>
         prevList.map(user =>
           user.username === username
-            ? { ...user, status: 'Online' }
+            ? { ...user, status: 'online' }
             : user
         )
       );

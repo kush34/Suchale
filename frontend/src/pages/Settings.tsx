@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react'
+import { FormEvent, ReactEventHandler, useContext, useEffect, useRef } from 'react'
 import { useUser } from '../Store/UserContext';
 import { useNavigate } from "react-router-dom"
 import api from '../utils/axiosConfig';
@@ -6,18 +6,27 @@ import { ThemeContext } from '../Store/ThemeContext';
 import { registerServiceWorker } from '@/utils/register-service-worker';
 import { toast } from 'sonner';
 import { Bell, LogOut, Moon, Pencil, Sun, Undo2 } from 'lucide-react';
+
 const Settings = () => {
-    const { theme, toggleTheme } = useContext(ThemeContext);
-    const { user } = useUser();
+    const themeCtx = useContext(ThemeContext);
+    if (!themeCtx) return null;
+    const { theme, toggleTheme } = themeCtx;
+    const userCtx = useUser();
+    if (!userCtx) return null;
+    const { user } = userCtx;
     const navigate = useNavigate();
-    const fileInputRef = useRef();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const logOut = () => {
         localStorage.setItem("token", "");
         navigate("/login")
     }
-    const handleUpload = async (e) => {
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const formData = new FormData();
-        formData.append("file", e.target.files[0]);
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            formData.append("file", e.target.files[0]);
+            // use file
+        }
 
         try {
             const res = await api.post("/user/profilepic", formData, {
@@ -31,7 +40,9 @@ const Settings = () => {
         }
     };
     const triggerFileInput = () => {
-        fileInputRef.current.click();
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
     };
 
 
@@ -39,29 +50,31 @@ const Settings = () => {
         try {
             const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
             const registration = await registerServiceWorker();
+            if (!registration) return null;
+
             if (!publicKey) {
                 new Error("No Public key found");
                 console.error("No Public key found");
             }
-            const urlBase64ToUint8Array = (base64String) => {
+            const urlBase64ToUint8Array = (base64String: string) => {
                 const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
                 const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
                 const rawData = window.atob(base64);
                 return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
             };
-    
+
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicKey),
             });
-    
-    
+
+
             console.log("Push Subscription:", subscription);
-    
+
             const response = await api.post("/user/subscribe", {
                 subscription
             });
-            if(response.status == 201){
+            if (response.status == 201) {
                 toast("Notification Enabled on this Device");
             }
         } catch (error) {
@@ -78,7 +91,6 @@ const Settings = () => {
             console.warn("Notification permission denied.");
         }
     };
-
     return (
         <div className={`${theme ? "bg-zinc-100 text-black" : "bg-black text-white"} h-screen`}>
             <div className={`head flex items-center justify-between`}>
@@ -92,7 +104,6 @@ const Settings = () => {
                     <img
                         className="w-40 h-40 object-cover rounded-full"
                         src={user?.profilePic || "836.jpg"}
-                        onError={(e) => { e.target.src = "836.jpg"; }}
                         alt="User profile"
                     />
                     <div className="edit m-5 cursor-pointer">
@@ -109,18 +120,18 @@ const Settings = () => {
                     </span>
                 </div>
                 <div className="flex justify-center m-5 " onClick={toggleTheme}>
-                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200":"border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
-                        {theme ? <Moon />:<Sun /> } Theme
+                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200" : "border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
+                        {theme ? <Moon /> : <Sun />} Theme
                     </button>
                 </div>
                 <div className="flex justify-center m-5 " onClick={askNotificationPermission}>
-                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200":"border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
+                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200" : "border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
                         <Bell /> Notification
                     </button>
                 </div>
                 <div className="flex justify-center m-5 " onClick={logOut}>
-                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200":"border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
-                       <LogOut /> Log Out
+                    <button className={`flex gap-5 cursor-pointer border-b ${theme ? "border-zinc-200" : "border-zinc-800"} py-2 w-full md:w-1/4 justify-center`}>
+                        <LogOut /> Log Out
                     </button>
                 </div>
             </div>

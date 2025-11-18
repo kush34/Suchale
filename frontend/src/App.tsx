@@ -1,6 +1,5 @@
-import { Button } from './Components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { Toaster } from 'sonner';
+import { Button } from '@/Components/ui/button';
 
 const App = () => {
   const navigate = useNavigate();
@@ -20,41 +19,41 @@ const App = () => {
             imageRendering: 'pixelated',
           }}
         />
-      <main className='w-full h-screen z-10'>
-        <nav className='z-10 p-10 flex justify-around'>
-          <div className='z-10 text-2xl tracking-wider font-bold'>
-            Suchale
+        <main className='w-full h-screen z-10'>
+          <nav className='z-10 p-10 flex justify-around'>
+            <div className='z-10 text-2xl tracking-wider font-bold'>
+              Suchale
+            </div>
+            <div className='z-10'>
+              <ul className='flex gap-5'>
+                <li><a href="#">Home</a></li>
+                <li>Features</li>
+                <li>Pricing</li>
+                <li>Contact</li>
+              </ul>
+            </div>
+            <div className='flex gap-10'>
+              <Button onClick={() => navigate("/login")} className={'z-10 hover:scale-105 cursor-pointer'}>Sign In</Button>
+            </div>
+          </nav>
+          <div className="z-10 flex justify-center gap-20 items-center mt-24">
+            <div className='z-10 w-1/2 h-1/3'>
+              <img src="image.png" className='z-10 w-full h-full rounded shadow-2xl' alt="mockup image" />
+            </div>
+            <div className='w-1/3 z-10 flex flex-col justify-center'>
+              <span className='text-4xl font-light'>
+                Blazing Fast Messaging
+              </span>
+              <span className='text-2xl font-bold'>
+                with Security and privacy
+              </span>
+              <span className='mt-5'>
+                <Button onClick={() => navigate("/register")} className={'z-10 hover:scale-105 bg-sky-600 ease-in duration-75 cursor-pointer'}>Join Now</Button>
+              </span>
+            </div>
           </div>
-          <div className='z-10'>
-            <ul className='flex gap-5'>
-              <li><a href="#">Home</a></li>
-              <li>Features</li>
-              <li>Pricing</li>
-              <li>Contact</li>
-            </ul>
-          </div>
-          <div className='flex gap-10'>
-            <Button onClick={() => navigate("/login")} className={'z-10 hover:scale-105 cursor-pointer'}>Sign In</Button>
-          </div>
-        </nav>
-        <div className="z-10 flex justify-center gap-20 items-center mt-24">
-          <div className='z-10 w-1/2 h-1/3'>
-            <img src="image.png" className='z-10 w-full h-full rounded shadow-2xl' alt="mockup image" />
-          </div>
-          <div className='w-1/3 z-10 flex flex-col justify-center'>
-            <span className='text-4xl font-light'>
-              Blazing Fast Messaging
-            </span>
-            <span className='text-2xl font-bold'>
-              with Security and privacy
-            </span>
-            <span className='mt-5'>
-              <Button onClick={() => navigate("/register")} className={'z-10 hover:scale-105 bg-sky-600 ease-in duration-75 cursor-pointer'}>Join Now</Button>
-            </span>
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
     </div >
 
   )

@@ -1,19 +1,21 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { ChatContext } from '../Store/ChatContext';
 import { ThemeContext } from '../Store/ThemeContext';
+import { Chat, Group } from '@/types';
+import { Infinity } from 'lucide-react';
 
 
-export function formatChatTime(dateString) {
+export function formatChatTime(dateString: string) {
   if (!dateString) {
     return '';
   }
 
   const messageDate = new Date(dateString);
   const now = new Date();
-  const diffInMilliseconds = now - messageDate;
+  const diffInMilliseconds = Number(now) - Number(messageDate);
   const diffInHours = diffInMilliseconds / (1000 * 60 * 60);
 
-  const format12Hour = (date) => {
+  const format12Hour = (date: Date) => {
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -29,7 +31,7 @@ export function formatChatTime(dateString) {
     return format12Hour(messageDate);
   }
 
-  const isYesterday = (date) => {
+  const isYesterday = (date: Date) => {
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
 
@@ -49,9 +51,16 @@ export function formatChatTime(dateString) {
   return messageDate.toLocaleDateString('en-US');
 }
 
-const GroupCard = ({ group }) => {
-  const { chat, setChat, setGroupFlag } = useContext(ChatContext);
-  const { theme } = useContext(ThemeContext);
+type GroupCardProps = {
+  group: Chat;
+}
+
+const GroupCard = ({ group }: GroupCardProps) => {
+  const userCtx = useContext(ChatContext)
+  if (!userCtx) return null;
+  const { chat, setChat, setGroupFlag } = userCtx;
+  const themeCtx = useContext(ThemeContext);
+  const theme = themeCtx?.theme;
   const dateString = group?.lastMessage?.createdAt;
   const formattedTime = formatChatTime(dateString);
   const handleClick = () => {

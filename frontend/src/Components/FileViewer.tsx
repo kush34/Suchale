@@ -1,11 +1,16 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { FileText, FileType, ArrowUpRight } from "lucide-react";
 import { ThemeContext } from "@/Store/ThemeContext";
 
-const FileViewer = ({ src, filename }) => {
+type FileViewerProps = {
+  src: string;
+  filename: string;
+}
+const FileViewer = ({ src, filename }: FileViewerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const isPDF = src.match(/\.pdf$/i);
-    const {theme} = useContext(ThemeContext);
+  const themeCtx = useContext(ThemeContext);
+  const theme = themeCtx?.theme;
   return (
     <>
       <div
