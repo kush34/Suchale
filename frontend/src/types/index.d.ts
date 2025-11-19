@@ -26,6 +26,11 @@ export interface Group {
     lastMessage: Message
 }
 
+type EmojiReaction = {
+    userId: string;
+    emoji: string;
+    _id: string;
+}
 export interface Message {
     _id: string,
     fromUser: string,
@@ -35,7 +40,7 @@ export interface Message {
     isEdited: boolean,
     read: boolean,
     isDeleted: boolean,
-    reactions: [],
+    reactions: EmojiReaction[],
     createdAt: string,
     updatedAt: string,
     __v: number

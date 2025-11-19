@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import ChatImageViewer from './ChatImageViewer';
 import VideoViewer from './VideoViewer';
 import FileViewer from './FileViewer';
@@ -22,6 +22,8 @@ import { toast } from 'sonner';
 import api from '@/utils/axiosConfig';
 import { formatChatTime } from './GroupCard';
 import { Message } from '@/types';
+import EmojiReactions from './EmojiReactions';
+import { ChatContext } from '@/Store/ChatContext';
 
 type MsgCardProps = {
     msg: Message;
@@ -32,6 +34,8 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [newContent, setNewContent] = useState(msg.content);
+    const chatCtx = useContext(ChatContext)
+    if (!chatCtx) return null;
     const holdTimer = useRef<number | null>(null);
 
     const getDate = (iso: string) => {
@@ -87,12 +91,22 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                 messageId: msg._id,
                 emoji,
             });
-            console.log("Reaction sent:", res.data);
-        } catch (err: any) {
-            console.error("Failed to react:", err.response?.data || err.message);
-            toast.error("Could not React to the Msg")
+            if (res.data.data.reactions) {
+                console.log(res.data.data.reactions)
+                chatCtx.setChatArr(prev =>
+                    prev.map(m =>
+                        m._id === msg._id
+                            ? { ...m, reactions: res.data.data.reactions }
+                            : m
+                    )
+                );
+            }
+        } catch (err) {
+            toast.error("Could not React to the Msg");
         }
     };
+
+
     const handleMouseUp = () => {
         if (holdTimer.current) {
             clearTimeout(holdTimer.current);
@@ -163,7 +177,11 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                     <ContextMenuItem onClick={() => reactToMessage("☠️")}>☠️</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
-
+            {
+                msg.reactions && msg.reactions?.length > 0
+                &&
+                <EmojiReactions reactions={msg.reactions} />
+            }
             {/* Left-hold menu (edit/delete) */}
             {showMenu && msg.fromUser === currentUser && (
                 <div

@@ -71,7 +71,7 @@ cd Suchale
 ```bash
 cd backend
 npm install
-npx nodemon index.js
+npx run dev
 ```
 
 ### Frontend Setup

@@ -9,14 +9,29 @@ import CreateGroupDialog from './CreateGroupDialog';
 import { Chat } from '@/types';
 
 const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
+  const [dispChat, setDispChat] = useState<Chat[]>(userChatList);
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchBar, setSearchBar] = useState<string>('');
   const themeCtx = useContext(ThemeContext)
   const theme = themeCtx?.theme;
   useEffect(() => {
+    const q = searchBar.trim().toLowerCase();
 
-  }, [searchBar])
+    if (!q) {
+      setDispChat(userChatList);
+      return;
+    }
+
+    const filtered = userChatList.filter((item) => {
+      const uname = item.username?.toLowerCase() || "";  // user
+      const gname = item.name?.toLowerCase() || "";      // group
+
+      return uname.includes(q) || gname.includes(q);
+    });
+
+    setDispChat(filtered);
+  }, [searchBar, userChatList]);
   return (
     <div className={`${theme ? "bg-white text-black border-zinc-100" : "bg-zinc-900 text-white border-zinc-800"} p-4 md:p-0  shadow-2xl h-full border-r-2 `}>
       <div className="top flex justify-between 1/6">
@@ -42,15 +57,15 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
         {
           isSearchOpen &&
           <div>
-            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={`${theme ? "bg-white" : "bg-zinc-800"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
+            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={`${theme ? "bg-zinc-200" : "bg-zinc-800"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
           </div>
         }
       </div>
       <div className="userlist flex flex-col gap-2 m-3 h-5/6">
         {
-          userChatList.length > 0 ?
+          dispChat.length > 0 ?
             <div className='overflow-y-scroll no-scrollbar h-full'>
-              {userChatList?.map((user, index) => {
+              {dispChat?.map((user, index) => {
                 return (
                   <div key={index}>
                     {

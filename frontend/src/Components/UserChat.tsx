@@ -142,7 +142,7 @@ const UserChat = () => {
           {chat?.username || chat?.name}
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
         </div>
-        <div className="md:hidden back_btn">
+        <div className="xl:hidden back_btn">
           <button className="text-sm cursor-pointer" onClick={() => setChat(null)}><Undo2 /></button>
         </div>
       </span>

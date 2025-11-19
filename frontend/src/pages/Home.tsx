@@ -18,6 +18,7 @@ const Home = () => {
   const themeCtx = useContext(ThemeContext);
   if (!themeCtx) return null;
   const theme = themeCtx?.theme;
+  const bg = theme ? "bg-zinc-100" : "bg-zinc-900";
 
   //list of contacts of user
 
@@ -68,25 +69,25 @@ const Home = () => {
     return (<Loader1 theme={theme} />);
   }
   return (
-    <div className={`md:flex h-screen ${!theme ? "bg-zinc-100" : "bg-zinc-950"} overflow-none`}>
-      <div className={`md:w-1/4 h-screen ${chat ? "hidden" : "block"} md:block`}>
+    <div className={`xl:flex h-screen ${bg} overflow-none`}>
+      <div className={`xl:w-1/4 h-screen ${chat ? "hidden" : "block"} xl:block`}>
         <UserList userChatList={userChatList} />
       </div>
-      {
-        chat ?
-          <div className={` w-full md:w-3/4 h-screen overflow-none`}>
-            <UserChat />
-          </div>
-          :
-          <div className={`${theme ? "bg-zinc-100" : "bg-zinc-950"} hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen text-zinc-500`}>
-            <span className='w-1/2 flex justify-center flex-col items-center gap-5'>
-              <img src="./icon.png" className='w-15 h-15' alt="logo img" />
-              Please select a chat to view messages
-            </span>
-            <span>
-            </span>
-          </div>
-      }
+
+      {chat ? (
+        <div className={`w-full xl:w-3/4 h-screen overflow-none`}>
+          <UserChat />
+        </div>
+      ) : (
+        <div
+          className={`${bg} hidden xl:flex items-center justify-center w-full xl:w-3/4 h-screen text-zinc-500`}
+        >
+          <span className="w-1/2 flex justify-center flex-col items-center gap-5">
+            <img src="./icon.png" className="w-15 h-15" alt="logo img" />
+            Please select a chat to view messages
+          </span>
+        </div>
+      )}
     </div>
   )
 }
