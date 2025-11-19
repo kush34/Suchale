@@ -1,0 +1,78 @@
+import { ReactNode, StrictMode } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import './index.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+
+import App from './App';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import AddContacts from './pages/AddContacts';
+import Settings from './pages/Settings';
+
+import { UserContextProvider } from './Store/UserContext';
+// import { SocketProvider } from './Store/SocketContext';
+import { ChatContextProvider } from './Store/ChatContext';
+import { ThemeContextProvider } from './Store/ThemeContext';
+import { SocketProvider } from './Store/SocketContext';
+import { registerServiceWorker } from './utils/register-service-worker';
+const root = document.getElementById('root');
+
+type Props = {
+  children: ReactNode;
+};
+
+function ProtectedRoutes({ children }: Props) {
+  return (
+    <UserContextProvider>
+      <ThemeContextProvider>
+        <ChatContextProvider>
+          <SocketProvider>
+            {children}
+          </SocketProvider>
+        </ChatContextProvider>
+      </ThemeContextProvider>
+    </UserContextProvider>
+  );
+}
+
+registerServiceWorker();
+if (root) {
+  ReactDOM.createRoot(root).render(
+    <BrowserRouter>
+      <Toaster richColors closeButton position="top-right" />
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+
+        {/* All protected routes */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoutes>
+              <Home />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/addContacts"
+          element={
+            <ProtectedRoutes>
+              <AddContacts />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoutes>
+              <Settings />
+            </ProtectedRoutes>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
