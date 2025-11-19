@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { PlayCircle } from "lucide-react"; 
+import { useState } from "react";
+import { PlayCircle } from "lucide-react";
 
-const VideoViewer = ({ src }) => {
+const VideoViewer = ({ src }: { src: string }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -33,7 +33,7 @@ const VideoViewer = ({ src }) => {
             controls
             autoPlay
             className="max-w-3/4 max-h-3/4 object-contain rounded"
-            onClick={(e) => e.stopPropagation()} 
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}

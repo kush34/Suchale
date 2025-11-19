@@ -22,7 +22,7 @@ const FileViewer = ({ src, filename }: FileViewerProps) => {
         ) : (
           <FileType className="text-blue-500" size={28} />
         )}
-        <div className="flex-1 truncate">{filename || src.split("/").pop()}</div>
+        <div className="flex-1 truncate">{filename.slice(0,25) || src.split("/").pop()}</div>
         <ArrowUpRight
           size={22}
           className="text-gray-500 hover:text-gray-700"

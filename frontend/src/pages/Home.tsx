@@ -16,7 +16,9 @@ const Home = () => {
   if (!chatCtx) return null;
   const chat = chatCtx?.chat;
   const themeCtx = useContext(ThemeContext);
-  const theme = themeCtx?.theme || true;
+  if (!themeCtx) return null;
+  const theme = themeCtx?.theme;
+
   //list of contacts of user
 
   const getChatList = async () => {
@@ -66,17 +68,17 @@ const Home = () => {
     return (<Loader1 theme={theme} />);
   }
   return (
-    <div className={`md:flex h-screen ${theme ? "bg-zinc-100" : "bg-zinc-950"} overflow-none`}>
+    <div className={`md:flex h-screen ${!theme ? "bg-zinc-100" : "bg-zinc-950"} overflow-none`}>
       <div className={`md:w-1/4 h-screen ${chat ? "hidden" : "block"} md:block`}>
         <UserList userChatList={userChatList} />
       </div>
       {
         chat ?
-          <div className='w-full md:w-3/4 h-screen overflow-none'>
+          <div className={` w-full md:w-3/4 h-screen overflow-none`}>
             <UserChat />
           </div>
           :
-          <div className="hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen md:h-9/10 text-zinc-500">
+          <div className={`${theme ? "bg-zinc-100" : "bg-zinc-950"} hidden xl:flex items-center justify-center w-full md:w-3/4 h-screen text-zinc-500`}>
             <span className='w-1/2 flex justify-center flex-col items-center gap-5'>
               <img src="./icon.png" className='w-15 h-15' alt="logo img" />
               Please select a chat to view messages

@@ -1,18 +1,19 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Settings, UserRoundPlus } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
-import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../Store/ThemeContext';
 import GroupCard from './GroupCard';
 import CreateGroupDialog from './CreateGroupDialog';
+import { Chat } from '@/types';
 
-const UserList = ({ userChatList }) => {
+const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchBar, setSearchBar] = useState();
-  const { theme } = useContext(ThemeContext)
+  const [searchBar, setSearchBar] = useState<string>('');
+  const themeCtx = useContext(ThemeContext)
+  const theme = themeCtx?.theme;
   useEffect(() => {
 
   }, [searchBar])
@@ -23,7 +24,7 @@ const UserList = ({ userChatList }) => {
           Suchale
         </div>
         <div className="settings flex justify-center items-center xl:m-3">
-          <button onClick={()=>setIsSearchOpen((prev)=>!prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
+          <button onClick={() => setIsSearchOpen((prev) => !prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
             <Search />
           </button>
           <div onClick={() => navigate('/settings')} className='cursor-pointer m-1 hover:scale-115 ease-in duration-120'>
@@ -41,7 +42,7 @@ const UserList = ({ userChatList }) => {
         {
           isSearchOpen &&
           <div>
-            <input onChange={(e) => setIsSearchOpen(e.target.value)} value={searchBar} className={`${theme ? "bg-white" : "bg-zinc-800"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
+            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={`${theme ? "bg-white" : "bg-zinc-800"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
           </div>
         }
       </div>

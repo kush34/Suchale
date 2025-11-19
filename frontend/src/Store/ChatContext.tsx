@@ -20,7 +20,7 @@ type ChatContextType = {
     groupFlag: boolean;
     setGroupFlag: React.Dispatch<React.SetStateAction<boolean>>;
 
-    getMessages: (loadMore?: boolean) => void;
+    getMessages: (loadMore?: boolean) => Promise<void>;
 
     loading: boolean;
     setLoading: React.Dispatch<React.SetStateAction<boolean>>;

@@ -10,11 +10,20 @@ import api from "../utils/axiosConfig";
 import { ThemeContext } from "../Store/ThemeContext";
 import LineLoader from "../loaders/LineLoader";
 import { toast } from "sonner";
+import { Message } from "@/types";
 
 const UserChat = () => {
-  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag, ViewChatInfo, infoWindow, sendMsg } = useContext(ChatContext);
-  const { theme } = useContext(ThemeContext);
-  const { user } = useUser();
+  const chatCtx = useContext(ChatContext);
+  if (!chatCtx) return null;
+  const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag, ViewChatInfo, infoWindow, sendMsg } = chatCtx;
+  const themeCtx = useContext(ThemeContext);
+  if (!themeCtx) return null;
+  const theme = themeCtx.theme;
+
+  const userCtx = useUser();
+  if (!userCtx) return null;
+  const user = userCtx.user;
+  if (!user) return null;
 
   const [message, setMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
@@ -23,13 +32,13 @@ const UserChat = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [hoverTopbar, setHoverTopbar] = useState(false);
 
-  const mediaInpRef = useRef();
-  const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
+  const mediaInpRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const typingTimeoutRef = useRef<number | null>(null);
 
   // Mouse tracking for info window
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener("mousemove", handleMouseMove);
@@ -45,15 +54,21 @@ const UserChat = () => {
     }, 2000);
   };
 
-  const handleEmojiClick = (emojiData) => setMessage((prev) => prev + emojiData);
+  const handleEmojiClick = (emojiData: string) => setMessage((prev) => prev + emojiData);
 
 
-  const mediaTrigger = () => mediaInpRef.current.click();
+  const mediaTrigger = () => {
+    if (mediaInpRef.current) mediaInpRef.current.click();
+  }
 
-  const sendMedia = async (e) => {
+  const sendMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
+    const target = e.target as HTMLInputElement;
+    const files = target.files;
+    if (files == null || !files[0]) return;
+    if (!chat) return;
     const formData = new FormData();
-    formData.append("file", e.target.files[0]);
+    formData.append("file", files[0]);
     formData.append("toUser", chat?.username);
 
     try {
@@ -63,7 +78,7 @@ const UserChat = () => {
       if (res.status === 200) {
         setChatArr((prev) => [
           ...prev,
-          { fromUser: user.username, toUser: chat?.username, content: res.data.url },
+          { fromUser: user.username, toUser: chat?.username, content: res.data.url } as Message,
         ]);
       }
     } catch (err) {
@@ -75,6 +90,7 @@ const UserChat = () => {
 
   useEffect(() => {
     socket.on("typing", ({ from }) => {
+      if (!chat) return;
       if (from === chat.username) setIsTyping(true);
     });
     socket.on("stopTyping", ({ from }) => setIsTyping(false));
@@ -152,7 +168,7 @@ const UserChat = () => {
         )}
       </div>
 
-      <div className={`flex media-emojis-textbar-sendbtn ${theme ? "bg-zinc-200 text-black":"text-white bg-zinc-700"} py-2`}>
+      <div className={`flex media-emojis-textbar-sendbtn ${theme ? "bg-zinc-200 text-black" : "text-white bg-zinc-700"} py-2`}>
         <div className="w-1/7 items-center flex justify-evenly">
           <div onClick={mediaTrigger} className="cursor-pointer flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110">
             <ImagePlay />

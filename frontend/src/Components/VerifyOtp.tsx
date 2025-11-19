@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Input } from '@/pages/Login';
 import { Button } from './ui/button';
+import { Input } from '@/pages/Login';
 
-const VerifyOtp = ({ email, password, username }) => {
+const VerifyOtp = ({ email, password, username }: { email: string, password: string, username: string }) => {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState();
+  const [otp, setOtp] = useState<string>("");
   const sendOtp = async () => {
+    if (otp.trim() === "" || isNaN(Number(otp))) return;
     try {
       const response = await axios.post(`${import.meta.env.VITE_URL}/user/verifyOtp`, {
         email: email,
@@ -18,7 +19,7 @@ const VerifyOtp = ({ email, password, username }) => {
       if (response.status === 200) {
         navigate('/login');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.response?.data || error.message);
     }
   }
@@ -45,8 +46,7 @@ const VerifyOtp = ({ email, password, username }) => {
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             placeholder='enter your OTP'
-            name=""
-            id=""
+            id="OTP"
             className="w-full max-w-xs p-3 text-black rounded"
           />
           <div className="submit w-full max-w-xs">
