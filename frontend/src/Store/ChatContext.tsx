@@ -1,7 +1,7 @@
 import { createContext, useEffect, useRef, useState } from "react";
-import api from '../utils/axiosConfig.js';
-import { UserContextType, useUser } from './UserContext.js';
-import { Chat, Group, Message, User } from "@/types/index.js";
+import api from '../utils/axiosConfig';
+import { UserContextType, useUser } from './UserContext';
+import { Chat, Group, Message, User } from "@/types/index";
 
 type SendMessagePayload =
     | { content: string; isGroup: true; groupId: string }

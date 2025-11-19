@@ -5,8 +5,8 @@ import UserList from '../Components/UserList'
 import { useNavigate } from 'react-router-dom'
 import socket from '../utils/socketService';
 import { ChatContext } from '../Store/ChatContext';
-import Loader1 from "../loaders/Loader1.js"
-import { ThemeContext } from '../Store/ThemeContext.jsx';
+import Loader1 from "../loaders/Loader1"
+import { ThemeContext } from '../Store/ThemeContext';
 import { Chat } from '@/types';
 const Home = () => {
   const navigate = useNavigate();

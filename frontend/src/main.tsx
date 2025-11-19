@@ -4,17 +4,17 @@ import './index.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import App from './App.jsx';
-import Home from './pages/Home.jsx';
-import Register from './pages/Register.jsx';
-import Login from './pages/Login.jsx';
-import AddContacts from './pages/AddContacts.jsx';
-import Settings from './pages/Settings.jsx';
+import App from './App';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import AddContacts from './pages/AddContacts';
+import Settings from './pages/Settings';
 
 import { UserContextProvider } from './Store/UserContext';
 // import { SocketProvider } from './Store/SocketContext';
 import { ChatContextProvider } from './Store/ChatContext';
-import { ThemeContextProvider } from './Store/ThemeContext.jsx';
+import { ThemeContextProvider } from './Store/ThemeContext';
 import { SocketProvider } from './Store/SocketContext';
 import { registerServiceWorker } from './utils/register-service-worker';
 const root = document.getElementById('root');
