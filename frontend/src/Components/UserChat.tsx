@@ -86,17 +86,29 @@ const UserChat = () => {
     }
     setLoading(false);
   };
-
+  const updateReaction = (updatedMsg: Message) => {
+    setChatArr(prev =>
+      prev.map(m =>
+        String(m._id) === String(updatedMsg._id) ? updatedMsg : m
+      )
+    );
+  };
 
   useEffect(() => {
     socket.on("typing", ({ from }) => {
       if (!chat) return;
       if (from === chat.username) setIsTyping(true);
     });
+    const handleDirect = (msg: Message) => updateReaction(msg);
+    const handleGroup = (msg: Message) => updateReaction(msg);
     socket.on("stopTyping", ({ from }) => setIsTyping(false));
+    socket.on("emojiReactionDirect", handleDirect)
+    socket.on("emojiReactionGroup", handleGroup)
     return () => {
       socket.off("typing");
       socket.off("stopTyping");
+      socket.off("emojiReactionDirect");
+      socket.off("emojiReactionGroup");
     };
   }, [chat]);
 

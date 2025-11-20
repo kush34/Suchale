@@ -71,7 +71,7 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
     return { status: "error", code: 404, message: `User does not exist : ${username}` };
   }
 
-  if (dbMsg.fromUser.toString() === dbUser._id.toString()) {
+  if (dbMsg.fromUser.toString() === dbUser.username.toString()) {
     return { status: "error", code: 400, message: "You cannot react to your own message." };
   }
 
@@ -87,7 +87,33 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
     { $addToSet: { reactions: { userId: dbUser._id, emoji } } },
     { new: true }
   );
+  if (!updatedMsg) return { status: "error", code: 404, message: "could not find the msg." }
 
+  if (updatedMsg.groupId) {
+    const senderSocketId = await redis.hget("onlineUsers", username);
+    if (senderSocketId) {
+      const senderSocket = io.sockets.sockets.get(senderSocketId);
+      if (senderSocket) {
+        console.log(`sending emoji reaction to GROUP: ${updatedMsg.groupId}`)
+        senderSocket.to(updatedMsg.groupId.toString()).emit("emojiReactionGroup", updatedMsg);
+      }
+    }
+  }
+
+  // DIRECT CHAT
+  else {
+    const otherUser =
+      dbMsg.fromUser.toString() === dbUser._id.toString()
+        ? dbMsg.toUser
+        : dbMsg.fromUser;
+    if (!otherUser) return { success: "error", code: 400, message: "could not react to the msg." }
+    const receiverSocketId = await redis.hget("onlineUsers", otherUser);
+    console.log(`other user:${receiverSocketId} : ${otherUser}`)
+    if (receiverSocketId) {
+      console.log(`sending emoji reaction to DM: ${updatedMsg.groupId}`)
+      io.to(receiverSocketId).emit("emojiReactionDirect", updatedMsg);
+    }
+  }
   return { status: true, code: 200, message: "Reaction added/updated", data: updatedMsg };
 };
 
