@@ -20,7 +20,7 @@ const PhotoMasonary = () => {
         }
       `}</style>
             <div className='marquee-container gap-5'>
-                {[...photos, ...photos, ...photos].map((img, index) => <img className='w-96 rounded-xl object-cover h-96 flex-shrink-0' key={index} src={img} alt={`Photo ${index + 1}`} />)}
+                {[...photos, ...photos, ...photos].map((img, index) => <img className='w-54 h-54 md:w-96 md:h-96 rounded-xl object-cover flex-shrink-0' key={index} src={img} alt={`Photo ${index + 1}`} />)}
             </div>
         </div>
     )

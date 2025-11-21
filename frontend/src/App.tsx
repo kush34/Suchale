@@ -8,11 +8,11 @@ import FAQs from './Components/landing/FAQs';
 const App = () => {
   const navigate = useNavigate();
   return (
-    <div>
+    <div className='max-w-8xl min-h-screen mx-auto'>
       <Navbar />
       <Hero />
       <PhotoMasonary />
-      <FAQs/>
+      <FAQs />
     </div>
 
   )
