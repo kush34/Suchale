@@ -74,7 +74,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
     <div
       onClick={handleClick}
       className={`${theme ? "bg-white text-black border-zinc-100" : "text-white border-zinc-800"} 
-        flex gap-3 items-center pb-3 hover:bg-zinc-700 
+        flex gap-3 items-center pb-3 hover:bg-zinc-400 
         ease-in duration-150 rounded cursor-pointer justify-between hover:shadow-xl border-b`}
     >
       <div className='flex gap-3'>

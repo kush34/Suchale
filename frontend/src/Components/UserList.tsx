@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { Settings, UserRoundPlus } from 'lucide-react';
+import { Settings, UserRoundPlus, X } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -56,8 +56,9 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
       <div className="searchbar px-4">
         {
           isSearchOpen &&
-          <div>
-            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={`${theme ? "bg-zinc-200" : "bg-zinc-800"} rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
+          <div className={`${theme ? "bg-zinc-200" : "bg-zinc-800"} flex items-center rounded`}>
+            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={` rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
+            {searchBar.length > 0 && <button onClick={() => setSearchBar('')} className='px-2'><X /></button>}
           </div>
         }
       </div>
