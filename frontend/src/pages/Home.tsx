@@ -66,7 +66,11 @@ const Home = () => {
     };
   }, []);
   if (loading) {
-    return (<Loader1 theme={theme} />);
+    return (
+      <div className='flex justify-center items-center w-full h-screen'>
+        <Loader1 theme={theme} />
+      </div>
+    );
   }
   return (
     <div className={`xl:flex h-screen ${bg} overflow-none`}>

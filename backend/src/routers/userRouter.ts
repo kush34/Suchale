@@ -28,4 +28,9 @@ router.get("/userInfo", verifyToken, userInfo);
 
 router.post("/subscribe", verifyToken, subscribe);
 
+router.post("/firebaseTokenVerify", (req, res) => {
+    console.log(`POST Firebase Token Verify `, req.body.token)
+    res.send("Pong")
+})
+
 export default router;

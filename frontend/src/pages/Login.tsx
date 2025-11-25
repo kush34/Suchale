@@ -1,9 +1,11 @@
-import { useState, ChangeEvent, ReactNode } from 'react';
+import { useState, ChangeEvent, ReactNode, useEffect } from 'react';
 import { Mail, Lock, Eye, Facebook, Chrome, Apple, AlertTriangle, AtSign, LucideIcon } from 'lucide-react';
 import axios from 'axios';
 import Loader1 from '@/loaders/Loader1';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { auth, googleSignInPopUp } from '@/config/firebaseConfig';
+import { getRedirectResult } from 'firebase/auth';
 
 type InputProps = {
   id: string;
@@ -108,6 +110,8 @@ const Login = () => {
     }
   };
 
+
+
   if (loading) return <Loader1 theme={true} />;
 
   const ErrorMessage = ({ message }: { message: string }) => (
@@ -149,9 +153,9 @@ const Login = () => {
         <div className="mt-6 space-y-3">
           <span className='text-zinc-600'>Coming Soon</span>
           <div className="grid grid-cols-3 gap-3">
-            <Button variant="ghost" disabled icon={Facebook} onClick={() => console.log('Facebook clicked')}>Facebook</Button>
-            <Button variant="ghost" disabled icon={Chrome} onClick={() => console.log('Google clicked')}>Google</Button>
-            <Button variant="ghost" disabled icon={Apple} onClick={() => console.log('Apple clicked')}>Apple</Button>
+            <Button icon={Chrome} onClick={() => googleSignInPopUp()}>
+              Google
+            </Button>
           </div>
         </div>
 
