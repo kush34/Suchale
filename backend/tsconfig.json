@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "strict": true,
     "noImplicitAny": false,
+    "resolveJsonModule": true,
     "typeRoots": [
       "./src/types",
       "./node_modules/@types"
@@ -15,6 +16,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/types/**/*.d.ts"
-, "src/tests/users.test.ts", "jest.config.js"  ]
+    "src/types/**/*.d.ts",
+    "src/tests/users.test.ts",
+    "jest.config.js"
+  ]
 }

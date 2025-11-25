@@ -110,6 +110,13 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    const res = await googleSignInPopUp();
+    if (res?.ok) {
+      localStorage.setItem("token", res.token);
+      navigate("/home");
+    }
+  };
 
 
   if (loading) return <Loader1 theme={true} />;
@@ -153,7 +160,7 @@ const Login = () => {
         <div className="mt-6 space-y-3">
           <span className='text-zinc-600'>Coming Soon</span>
           <div className="grid grid-cols-3 gap-3">
-            <Button icon={Chrome} onClick={() => googleSignInPopUp()}>
+            <Button icon={Chrome} onClick={() => handleGoogleLogin()}>
               Google
             </Button>
           </div>

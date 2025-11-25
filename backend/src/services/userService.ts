@@ -7,6 +7,7 @@ import Message, { IMessage } from "../models/messageModel";
 import crypto from "crypto"
 import redis from "../utils/redis";
 import sendOtp from "../controllers/sendOtp";
+import admin from "../config/firebase";
 
 interface ServiceResponse {
   statusCode: number;
@@ -285,3 +286,78 @@ export const sendMailService = async (email: string, username: string, password:
 
   return { status: "success", code: 200, message: `OTP sent to user email: ${email}` };
 };
+
+export const firebaseTokenVerify = async (token: string) => {
+  if (!token) {
+    return { status: "error", code: 400, message: "Token is required!" };
+  }
+
+  const decoded = await admin.auth().verifyIdToken(token);
+
+  let user = await User.findOne({ email: decoded.email });
+
+  // If user does NOT exist → create one
+  let resToken: string;
+  const jwtSecret = process.env.jwt_Secret;
+  if (!jwtSecret) throw new Error("JWT secret missing in environment");
+
+  if (!user) {
+    const baseName = decoded.name?.toLowerCase().replace(/\s+/g, "_") || "user";
+
+    let username = baseName;
+    let exists = await User.findOne({ username });
+
+    // Generate a unique username
+
+    while (exists) {
+      const suffix = Math.floor(Math.random() * 10000);
+      username = `${baseName}_${suffix}`;
+      exists = await User.findOne({ username });
+    }
+
+    // Create fake password because schema requires it
+    const fakePassword = Math.random().toString(36).slice(-12);
+
+    user = await User.create({
+      username,
+      email: decoded.email,
+      password: fakePassword,
+      profilePic: decoded.picture || undefined,
+    });
+
+    console.log("New user created:", username);
+    resToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        id: user._id
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+  } else {
+    resToken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        id: user._id
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+  }
+
+  return {
+    status: "success",
+    code: 200,
+    message: "Token verified",
+    token: resToken,
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      profilePic: user.profilePic,
+    }
+  };
+};
+

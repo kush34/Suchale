@@ -5,6 +5,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
 } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
@@ -24,47 +25,36 @@ const provider = new GoogleAuthProvider();
 
 const getFirebaseToken = async () => {
     const user = auth.currentUser;
+    if (!user) return null;
 
-    if (user) {
-        try {
-            const token = await user.getIdToken();
-            console.log("Token:", token);
-            const response = await axios.post(`${import.meta.env.VITE_URL}/user/firebaseTokenVerify`)
-            if (response.status === 200) {
-                return { status: true, message: "Login Successfull" }
-            } else {
-                return { status: false, message: `${response.data.message}` }
-            }
-        } catch (error) {
-            console.error("Error getting token:", error);
-            return { status: false, messsage: error }
-        }
+    try {
+        const token = await user.getIdToken(true); // always fresh
+
+        const response = await axios.post(
+            `${import.meta.env.VITE_URL}/user/firebaseTokenVerify`,
+            { token }
+        );
+
+        if (response.status === 200)
+            return { ok: true, token: response.data.result.token };
+
+        return { ok: false, message: response.data.message };
+    } catch (err) {
+        console.error("Token verify error:", err);
+        return { ok: false };
     }
 };
 
 
 export const googleSignInPopUp = async () => {
     try {
-        const result = await signInWithPopup(auth, provider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        if (!credential) return null;
-
-        const token = credential.accessToken;
-        const user = result.user;
-
-        await getFirebaseToken();
-        console.log(`User signed in`);
-        return true;
-    } catch (error: any) {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        const email = error.customData?.email;
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        console.error(`Sign-in error: ${errorCode} - ${errorMessage}`);
-        return false;
+        await signInWithPopup(auth, provider);
+        return await getFirebaseToken();
+    } catch (error) {
+        console.error("Google Sign-in Error:", error);
+        return { ok: false };
     }
-}
-
+};
 
 
 

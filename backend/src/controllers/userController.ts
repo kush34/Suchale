@@ -225,3 +225,22 @@ export const sendMail = async (req: Request<{}, {}, SendMailBody>, res: Response
         res.status(500).json({ status: "error", message: "Something went wrong" });
     }
 };
+
+
+interface firebaseTokenVerifyPayload {
+    token: string;
+}
+
+
+export const firebaseTokenVerify = async (req: Request<{}, {}, firebaseTokenVerifyPayload>, res: Response) => {
+    try {
+        const { token } = req.body;
+
+        const result = await userService.firebaseTokenVerify(token);
+        res.status(result.code).json(result);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Something went wrong" });
+    }
+}
