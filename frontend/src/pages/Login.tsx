@@ -4,8 +4,7 @@ import axios from 'axios';
 import Loader1 from '@/loaders/Loader1';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { auth, googleSignInPopUp } from '@/config/firebaseConfig';
-import { getRedirectResult } from 'firebase/auth';
+import { googleSignInPopUp } from '@/config/firebaseConfig';
 
 type InputProps = {
   id: string;
@@ -111,15 +110,17 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true)
     const res = await googleSignInPopUp();
     if (res?.ok) {
       localStorage.setItem("token", res.token);
       navigate("/home");
     }
+    setLoading(false)
   };
 
 
-  if (loading) return <Loader1 theme={true} />;
+  if (loading) return <Loader1 theme={false} />;
 
   const ErrorMessage = ({ message }: { message: string }) => (
     <div className="flex items-center p-3 mt-4 text-sm font-medium text-red-400 bg-red-900/30 rounded-lg border border-red-700/50">
@@ -158,12 +159,9 @@ const Login = () => {
         </form>
 
         <div className="mt-6 space-y-3">
-          <span className='text-zinc-600'>Coming Soon</span>
-          <div className="grid grid-cols-3 gap-3">
-            <Button icon={Chrome} onClick={() => handleGoogleLogin()}>
-              Google
-            </Button>
-          </div>
+          <Button className='w-full bg-sky-500' onClick={() => handleGoogleLogin()} disabled={loading}>
+            Google
+          </Button>
         </div>
 
         <p className="mt-8 text-center text-sm text-gray-500">

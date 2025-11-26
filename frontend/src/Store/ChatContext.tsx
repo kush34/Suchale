@@ -76,7 +76,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
 
             if (response.status === 200) {
                 const newMessage: Message = {
-                    _id: response.data.message._id,
+                    _id: response.data._id,
                     fromUser: user.username,
                     toUser: "username" in chat ? chat.username : "",
                     content,
