@@ -36,7 +36,7 @@ const getFirebaseToken = async () => {
         );
 
         if (response.status === 200)
-            return { ok: true, token: response.data.result.token };
+            return { ok: true, token: response.data.token };
 
         return { ok: false, message: response.data.message };
     } catch (err) {

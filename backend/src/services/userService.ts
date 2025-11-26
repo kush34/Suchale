@@ -119,8 +119,11 @@ export const getUserList = async (username: string) => {
   if (!dbUser) return { error: "User not found" };
 
   // Fetch contacts
-  const contacts = dbUser.contacts || [];
-  const resUser = await User.find({ _id: { $in: contacts } }, "username profilePic");
+  // const contacts = dbUser.contacts || [];
+
+  const contactIds = dbUser.contacts.map(c => c.userId);
+
+  const resUser = await User.find({ _id: { $in: contactIds } }, "username profilePic");
 
   // Fetch groups
   const resGrp = await Group.find({ users: dbUser._id }, "name profilePic");
