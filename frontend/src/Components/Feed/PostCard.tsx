@@ -23,7 +23,7 @@ interface PostCardProps {
 
 const PostCard = ({ post }: PostCardProps) => {
     return (
-        <div className='p-5 rounded border-zinc-400 border flex flex-col gap-5'>
+        <div className='p-5 rounded border-zinc-200 shadow border flex flex-col gap-5'>
             <Profile
                 src={post.user.profilePhoto || './836.jpg'}
                 username={post.user.username || 'text_34'}
@@ -36,3 +36,4 @@ const PostCard = ({ post }: PostCardProps) => {
 }
 
 export default PostCard
+
