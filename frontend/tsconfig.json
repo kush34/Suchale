@@ -9,6 +9,8 @@
     "allowJs": false,
     "checkJs": false,
     "strict": true,
+    "types": ["react"],
+    "lib": ["DOM","ESNext"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "baseUrl": "./src",

@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@/Components/ui/button';
-import Navbar from './Components/landing/Navbar';
-import Hero from './Components/landing/Hero';
-import PhotoMasonary from './Components/landing/PhotoMasonary';
-import FAQs from './Components/landing/FAQs';
+import { Button } from '@/components/ui/button';
+import Navbar from './components/landing/Navbar';
+import Hero from './components/landing/Hero';
+import PhotoMasonary from './components/landing/PhotoMasonary';
+import FAQs from './components/landing/FAQs';
 
 const App = () => {
   const navigate = useNavigate();

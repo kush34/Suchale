@@ -17,6 +17,8 @@ import { ChatContextProvider } from './Store/ChatContext';
 import { ThemeContextProvider } from './Store/ThemeContext';
 import { SocketProvider } from './Store/SocketContext';
 import { registerServiceWorker } from './utils/register-service-worker';
+import FeedPage from './pages/Feed';
+import { SidebarProvider } from './components/ui/sidebar';
 const root = document.getElementById('root');
 
 type Props = {
@@ -27,11 +29,13 @@ function ProtectedRoutes({ children }: Props) {
   return (
     <UserContextProvider>
       <ThemeContextProvider>
-        <ChatContextProvider>
-          <SocketProvider>
-            {children}
-          </SocketProvider>
-        </ChatContextProvider>
+        {/* <SidebarProvider> */}
+          <ChatContextProvider>
+            <SocketProvider>
+              {children}
+            </SocketProvider>
+          </ChatContextProvider>
+        {/* </SidebarProvider> */}
       </ThemeContextProvider>
     </UserContextProvider>
   );
@@ -49,7 +53,7 @@ if (root) {
 
         {/* All protected routes */}
         <Route
-          path="/home"
+          path="/messages"
           element={
             <ProtectedRoutes>
               <Home />
@@ -69,6 +73,14 @@ if (root) {
           element={
             <ProtectedRoutes>
               <Settings />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoutes>
+              <FeedPage />
             </ProtectedRoutes>
           }
         />

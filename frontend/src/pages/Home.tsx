@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import api from '../utils/axiosConfig';
-import UserChat from '../Components/UserChat'
-import UserList from '../Components/UserList'
+import UserChat from '../components/UserChat'
+import UserList from '../components/UserList'
 import { useNavigate } from 'react-router-dom'
 import socket from '../utils/socketService';
 import { ChatContext } from '../Store/ChatContext';

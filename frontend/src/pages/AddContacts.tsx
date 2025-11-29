@@ -35,12 +35,12 @@ const AddContacts = () => {
     getContacts();
   }, [username]);
   return (
-    <div className={`${theme ? "bg-zinc-300 text-black" : "bg-black text-white"} h-screen`}>
+    <div className={`${theme ? "bg-white text-black" : "bg-black text-white"} h-screen`}>
       <div className={`head  flex justify-between items-center pt-5`}>
-        <h1 className="text-2xl font-bold m-5">Add Contacts</h1>
+        <h1 className="text-2xl font-bold m-5">Search</h1>
         <div>
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(-1)}
             className="m-5 bg-white text-black border rounded px-4 py-2 cursor-pointer"
           >
             Back
@@ -63,7 +63,9 @@ const AddContacts = () => {
         />
       </div>
       {loading ? (
-        <Loader1 theme={theme || true} />
+        <div>
+          <Loader1 theme={theme || true} />
+        </div>
       ) : (
         <div className={`search-results flex justify-center mt-5`}>
           {users.length == 0 ? (

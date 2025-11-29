@@ -4,7 +4,7 @@ import Loader1 from '@/loaders/Loader1';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import VerifyOtp from '@/Components/VerifyOtp';
+import VerifyOtp from '@/components/VerifyOtp';
 import { Button, Input } from './Login';
 
 
