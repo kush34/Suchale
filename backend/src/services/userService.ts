@@ -8,6 +8,7 @@ import crypto from "crypto"
 import redis from "../utils/redis";
 import sendOtp from "../controllers/sendOtp";
 import admin from "../config/firebase";
+import Post from "../models/postModel";
 
 interface ServiceResponse {
   statusCode: number;
@@ -232,12 +233,12 @@ export const addContactService = async (username: string, contactUsername: strin
   }
 
   // Check if already in contacts
-  if (curUser.contacts.some(c => c.userId.equals(contactUser._id))) {
+  if (curUser.contacts.some(c => c.userId.equals((contactUser as any)._id))) {
     return { status: "error", code: 400, message: "User already in contacts" };
   }
 
   const newContact: IContact = {
-    userId: contactUser._id,
+    userId: (contactUser as any)._id,
     lastMessage: null
   };
   curUser.contacts.push(newContact);
@@ -364,3 +365,42 @@ export const firebaseTokenVerify = async (token: string) => {
   };
 };
 
+
+export const getUserProfile = async (username: string) => {
+
+  const user = await User.findOne({ username }).select(
+    "username fullName bio profilePic followers following"
+  );
+
+  if (!user) {
+    return { status: "error", code: 404, message: "User not found" };
+  }
+
+  const posts = await Post.find({ user: user._id })
+    .sort({ createdAt: -1 })
+    .select("media content engagement")
+    .lean();
+
+  return {
+    status: "succes", code: 200, data: {
+      user: {
+        username: user.username,
+        fullName: user.fullName,
+        bio: user.bio,
+        profilePic: user.profilePic,
+        followers: user.followers?.length || 0,
+        following: user.following?.length || 0,
+        posts: posts.map((p) => ({
+          post_id: p._id,
+          media: p.media,
+          content: p.content,
+          engagement: p.engagement,
+          user: {
+            username: user.username,
+            profilePic: user.profilePic,
+          },
+        })),
+      },
+    }
+  };
+}

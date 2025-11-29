@@ -103,7 +103,7 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
   // DIRECT CHAT
   else {
     const otherUser =
-      dbMsg.fromUser.toString() === dbUser._id.toString()
+      dbMsg.fromUser.toString() === (dbUser as any)._id.toString()
         ? dbMsg.toUser
         : dbMsg.fromUser;
     if (!otherUser) return { success: "error", code: 400, message: "could not react to the msg." }
@@ -260,7 +260,7 @@ export const getMembersByGroupIdService = async (username: string, groupId: stri
 
   if (!groupDB) throw new Error("Group not found.");
   if (!userDB) throw new Error("User not found.");
-  if (!groupDB.users.includes(userDB._id)) throw new Error(`User not member of ${groupDB.name}.`);
+  if (!groupDB.users.includes((userDB as any)._id)) throw new Error(`User not member of ${groupDB.name}.`);
 
   const members = await User.find({ _id: { $in: groupDB.users } }).select("username profilePic");
 

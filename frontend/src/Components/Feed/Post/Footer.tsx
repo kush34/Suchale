@@ -1,4 +1,4 @@
-import { Heart, MessageCircle } from 'lucide-react'
+import { Heart, MessageCircle, Share } from 'lucide-react'
 import React from 'react'
 
 interface PostFooterProps {
@@ -14,6 +14,9 @@ const Footer = (engagement: PostFooterProps) => {
             <span className='flex gap-2'>
                 <MessageCircle />
                 {engagement.comment}
+            </span>
+            <span className='flex gap-2'>
+                <Share />
             </span>
         </span>
     )

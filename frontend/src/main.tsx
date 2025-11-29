@@ -19,6 +19,7 @@ import { SocketProvider } from './Store/SocketContext';
 import { registerServiceWorker } from './utils/register-service-worker';
 import FeedPage from './pages/Feed';
 import { SidebarProvider } from './components/ui/sidebar';
+import ProfilePage from './pages/ProfilePage';
 const root = document.getElementById('root');
 
 type Props = {
@@ -82,6 +83,12 @@ if (root) {
             <ProtectedRoutes>
               <FeedPage />
             </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/profile/:username"
+          element={
+              <ProfilePage />
           }
         />
       </Routes>

@@ -88,7 +88,7 @@ import api from "@/utils/axiosConfig";
 interface Post {
   post_id: string;
   user: {
-    profilePhoto: string;
+    profilePic: string;
     username: string;
   };
   media?: string[];
@@ -108,7 +108,7 @@ const Feed = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/post/feed"); // your backend endpoint
+      const res = await api.get("/post/feed"); 
       setPosts(res.data.posts || []);
     } catch (err: any) {
       console.error(err);

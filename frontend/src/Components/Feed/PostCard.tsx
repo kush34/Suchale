@@ -9,7 +9,7 @@ interface PostCardProps {
     post: {
         post_id: string;
         user: {
-            profilePhoto: string;
+            profilePic: string;
             username: string;
         };
         media?: string[];
@@ -25,7 +25,7 @@ const PostCard = ({ post }: PostCardProps) => {
     return (
         <div className='p-5 rounded border-zinc-200 shadow border flex flex-col gap-5'>
             <Profile
-                src={post.user.profilePhoto || './836.jpg'}
+                src={post.user.profilePic || './836.jpg'}
                 username={post.user.username || 'text_34'}
             />
             {post.media && <Media src={post.media} />}
