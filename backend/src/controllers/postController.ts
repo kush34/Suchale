@@ -133,18 +133,25 @@ export const likePost = async (req: Request, res: Response) => {
         const userId = req.id;
         const { postId } = req.params;
 
+        if (!userId) {
+            return res.status(401).send({ message: "Unauthorized" });
+        }
+
         if (!postId) {
             return res.status(400).send({ message: "postId required" });
         }
 
+        // Convert userId to ObjectId for proper comparison with MongoDB
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
         const added = await Post.findOneAndUpdate(
             {
                 _id: postId,
-                "engagement.likes.user": { $ne: userId }
+                "engagement.likes.user": { $ne: userObjectId }
             },
             {
                 $push: {
-                    "engagement.likes": { user: userId, likedAt: new Date() }
+                    "engagement.likes": { user: userObjectId, likedAt: new Date() }
                 }
             },
             { new: true }
@@ -158,7 +165,7 @@ export const likePost = async (req: Request, res: Response) => {
             { _id: postId },
             {
                 $pull: {
-                    "engagement.likes": { user: userId }
+                    "engagement.likes": { user: userObjectId }
                 }
             },
             { new: true }

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner';
 import CommentCard from "@/components/CommentCard";
+import { Skeleton } from '@/components/ui/skeleton';
+import PostPageSkeleton from '@/components/skeletons/post-page';
 
 interface Post {
     _id: string;
@@ -34,7 +36,7 @@ interface Post {
 const PostPage = () => {
     const { postId } = useParams();
     const [post, setPost] = useState<Post | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [comment, setComment] = useState("");
 
     const fetchPost = async () => {
@@ -87,7 +89,7 @@ const PostPage = () => {
                         ...prev,
                         engagement: {
                             ...prev.engagement,
-                            comments: [...prev.engagement.comments, res.data.data] 
+                            comments: [...prev.engagement.comments, res.data.data]
                         }
                     }
                     : prev
@@ -103,7 +105,8 @@ const PostPage = () => {
         if (postId) fetchPost();
     }, []);
 
-    if (loading || !post) return <div>Loading...</div>;
+    if (loading || !post) return <PostPageSkeleton/>;
+
 
     return (
         <div className="max-w-xl mx-auto py-4">

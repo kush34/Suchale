@@ -391,7 +391,7 @@ export const getUserProfile = async (username: string) => {
         followers: user.followers?.length || 0,
         following: user.following?.length || 0,
         posts: posts.map((p) => ({
-          post_id: p._id,
+          _id: p._id,
           media: p.media,
           content: p.content,
           engagement: p.engagement,

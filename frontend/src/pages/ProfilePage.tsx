@@ -3,6 +3,28 @@ import { useParams } from 'react-router-dom'
 import api from '@/utils/axiosConfig'
 import PostCard from '@/components/Feed/PostCard';
 
+interface post {
+    _id: string;
+    media?: string[];
+    content: string;
+    engagement: {
+        likes: {
+            user: string;
+            likedAt: string;
+            _id: string;
+        }[];
+        comments: {
+            userId: string;
+            content: string;
+            createdAt: Date;
+        }[];
+        isLiked: boolean;
+    };
+    user: {
+        username: string;
+        profilePic: string;
+    };
+}
 interface UserProfile {
     username: string;
     profilePic: string;
@@ -10,25 +32,14 @@ interface UserProfile {
     bio: string;
     followers: number;
     following: number;
-    posts: {
-        post_id: string;
-        media?: string[];
-        content: string;
-        engagement: {
-            like: number;
-            comments: number;
-        };
-        user: {
-            username: string;
-            profilePic: string;
-        };
-    }[];
+    posts: post[];
 }
 
 const ProfilePage = () => {
     const { username } = useParams();
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState<UserProfile | null>(null);
+    const [posts, setPosts] = useState<post[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const getProfile = async (username: string) => {
@@ -46,6 +57,8 @@ const ProfilePage = () => {
             });
 
             setUser(res.data.data.user);
+            setPosts(res.data.data.user.posts);
+
         } catch (err: any) {
             console.log(err);
             setError(err.response?.data?.message || "Unable to load profile");
@@ -53,7 +66,22 @@ const ProfilePage = () => {
             setLoading(false);
         }
     };
-
+    const UpdateLike = (id: string) => {
+        setPosts(prev =>
+            prev && prev.map(post => {
+                if (post._id === id) {
+                    return {
+                        ...post,
+                        engagement: {
+                            ...post.engagement,
+                            isLiked: !post.engagement.isLiked
+                        }
+                    };
+                }
+                return post
+            })
+        )
+    }
     useEffect(() => {
         if (!username) return;
         getProfile(username);
@@ -80,15 +108,15 @@ const ProfilePage = () => {
                     <div className="flex gap-5 mt-2 text-sm">
                         <span>{user.followers} Followers</span>
                         <span>{user.following} Following</span>
-                        <span>{user.posts.length} Posts</span>
+                        <span>{posts && posts.length} Posts</span>
                     </div>
                 </div>
             </div>
 
             {/* Posts */}
             <div className="flex flex-col gap-4">
-                {user.posts.map((p) => (
-                    <PostCard key={p.post_id} post={p} />
+                {posts && posts.map((p) => (
+                    <PostCard key={p._id} post={p} likeToggle={UpdateLike}/>
                 ))}
             </div>
         </div>
