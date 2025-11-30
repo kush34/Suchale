@@ -5,12 +5,20 @@ export interface IPost extends Document {
   content: string;
   media?: string[];
   engagement: {
-    like: number;
-    comments: number;
+    likes: {
+      user: mongoose.Types.ObjectId;
+      likedAt: Date;
+    }[];
+    comments: {
+      userId: mongoose.Types.ObjectId;
+      content: string;
+      createdAt: Date;
+    }[];
   };
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 const postSchema = new Schema<IPost>(
   {
@@ -28,19 +36,24 @@ const postSchema = new Schema<IPost>(
     },
     media: [
       {
-        type: String, 
+        type: String,
         trim: true,
       },
     ],
     engagement: {
-      like: {
-        type: Number,
-        default: 0,
-      },
-      comments: {
-        type: Number,
-        default: 0,
-      },
+      likes: [
+        {
+          user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+          likedAt: { type: Date, default: Date.now }
+        }
+      ],
+      comments: [
+        {
+          userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+          content: { type: String, required: true },
+          createdAt: { type: Date, default: Date.now }
+        }
+      ]
     },
   },
   { timestamps: true }

@@ -97,10 +97,10 @@ export const getPost = async (req: Request, res: Response) => {
 };
 
 
-// GET FEED (PAGINATED)
 export const getFeed = async (req: Request, res: Response) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
+        const userId = req.id;
+        const page = Number(req.query.page) || 1;
         const limit = 10;
         const skip = (page - 1) * limit;
 
@@ -111,10 +111,102 @@ export const getFeed = async (req: Request, res: Response) => {
             .populate("user", "username profilePic")
             .lean();
 
-        return res.json({ page, posts });
+        const feed = posts.map(post => ({
+            ...post,
+            isLiked: post.engagement?.likes?.some(
+                (like: any) => like.user.toString() === userId
+            )
+        }));
+
+        return res.json({ page, posts: feed });
 
     } catch (error) {
         console.log("Error fetching feed:", error);
-        res.status(500).send({ message: "Internal Server Error" });
+        return res.status(500).send({ message: "Internal Server Error" });
     }
 };
+
+
+
+export const likePost = async (req: Request, res: Response) => {
+    try {
+        const userId = req.id;
+        const { postId } = req.params;
+
+        if (!postId) {
+            return res.status(400).send({ message: "postId required" });
+        }
+
+        const added = await Post.findOneAndUpdate(
+            {
+                _id: postId,
+                "engagement.likes.user": { $ne: userId }
+            },
+            {
+                $push: {
+                    "engagement.likes": { user: userId, likedAt: new Date() }
+                }
+            },
+            { new: true }
+        );
+
+        if (added) {
+            return res.send({ message: "Liked the post", post: added });
+        }
+
+        const removed = await Post.findOneAndUpdate(
+            { _id: postId },
+            {
+                $pull: {
+                    "engagement.likes": { user: userId }
+                }
+            },
+            { new: true }
+        );
+
+        return res.send({ message: "Removed like from post", post: removed });
+
+    } catch (error) {
+        console.log(`ERROR / likePost: ${error}`);
+        return res.status(500).send({ message: "Internal server error" });
+    }
+};
+
+
+export const commentPost = async (req: Request, res: Response) => {
+    try {
+        if (!req.id) {
+            return res.status(401).send({ message: "Unauthorized" });
+        }
+        const userId = new mongoose.Types.ObjectId(req.id);
+
+        const { postId } = req.params;
+        const { content } = req.body;
+
+        if (!postId || !content?.trim()) {
+            return res.status(400).send({ message: "postId and content are required" });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).send({ message: "Post not found" });
+        }
+
+        const newComment = {
+            userId: userId,
+            content: content.trim(),
+            createdAt: new Date(),
+        };
+
+        post.engagement.comments.push(newComment);
+        await post.save();
+
+        return res.send({ message: "Comment added", comment: newComment });
+
+    } catch (error) {
+        console.log(`ERROR /commentPost: ${error}`);
+        return res.status(500).send({ message: "Internal server error" });
+    }
+};
+
+

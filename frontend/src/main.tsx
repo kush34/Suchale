@@ -17,7 +17,7 @@ import { ChatContextProvider } from './Store/ChatContext';
 import { ThemeContextProvider } from './Store/ThemeContext';
 import { SocketProvider } from './Store/SocketContext';
 import { registerServiceWorker } from './utils/register-service-worker';
-import FeedPage from './pages/Feed';
+import FeedPage from './pages/FeedPage';
 import { SidebarProvider } from './components/ui/sidebar';
 import ProfilePage from './pages/ProfilePage';
 const root = document.getElementById('root');
