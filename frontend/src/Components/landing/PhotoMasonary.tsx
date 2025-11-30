@@ -1,6 +1,6 @@
 import React from 'react'
 
-const PhotoMasonary = () => {
+export const PhotoMasonary = () => {
 
     const photos = ["./Landing/1.jpg", "./Landing/2.jpg", "./Landing/3.jpg", "./Landing/4.jpg", "./Landing/5.jpg", "./Landing/6.jpg"]
     return (
@@ -25,5 +25,3 @@ const PhotoMasonary = () => {
         </div>
     )
 }
-
-export default PhotoMasonary

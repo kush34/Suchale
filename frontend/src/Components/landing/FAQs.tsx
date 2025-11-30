@@ -1,6 +1,6 @@
 import React from 'react'
 
-const FAQs = () => {
+export const FAQs = () => {
     return (
         <div className='flex flex-col items-center justify-center my-16'>
             <span className='font-xl font-semibold'>

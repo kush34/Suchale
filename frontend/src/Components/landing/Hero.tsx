@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 
-const Hero = () => {
+export const Hero = () => {
     const badge = ["->  latest  ->", "-> positive ->", "-> trending ->"]
     const [index, setIndex] = useState(0);
     const navigate = useNavigate();
@@ -45,5 +45,3 @@ const Hero = () => {
         </div>
     )
 }
-
-export default Hero
