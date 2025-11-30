@@ -201,7 +201,7 @@ export const commentPost = async (req: Request, res: Response) => {
         post.engagement.comments.push(newComment);
         await post.save();
 
-        return res.send({ message: "Comment added", comment: newComment });
+        return res.send({ message: "Comment added", data: newComment });
 
     } catch (error) {
         console.log(`ERROR /commentPost: ${error}`);
@@ -210,3 +210,55 @@ export const commentPost = async (req: Request, res: Response) => {
 };
 
 
+export const getPostById = async (req: Request, res: Response) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.id; 
+
+        if (!postId) {
+            return res.status(400).json({ message: "postId required" });
+        }
+
+        const post = await Post.findById(postId)
+            .populate("user", "username profilePic")
+            .populate("engagement.comments.userId", "username profilePic");
+
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Transform comments for UI  
+        const formattedComments = post.engagement.comments.map((c) => ({
+            userId: c.userId?._id,
+            username: (c.userId as any)?.username,
+            profilePic: (c.userId as any)?.profilePic,
+            content: c.content,
+            createdAt: c.createdAt,
+        }));
+
+        //  modify as req on  frontend side  
+        const responsePost = {
+            _id: post._id,
+            user: {
+                profilePic: (post.user as any).profilePic,
+                username: (post.user as any).username,
+            },
+            media: post.media,
+            content: post.content,
+            engagement: {
+                likes: post.engagement.likes,
+                comments: formattedComments,
+                isLiked: post.engagement.likes.some(like => like.user.toString() === userId),
+            }
+        };
+
+        return res.status(200).json({
+            message: "Post fetched",
+            data: responsePost
+        });
+
+    } catch (error) {
+        console.error("getPostById error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};

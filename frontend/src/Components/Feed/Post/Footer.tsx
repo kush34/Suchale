@@ -1,5 +1,6 @@
 import { Heart, MessageCircle, Share } from 'lucide-react'
 import React from 'react'
+import { toast } from 'sonner';
 
 interface PostFooterProps {
     like: number,
@@ -7,28 +8,41 @@ interface PostFooterProps {
     isLiked: boolean,
     onLikeToggle: () => void;
     isLoading?: boolean;
+    _id: string;
 }
-const Footer = (engagement: PostFooterProps) => {
+const Footer = ({
+    like,
+    comments,
+    isLiked,
+    onLikeToggle,
+    isLoading,
+    _id
+}: PostFooterProps) => {
+
+    const onCopy = () => {
+        navigator.clipboard.writeText(`${import.meta.env.VITE_SITE_URL}/post/${_id}`)
+        toast("Url copied")
+    }
     return (
         <span className='flex justify-between mt-5 text-zinc-500'>
             <button
-                onClick={() => engagement.onLikeToggle()}
-                disabled={engagement.isLoading}
-                className={`flex gap-2 items-center transition-colors ${engagement.isLiked
+                onClick={() => onLikeToggle()}
+                disabled={isLoading}
+                className={`flex gap-2 items-center transition-colors ${isLiked
                     ? 'text-red-500'
                     : 'hover:text-red-400'
                     } disabled:opacity-50`}
             >
-                <Heart fill={engagement.isLiked ? "currentColor" : "none"} />
-                {engagement.like}
+                <Heart fill={isLiked ? "currentColor" : "none"} />
+                {like}
             </button>
             <span className='flex gap-2'>
                 <MessageCircle />
-                {engagement.comments}
+                {comments}
             </span>
-            <span className='flex gap-2'>
+            <button onClick={onCopy} className='flex gap-2'>
                 <Share />
-            </span>
+            </button>
         </span>
     )
 }

@@ -20,6 +20,7 @@ import { registerServiceWorker } from './utils/register-service-worker';
 import FeedPage from './pages/FeedPage';
 import { SidebarProvider } from './components/ui/sidebar';
 import ProfilePage from './pages/ProfilePage';
+import PostPage from './pages/PostPage';
 const root = document.getElementById('root');
 
 type Props = {
@@ -89,6 +90,12 @@ if (root) {
           path="/profile/:username"
           element={
               <ProfilePage />
+          }
+        />
+        <Route
+          path="/post/:postId"
+          element={
+              <PostPage />
           }
         />
       </Routes>

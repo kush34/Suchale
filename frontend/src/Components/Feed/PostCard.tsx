@@ -3,6 +3,7 @@ import Profile from './Post/Profile'
 import Footer from './Post/Footer';
 import Media from './Post/Media';
 import api from '@/utils/axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 interface PostCardProps {
     post: {
@@ -34,7 +35,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
     const [liked, setLiked] = useState(post.engagement.isLiked);
     const [likeCount, setLikeCount] = useState(post.engagement.likes.length);
     const [isLoading, setIsLoading] = useState(false);
-
+    const navigate = useNavigate()
     const handleLike = async () => {
         if (isLoading) return;
         setIsLoading(true);
@@ -73,8 +74,8 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
                 username={post.user.username || 'text_34'}
             />
             {post.media && <Media src={post.media} />}
-            <span>{post.content}</span>
-            <Footer like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />
+            <span onClick={() => navigate(`/post/${post._id}`)} className='cursor-pointer'>{post.content}</span>
+            <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />
         </div>
     )
 }
