@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Navbar } from "@/components/landing/home-navbar";
-import { Hero } from "@/components/landing/hero";
-import { PhotoMasonary } from "@/components/landing/photo-marque";
-import FAQs from "@/components/landing/faqs";
+import { Navbar } from "@/components/landing/topbar";
+import { Hero } from "@/components/landing/hero-section";
+import { PhotoMasonary } from "@/components/landing/photo-section";
+import FAQs from "@/components/landing/faqs-section";
 
 const App = () => {
   const navigate = useNavigate();
