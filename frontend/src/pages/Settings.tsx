@@ -97,7 +97,7 @@ const Settings = () => {
                 <div className="title text-lg md:text-4xl m-4 font-bold">
                     Settings
                 </div>
-                <div><button onClick={() => navigate("/home")} className='m-5 bg-black text-white rounded-full px-2 py-2 cursor-pointer'><Undo2 /></button></div>
+                <div><button onClick={() => navigate(-1)} className='m-5 bg-black text-white rounded-full px-2 py-2 cursor-pointer'><Undo2 /></button></div>
             </div>
             <div className='m-5'>
                 <div className="profilepic flex justify-center items-center">

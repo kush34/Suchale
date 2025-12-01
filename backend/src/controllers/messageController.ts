@@ -1,4 +1,4 @@
-import User from '../models/userModel';
+import User, { IUser } from '../models/userModel';
 import { Request, Response } from 'express';
 import * as messageService from "../services/messageService"
 
@@ -116,7 +116,7 @@ export const createGroup = async (req: Request, res: Response) => {
 
         const { name, photoURL, users } = req.body;
 
-        const dbUser = await User.findOne({ username });
+        const dbUser = await User.findOne({ username }) as any;
         if (!dbUser) return res.status(400).json({ error: "User not found" });
 
         const newGroup = await messageService.createGroupService({ name, photoURL, users, adminId: dbUser._id.toString() });

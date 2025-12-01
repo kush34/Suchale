@@ -17,6 +17,10 @@ import { ChatContextProvider } from './Store/ChatContext';
 import { ThemeContextProvider } from './Store/ThemeContext';
 import { SocketProvider } from './Store/SocketContext';
 import { registerServiceWorker } from './utils/register-service-worker';
+import FeedPage from './pages/FeedPage';
+import { SidebarProvider } from './components/ui/sidebar';
+import ProfilePage from './pages/ProfilePage';
+import PostPage from './pages/PostPage';
 const root = document.getElementById('root');
 
 type Props = {
@@ -27,11 +31,13 @@ function ProtectedRoutes({ children }: Props) {
   return (
     <UserContextProvider>
       <ThemeContextProvider>
-        <ChatContextProvider>
-          <SocketProvider>
-            {children}
-          </SocketProvider>
-        </ChatContextProvider>
+        {/* <SidebarProvider> */}
+          <ChatContextProvider>
+            <SocketProvider>
+              {children}
+            </SocketProvider>
+          </ChatContextProvider>
+        {/* </SidebarProvider> */}
       </ThemeContextProvider>
     </UserContextProvider>
   );
@@ -49,7 +55,7 @@ if (root) {
 
         {/* All protected routes */}
         <Route
-          path="/home"
+          path="/messages"
           element={
             <ProtectedRoutes>
               <Home />
@@ -70,6 +76,26 @@ if (root) {
             <ProtectedRoutes>
               <Settings />
             </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoutes>
+              <FeedPage />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/profile/:username"
+          element={
+              <ProfilePage />
+          }
+        />
+        <Route
+          path="/post/:postId"
+          element={
+              <PostPage />
           }
         />
       </Routes>

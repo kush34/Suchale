@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import * as userService from "../services/userService";
+import User from '../models/userModel';
+import Post from '../models/postModel';
 
 
 interface RegisterBody {
@@ -14,6 +16,7 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
         const result = await userService.registerUser(username, email, password);
         res.status(result.statusCode).json(result.body);
     } catch (error) {
+        console.log(`Error /user/create ${error}`)
         res.status(500).json({ message: "something went wrong" });
     }
 };
@@ -244,3 +247,17 @@ export const firebaseTokenVerify = async (req: Request<{}, {}, firebaseTokenVeri
         res.status(500).json({ status: "error", message: "Something went wrong" });
     }
 }
+
+export const getUserProfile = async (req: Request, res: Response) => {
+    try {
+        const { username } = req.params;
+
+        if (!username) return res.status(400).send({ message: "username required to get profile of user." })
+        const result = await userService.getUserProfile(username);
+
+        return res.status(Number(result.code)).send(result)
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};

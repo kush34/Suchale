@@ -3,7 +3,7 @@ import { Button } from '../ui/button'
 import { Languages } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-const Navbar = () => {
+export const Navbar = () => {
     const navigate = useNavigate();
     return (
         <div className='flex justify-between mx-10 my-10'>
@@ -28,5 +28,3 @@ const Navbar = () => {
         </div >
     )
 }
-
-export default Navbar

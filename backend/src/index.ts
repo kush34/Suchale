@@ -5,7 +5,7 @@ import 'dotenv/config'
 import connectDB from "./config/database";
 import userRouter from "./routers/userRouter";
 import messageRouter from "./routers/messageRouter";
-
+import postRouter from "./routers/postRouter"
 import cors from 'cors';
 import socketHandler from "./socket";
 
@@ -19,7 +19,6 @@ const io = new Server(server, {
 });
 
 connectDB();
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(
@@ -32,6 +31,7 @@ app.use(
 
 app.use('/user', userRouter);
 app.use('/message', messageRouter);
+app.use('/post', postRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
 
 

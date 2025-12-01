@@ -98,7 +98,7 @@ const Login = () => {
       if (res.status === 200) {
         localStorage.setItem("token", res.data.token);
         toast("Login Successful");
-        navigate("/home");
+        navigate("/feed");
       } else {
         setFlag3(true);
       }
@@ -114,7 +114,7 @@ const Login = () => {
     const res = await googleSignInPopUp();
     if (res?.ok) {
       localStorage.setItem("token", res.token);
-      navigate("/home");
+      navigate("/feed");
     }
     setLoading(false)
   };

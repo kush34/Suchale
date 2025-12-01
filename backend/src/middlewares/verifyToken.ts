@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 interface AuthRequest extends Request {
     username?: string;
     email?: string;
+    id?:string
 }
 
 const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -22,6 +23,7 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
 
         req.username = result.username;
         req.email = result.email;
+        req.id = result.id;
 
         next();
     } catch (error) {

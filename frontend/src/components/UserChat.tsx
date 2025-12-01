@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Loader1 from '../loaders/Loader1';
 import { ImagePlay, SmilePlus, SendHorizontal, Undo2 } from "lucide-react";
-import EmojiPicker from './EmojiPicker';
+import EmojiPicker from '@/components/EmojiPicker';
 import { ChatContext } from "../Store/ChatContext";
-import MsgCard from "./MsgCard";
+import MsgCard from "@/components/MsgCard";
 import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
@@ -34,7 +34,7 @@ const UserChat = () => {
 
   const mediaInpRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const typingTimeoutRef = useRef<number | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Mouse tracking for info window
   useEffect(() => {
