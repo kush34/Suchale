@@ -13,8 +13,6 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchBar, setSearchBar] = useState<string>('');
-  const themeCtx = useContext(ThemeContext)
-  const theme = themeCtx?.theme;
   useEffect(() => {
     const q = searchBar.trim().toLowerCase();
 
@@ -33,11 +31,9 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
     setDispChat(filtered);
   }, [searchBar, userChatList]);
   return (
-    <div className={`${theme ? "bg-white text-black border-zinc-100" : "bg-zinc-900 text-white border-zinc-800"} p-4 md:p-0  shadow-2xl h-full border-r-2 `}>
-      <div className="top flex justify-between 1/6">
-        <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide text-blue-400">
-          Suchale
-        </div>
+    <div className={`bg-card p-4 md:p-0  shadow-2xl h-full border-r-2 `}>
+      <div className="top flex justify-end 1/6">
+
         <div className="settings flex justify-center items-center xl:m-3">
           <button onClick={() => setIsSearchOpen((prev) => !prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
             <Search />
@@ -56,7 +52,7 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
       <div className="searchbar px-4">
         {
           isSearchOpen &&
-          <div className={`${theme ? "bg-zinc-200" : "bg-zinc-800"} flex items-center rounded`}>
+          <div className={`bg-accent flex items-center rounded`}>
             <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={` rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
             {searchBar.length > 0 && <button onClick={() => setSearchBar('')} className='px-2'><X /></button>}
           </div>

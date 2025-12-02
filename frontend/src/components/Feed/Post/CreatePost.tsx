@@ -50,14 +50,12 @@ const CreatePost = () => {
     setLoading(true);
 
     try {
-      // Upload all media first
       let mediaUrls: string[] = [];
 
       if (files.length > 0) {
         mediaUrls = await Promise.all(files.map(uploadToCloudinary));
       }
 
-      // Submit post
       await api.post("/post", {
         content,
         media: mediaUrls,
@@ -65,7 +63,6 @@ const CreatePost = () => {
 
       toast("Post shared 🎉");
 
-      // reset UI
       setContent("");
       setFiles([]);
     } catch (err) {
@@ -76,12 +73,12 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="w-full md:w-1/3 border shadow-sm rounded-lg p-4 bg-white">
+    <div className="w-full md:w-1/3 border shadow-sm rounded-lg p-4 bg-card">
       <textarea
         placeholder="Share your thoughts..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full resize-none border border-zinc-200 rounded p-3"
+        className="w-full resize-none border  rounded p-3"
         rows={3}
       />
 

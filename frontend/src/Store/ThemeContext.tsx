@@ -1,39 +1,35 @@
 import { createContext, useEffect, useState } from "react";
 
-
 type ThemeContextType = {
-    theme: boolean;
-    setTheme: React.Dispatch<React.SetStateAction<boolean>>;
-    toggleTheme: () => void;
+  theme: "light" | "dark";
+  toggleTheme: () => void;
 };
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export const ThemeContextProvider = ({ children }: { children: React.ReactNode }) => {
-    const [theme, setTheme] = useState<boolean>(true);
-    const toggleTheme = () => {
-        setTheme(prev => {
-            const newTheme = !prev;
-            localStorage.setItem('theme', JSON.stringify(newTheme));
-            return newTheme;
-        });
-    };
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
-    useEffect(() => {
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme !== null) {
-            setTheme(JSON.parse(storedTheme));
-        } else {
-            localStorage.setItem('theme', JSON.stringify(true));
-            setTheme(true);
-        }
-    }, []);
-    return (
-        <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    )
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
 
-}
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
+
+  useEffect(() => {
+    const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
+    setTheme(savedTheme);
+
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 export default ThemeContextProvider;

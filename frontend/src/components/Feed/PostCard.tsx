@@ -68,7 +68,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
 
 
     return (
-        <div className='p-5 rounded border-zinc-200 shadow border flex flex-col gap-5'>
+        <div className='p-5 rounded border-accent shadow border flex flex-col gap-5'>
             <Profile
                 src={post.user.profilePic || './836.jpg'}
                 username={post.user.username || 'text_34'}

@@ -1,6 +1,5 @@
 import { useContext } from 'react';
 import { ChatContext } from '../Store/ChatContext';
-import { ThemeContext } from '../Store/ThemeContext';
 import { Chat, Group } from '@/types';
 import { Infinity } from 'lucide-react';
 
@@ -59,8 +58,6 @@ const GroupCard = ({ group }: GroupCardProps) => {
   const userCtx = useContext(ChatContext)
   if (!userCtx) return null;
   const { chat, setChat, setGroupFlag } = userCtx;
-  const themeCtx = useContext(ThemeContext);
-  const theme = themeCtx?.theme;
   const dateString = group?.lastMessage?.createdAt;
   const formattedTime = formatChatTime(dateString);
   const handleClick = () => {
@@ -73,7 +70,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
   return (
     <div
       onClick={handleClick}
-      className={`${theme ? "bg-white text-black border-zinc-100" : "text-white border-zinc-800"} 
+      className={`
         flex gap-3 items-center pb-3 hover:bg-zinc-400 
         ease-in duration-150 rounded cursor-pointer justify-between hover:shadow-xl border-b`}
     >

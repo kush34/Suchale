@@ -7,7 +7,6 @@ import MsgCard from "@/components/MsgCard";
 import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
-import { ThemeContext } from "../Store/ThemeContext";
 import LineLoader from "../loaders/LineLoader";
 import { toast } from "sonner";
 import { Message } from "@/types";
@@ -16,9 +15,6 @@ const UserChat = () => {
   const chatCtx = useContext(ChatContext);
   if (!chatCtx) return null;
   const { chat, setChat, chatArr, setChatArr, hasMore, chatDivRef, getMessages, loading, setLoading, groupFlag, ViewChatInfo, infoWindow, sendMsg } = chatCtx;
-  const themeCtx = useContext(ThemeContext);
-  if (!themeCtx) return null;
-  const theme = themeCtx.theme;
 
   const userCtx = useUser();
   if (!userCtx) return null;
@@ -140,12 +136,12 @@ const UserChat = () => {
   if (!chat) return <div className="flex justify-center items-center w-3/4 text-zinc-500">Please select chat to view messages</div>;
 
   return (
-    <div className={`shadow-2xl ${theme ? "bg-white text-black" : "bg-zinc-900 text-white"} flex flex-col justify-between md:w-full h-full overflow-none`}>
+    <div className={`shadow-2xl bg-card text-card-foreground flex flex-col justify-between md:w-full h-full overflow-none`}>
       <span
         onClick={ViewChatInfo}
         onMouseEnter={() => setHoverTopbar(true)}
         onMouseLeave={() => setHoverTopbar(false)}
-        className={`${theme ? "bg-zinc-800 text-white" : "bg-zinc-800"} profile-username-typingindicator-back_btn py-3 px-5 flex items-center gap-2 font-medium text-2xl`}
+        className={`bg-secondary text-secondary-foreground profile-username-typingindicator-back_btn py-3 px-5 flex items-center gap-2 font-medium text-2xl`}
       >
         <div className="img">
           <img className="rounded-full w-15 h-15" src={chat?.profilePic || "https://placehold.co/400x400"} alt="" />
@@ -180,7 +176,7 @@ const UserChat = () => {
         )}
       </div>
 
-      <div className={`flex media-emojis-textbar-sendbtn ${theme ? "bg-zinc-200 text-black" : "text-white bg-zinc-700"} py-2`}>
+      <div className={`flex media-emojis-textbar-sendbtn bg-muted text-muted-foreground py-2`}>
         <div className="w-1/7 items-center flex justify-evenly">
           <div onClick={mediaTrigger} className="cursor-pointer flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110">
             <ImagePlay />
@@ -226,14 +222,13 @@ const UserChat = () => {
             position: "fixed",
             top: mousePos.y + 15,
             left: mousePos.x + 15,
-            backgroundColor: theme ? "#fff" : "#000",
-            color: theme ? "#000" : "#fff",
             padding: "0.5rem",
             borderRadius: "0.5rem",
             boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
             zIndex: 1000,
             width: "200px",
           }}
+          className="bg-popover text-popover-foreground shadow p-2 rounded"
         >
           <div className="font-bold mb-2">Members</div>
           {infoWindow.map((member) => (

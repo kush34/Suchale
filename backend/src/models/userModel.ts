@@ -6,6 +6,7 @@ export interface IContact {
 }
 
 export interface IUser extends Document {
+  _id:mongoose.Types.ObjectId;
   username: string;
   fullName?: string;
   bio?: string;

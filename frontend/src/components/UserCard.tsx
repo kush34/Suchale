@@ -22,7 +22,7 @@ const UserCard = ({ user }: { user: Chat }) => {
         }
     }
     return (
-        <div onClick={() => handleClick(user)} className={`${theme ? "bg-white border-zinc-100 text-black" : " text-white border-zinc-800"} border-b flex gap-3 justify-between items-center pb-3 hover:bg-zinc-400 ease-in  duration-150 border-0  cursor-pointer hover:shadow-xl`}>
+        <div onClick={() => handleClick(user)} className={`bg-card border-b flex gap-3 justify-between items-center pb-3 hover:bg-zinc-400 ease-in  duration-150 border-0  cursor-pointer hover:shadow-xl`}>
             <div className='flex gap-3 items-center'>
                 <div className="ml-2 userimg mt-2 flex items-end">
                     <div>

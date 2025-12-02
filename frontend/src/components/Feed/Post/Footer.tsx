@@ -1,5 +1,6 @@
 import { Heart, MessageCircle, Share } from 'lucide-react'
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface PostFooterProps {
@@ -18,7 +19,7 @@ const Footer = ({
     isLoading,
     _id
 }: PostFooterProps) => {
-
+    const navigate = useNavigate();
     const onCopy = () => {
         navigator.clipboard.writeText(`${import.meta.env.VITE_SITE_URL}/post/${_id}`)
         toast("Url copied")
@@ -36,7 +37,7 @@ const Footer = ({
                 <Heart fill={isLiked ? "currentColor" : "none"} />
                 {like}
             </button>
-            <span className='flex gap-2'>
+            <span className='flex gap-2' onClick={()=>navigate(`/post/${_id}`)}>
                 <MessageCircle />
                 {comments}
             </span>

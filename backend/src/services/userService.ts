@@ -233,7 +233,7 @@ export const addContactService = async (username: string, contactUsername: strin
   }
 
   // Check if already in contacts
-  if (curUser.contacts.some(c => c.userId.equals((contactUser as any)._id))) {
+  if (curUser.contacts.some(c => c.userId.equals((contactUser)._id))) {
     return { status: "error", code: 400, message: "User already in contacts" };
   }
 
