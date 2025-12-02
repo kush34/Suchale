@@ -27,8 +27,8 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <div className="bg-background hidden xl:flex flex-col px-10 py-36 h-screen gap-5">
-      <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide">
+    <div className="bg-background hidden xl:flex flex-col px-12 py-36 h-screen gap-5 border border-border">
+      <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide ">
         Suchale
       </div>
       {items.map((item) => (

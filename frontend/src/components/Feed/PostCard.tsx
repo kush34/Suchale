@@ -74,7 +74,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
                 username={post.user.username || 'text_34'}
             />
             {post.media && <Media src={post.media} />}
-            <span onClick={() => navigate(`/post/${post._id}`)} className='cursor-pointer'>{post.content}</span>
+            <span onClick={() => navigate(`/post/${post._id}`)} className='text-xl cursor-pointer'>{post.content}</span>
             <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />
         </div>
     )

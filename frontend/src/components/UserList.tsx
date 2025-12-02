@@ -31,7 +31,7 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
     setDispChat(filtered);
   }, [searchBar, userChatList]);
   return (
-    <div className={`bg-card p-4 md:p-0  shadow-2xl h-full border-r-2 `}>
+    <div className={`bg-card p-4 md:p-0 h-full border-r-2 `}>
       <div className="top flex justify-end 1/6">
 
         <div className="settings flex justify-center items-center xl:m-3">
