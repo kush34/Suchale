@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
-import { addContact, firebaseTokenVerify, getUserProfile, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import { addContact, blockUser, firebaseTokenVerify, getUserProfile, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
 import upload from "../middlewares/multer";
 
 const router = express.Router();
@@ -31,5 +31,7 @@ router.post("/subscribe", verifyToken, subscribe);
 router.post("/firebaseTokenVerify", firebaseTokenVerify)
 
 router.get("/profile/:username",getUserProfile)
+
+router.post("/blockUser/:usernameToBlock",verifyToken,blockUser)
 
 export default router;

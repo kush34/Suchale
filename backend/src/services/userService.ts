@@ -384,6 +384,7 @@ export const getUserProfile = async (username: string) => {
   return {
     status: "succes", code: 200, data: {
       user: {
+        _id:user._id,
         username: user.username,
         fullName: user.fullName,
         bio: user.bio,
@@ -403,4 +404,18 @@ export const getUserProfile = async (username: string) => {
       },
     }
   };
+}
+
+export const blockUserByUsername = async (usernameToBlock:string,userId:string)=>{
+  const userGettingBlocked = await User.findOne({username:usernameToBlock});
+  if(!userGettingBlocked) return {status:"error",code:404,message:"user to block does not exists."};
+
+  const userBlockingUsername = await User.findByIdAndUpdate(
+    userId,
+    {$set:{blockedUsers:userGettingBlocked._id}},
+    {new:true}
+  )
+  console.log(userBlockingUsername);
+  if(!userBlockingUsername) return {status:"error",code:400,message:"could not block the user."};
+  return {status:"success",code:200,message:"user blocked"};
 }

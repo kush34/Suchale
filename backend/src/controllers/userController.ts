@@ -261,3 +261,18 @@ export const getUserProfile = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export const blockUser = async (req:Request, res:Response)=>{
+    try {
+        const {usernameToBlock} = req.params
+        const userId = req.id;
+        if(!usernameToBlock) return res.status(400).send({message:"/user/block/:usernameToBlock is required to block a user."})
+        
+        const result = await userService.blockUserByUsername(usernameToBlock.toString(),userId as string);
+        return res.status(Number(result.code)).send(result);
+
+    } catch (error) {
+        console.log(`Error: /user/block/:usernameToBlock userService:blockUser ${error}`)
+        return res.status(500).send({message:"Couldnt block the user"})
+    }
+}
