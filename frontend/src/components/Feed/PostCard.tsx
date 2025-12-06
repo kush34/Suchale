@@ -4,6 +4,7 @@ import Footer from './Post/Footer';
 import Media from './Post/Media';
 import api from '@/utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { formatChatTime } from '../GroupCard';
 
 interface PostCardProps {
     post: {
@@ -14,6 +15,7 @@ interface PostCardProps {
         };
         media?: string[];
         content: string;
+        createdAt:string;
         engagement: {
             likes: {
                 user: string;
@@ -36,6 +38,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
     const [likeCount, setLikeCount] = useState(post.engagement.likes.length);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate()
+    const date = formatChatTime(post.createdAt)
     const handleLike = async () => {
         if (isLoading) return;
         setIsLoading(true);
@@ -69,10 +72,14 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
 
     return (
         <div className='p-5 rounded border-accent shadow border flex flex-col gap-5'>
-            <Profile
-                src={post.user.profilePic || './836.jpg'}
-                username={post.user.username || 'text_34'}
-            />
+
+            <span className='flex justify-between'>
+                <Profile
+                    src={post.user.profilePic || './836.jpg'}
+                    username={post.user.username || 'text_34'}
+                />
+                <span className='text-secondary'>{date}</span>
+            </span>
             {post.media && <Media src={post.media} />}
             <span onClick={() => navigate(`/post/${post._id}`)} className='text-xl cursor-pointer'>{post.content}</span>
             <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />

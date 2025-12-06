@@ -11,6 +11,7 @@ interface Post {
   };
   media?: string[];
   content: string;
+  createdAt: string;
   engagement: {
     likes: {
       user: string;
@@ -69,7 +70,7 @@ const Feed = () => {
   if (error) return <p className="text-center py-4 text-red-500">{error}</p>;
 
   return (
-    <div className="w-1/3 grid gap-4">
+    <div className="w-full xl:w-2/5 grid gap-4">
       {posts.length === 0 ? (
         <p className="text-center py-4">No posts yet</p>
       ) : (

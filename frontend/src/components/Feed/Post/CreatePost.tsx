@@ -73,7 +73,7 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="w-full md:w-1/3 border shadow-sm rounded-lg p-4 bg-card">
+    <div className="w-full xl:w-2/5 border shadow-sm rounded-lg p-4 bg-card">
       <textarea
         placeholder="Share your thoughts..."
         value={content}

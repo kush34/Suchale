@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import CommentCard from "@/components/CommentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostPageSkeleton from "@/components/skeletons/post-page";
+import { Button } from "@/components/ui/button";
 
 interface Post {
   _id: string;
@@ -15,6 +16,7 @@ interface Post {
   };
   media?: string[];
   content: string;
+  createdAt: string;
   engagement: {
     likes: {
       user: string;
@@ -120,11 +122,11 @@ const PostPage = () => {
 
   return (
     <div className="flex flex-col justify-center items-center py-4">
-      <div className="w-full p-5 xl:w-1/3">
+      <div className="w-full p-5 xl:w-2/5">
         <PostCard post={post} likeToggle={likeToggle} />
 
         <div className="mt-4 border p-4 rounded-xl">
-          <h2 className="font-bold text-lg mb-3">Add a Comment</h2>
+          <h2 className="font-bold text-sm mb-3">Add a Comment</h2>
 
           <textarea
             className="w-full p-2 border rounded-md resize-none"
@@ -133,12 +135,12 @@ const PostPage = () => {
             onChange={(e) => setComment(e.target.value)}
           ></textarea>
 
-          <button
+          <Button
             onClick={addComment}
-            className="mt-2 bg-accent-foreground text-white px-4 py-1 rounded-md"
+            className="mt-4"
           >
             Comment
-          </button>
+          </Button>
         </div>
 
         {/* All Comments  */}

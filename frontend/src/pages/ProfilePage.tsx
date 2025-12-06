@@ -3,11 +3,13 @@ import { useParams } from "react-router-dom";
 import api from "@/utils/axiosConfig";
 import PostCard from "@/components/Feed/PostCard";
 import { ProfileBlock } from "@/components/pages/profile/ProfileBlock";
+import { Button } from "@/components/ui/button";
 
 interface post {
   _id: string;
   media?: string[];
   content: string;
+  createdAt: string;
   engagement: {
     likes: {
       user: string;
@@ -95,16 +97,16 @@ const ProfilePage = () => {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-5">
+    <div className="w-full max-w-xl mx-auto p-5">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <img
           src={user.profilePic}
-          className="w-24 h-24 rounded-full object-cover border"
+          className="w-24 h-24 rounded-full object-cover"
           alt="profile"
         />
         <div>
-          <span className="grid grid-cols-2">
+          <span className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">{user.username}</h1>
             <ProfileBlock username={user.username} />
           </span>
@@ -114,6 +116,9 @@ const ProfilePage = () => {
             <span>{user.followers} Followers</span>
             <span>{user.following} Following</span>
             <span>{posts && posts.length} Posts</span>
+          </div>
+          <div className="actions mt-5">
+            <Button>Follow</Button>
           </div>
         </div>
       </div>

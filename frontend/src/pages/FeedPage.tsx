@@ -7,7 +7,7 @@ import CreatePost from "@/components/Feed/Post/CreatePost";
 const FeedPage = () => {
   return (
     <div className="w-full h-screen overflow-y-auto">
-      <div className="flex flex-col justify-center items-center gap-2 mt-8 overflow-y-scroll">
+      <div className="flex flex-col justify-center items-center gap-2 mt-8 overflow-y-scrollno-scrollbar sm:p-5">
         <CreatePost />
         <Feed />
       </div>
