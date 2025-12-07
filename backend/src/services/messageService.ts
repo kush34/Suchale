@@ -266,3 +266,32 @@ export const getMembersByGroupIdService = async (username: string, groupId: stri
 
   return members;
 };
+
+
+export const searchUserMsgs = async (
+  username: string,
+  searchQuery: string,
+  toUser?: string
+) => {
+
+  const baseFilter: any = {
+    $or: [
+      { fromUser: username },
+      { toUser: username }
+    ],
+    content: { $regex: searchQuery, $options: "i" }
+  };
+
+  if (toUser) {
+    baseFilter.toUser = toUser;  
+  }
+
+  const messages = await Message.find(baseFilter);
+
+  return {
+    status: "success",
+    code: 200,
+    data: messages
+  };
+}
+

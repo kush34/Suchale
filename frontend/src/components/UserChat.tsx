@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Loader1 from '../loaders/Loader1';
-import { ImagePlay, SmilePlus, SendHorizontal, Undo2 } from "lucide-react";
+import { ImagePlay, SmilePlus, SendHorizontal, Undo2, Search } from "lucide-react";
 import EmojiPicker from '@/components/EmojiPicker';
 import { ChatContext } from "../Store/ChatContext";
 import MsgCard from "@/components/MsgCard";
@@ -10,6 +10,7 @@ import api from "../utils/axiosConfig";
 import LineLoader from "../loaders/LineLoader";
 import { toast } from "sonner";
 import { Message } from "@/types";
+import Profile from "./Feed/Post/Profile";
 
 const UserChat = () => {
   const chatCtx = useContext(ChatContext);
@@ -143,11 +144,8 @@ const UserChat = () => {
         onMouseLeave={() => setHoverTopbar(false)}
         className={`bg-secondary text-secondary-foreground profile-username-typingindicator-back_btn py-3 px-5 flex items-center gap-2 font-medium text-2xl`}
       >
-        <div className="img">
-          <img className="rounded-full w-15 h-15" src={chat?.profilePic || "https://placehold.co/400x400"} alt="" />
-        </div>
+        <Profile username={chat.username || chat.name} src={chat?.profilePic}/>
         <div>
-          {chat?.username || chat?.name}
           {isTyping && <div className="text-green-500 text-sm">typing...</div>}
         </div>
         <div className="xl:hidden back_btn">

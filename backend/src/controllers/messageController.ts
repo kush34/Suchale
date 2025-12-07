@@ -36,7 +36,7 @@ export const reactToMsg = async (req: Request, res: Response) => {
         if (!emoji || !messageId)
             return res.status(400).send({ error: "messageId and emoji is required" });
 
-        const result = await messageService.reactToMsg(username,messageId, emoji);
+        const result = await messageService.reactToMsg(username, messageId, emoji);
 
         if (result.status != "success") return res.status(Number(result.code)).send(result);
         res.status(200).json(result);
@@ -58,7 +58,8 @@ export const updateMsgById = async (req: Request, res: Response) => {
 
         return res.status(Number(result.code)).json(result)
     } catch (error: any) {
-        res.status(500).send({ error: error.message || "Something went wrong" });
+        console.log(`ERROR updateMsgById : ${error}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 }
 
@@ -74,7 +75,8 @@ export const deletedMsgById = async (req: Request, res: Response) => {
 
         return res.status(Number(result.code)).json(result)
     } catch (error: any) {
-        res.status(500).send({ error: error.message || "Something went wrong" });
+        console.log(`ERROR deletedMsgById : ${error}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 }
 
@@ -90,7 +92,8 @@ export const getMessages = async (req: Request, res: Response) => {
         const result = await messageService.getMessagesService({ username, toUser, groupId, isGroup, page, limit });
         res.status(200).json(result);
     } catch (err: any) {
-        res.status(400).json({ error: err.message || "Failed to fetch messages" });
+        console.log(`ERROR getMessages : ${err}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 };
 
@@ -105,7 +108,8 @@ export const media = async (req: Request, res: Response) => {
         const result = await messageService.sendMediaService(username, toUser, req.file.path);
         res.status(200).json(result);
     } catch (err: any) {
-        res.status(500).send({ error: err.message || "Something went wrong" });
+        console.log(`ERROR media : ${err}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 };
 
@@ -122,7 +126,8 @@ export const createGroup = async (req: Request, res: Response) => {
         const newGroup = await messageService.createGroupService({ name, photoURL, users, adminId: dbUser._id.toString() });
         res.status(200).json({ newGroup });
     } catch (err: any) {
-        res.status(500).json({ error: err.message || "Something went wrong" });
+        console.log(`ERROR createGroup : ${err}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 };
 
@@ -137,6 +142,33 @@ export const getMembersByGroupId = async (req: Request, res: Response) => {
         const members = await messageService.getMembersByGroupIdService(username, groupId);
         res.status(200).json(members);
     } catch (err: any) {
-        res.status(500).json({ error: err.message || "Something went wrong" });
+        console.log(`ERROR getMembersByGroupId : ${err}`)
+        res.status(500).json({ message: "Something went wrong" });
     }
 };
+
+
+export const searchUserMsgs = async (req: Request, res: Response) => {
+  try {
+    const { term, toUser } = req.query;
+    const username = req.username;
+
+    if (!username) 
+      return res.status(401).json({ error: "Unauthorized" });
+
+    if (!term)
+      return res.status(400).json({ error: "Search term required" });
+
+    const result = await messageService.searchUserMsgs(
+      username,
+      term.toString(),
+      toUser?.toString()     
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.log(`ERROR /message/search : ${error}`)
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
