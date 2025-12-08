@@ -37,10 +37,10 @@ const Footer = ({
                 <Heart fill={isLiked ? "currentColor" : "none"} />
                 {like}
             </button>
-            <span className='flex gap-2' onClick={()=>navigate(`/post/${_id}`)}>
+            <button className='flex gap-2' onClick={()=>navigate(`/post/${_id}`)}>
                 <MessageCircle />
                 {comments}
-            </span>
+            </button>
             <button onClick={onCopy} className='flex gap-2'>
                 <Share />
             </button>

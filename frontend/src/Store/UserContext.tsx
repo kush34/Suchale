@@ -8,7 +8,7 @@ export type UserContextType = {
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
 };
 
-const UserContext = createContext<UserContextType | null>(null);
+export const UserContext = createContext<UserContextType | null>(null);
 
 
 export const UserContextProvider = ({ children }: { children: React.ReactNode }) => {

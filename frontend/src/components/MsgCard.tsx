@@ -152,20 +152,29 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                                 ) : msg.content?.match(/\.(pdf|docx|txt|rtf|odt)$/i) ? (
                                     <FileViewer src={msg.content} filename={msg.content} />
                                 ) : (
-                                    <div className={`flex justify-start text-lg ${msg.isDeleted && "opacity-60 italic text-red-100"}`}>
+                                    <div className={`flex justify-start text-lg ${msg.isDeleted && "opacity-60 italic text-red-400"}`}>
                                         {msg.content}
                                     </div>
                                 )
                             }
                         </div>
-                        <div className="flex text-[10px] justify-end gap-2">
-                            <div className="text-zinc-500">
-                                {msg.isEdited && <span className="mx-3">Edited</span>}
-                                {formatChatTime(msg.createdAt)}
+                        <div className="flex justify-between items-center mt-1 text-[10px]  gap-2">
+                            <div>
+                                {
+                                    msg.reactions && msg.reactions?.length > 0
+                                    &&
+                                    <EmojiReactions reactions={msg.reactions} />
+                                }
                             </div>
-                            <span className="text-white">
-                                {msg.read ? <CheckCheck size={16} /> : <Check size={16} />}
-                            </span>
+                            <div className='flex gap-2'>
+                                <div className="text-zinc-500">
+                                    {msg.isEdited && <span className="mx-3">Edited</span>}
+                                    {formatChatTime(msg.createdAt)}
+                                </div>
+                                <span className="text-white">
+                                    {msg.read ? <CheckCheck size={16} /> : <Check size={16} />}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </ContextMenuTrigger>
@@ -177,16 +186,12 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                     <ContextMenuItem onClick={() => reactToMessage("☠️")}>☠️</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
-            {
-                msg.reactions && msg.reactions?.length > 0
-                &&
-                <EmojiReactions reactions={msg.reactions} />
-            }
+
             {/* Left-hold menu (edit/delete) */}
             {showMenu && msg.fromUser === currentUser && (
                 <div
                     onMouseLeave={handleCloseMenu}
-                    className="flex absolute right-0 top-0 bg-white text-black text-sm rounded-md shadow-md p-2 z-50"
+                    className="flex absolute right-0 top-0  text-sm rounded-md shadow-md p-2 z-50"
                 >
                     <div
                         onClick={handleEditClick}

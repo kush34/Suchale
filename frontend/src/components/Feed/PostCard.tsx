@@ -78,7 +78,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
                     src={post.user.profilePic || './836.jpg'}
                     username={post.user.username || 'text_34'}
                 />
-                <span className='text-secondary'>{date}</span>
+                <span className='font-light'>{date}</span>
             </span>
             {post.media && <Media src={post.media} />}
             <span onClick={() => navigate(`/post/${post._id}`)} className='text-xl cursor-pointer'>{post.content}</span>
