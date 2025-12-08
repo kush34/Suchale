@@ -9,11 +9,18 @@ import postRouter from "./routers/postRouter"
 import cors from 'cors';
 import socketHandler from "./socket";
 
+const allowedOrigins: string[] = [
+  process.env.DOMAIN_1,
+  process.env.DOMAIN_2
+].filter((o): o is string => Boolean(o));
+
+console.log("Allowed origins:", allowedOrigins)
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.Frontend_URL,
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -21,12 +28,16 @@ const io = new Server(server, {
 connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
-app.use(
-  cors({
-    origin: `${process.env.Frontend_URL}`,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true
+}));
+
 
 
 app.use('/user', userRouter);
