@@ -21,7 +21,7 @@ interface Post {
     comments: {
       userId: string;
       content: string;
-      createdAt: Date;
+      createdAt: string;
     }[];
     isLiked: boolean;
   };

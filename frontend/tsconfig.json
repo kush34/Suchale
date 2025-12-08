@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "target": "ESNext",
     "noEmit": true,
     "useDefineForClassFields": true,
@@ -10,7 +9,7 @@
     "allowJs": false,
     "checkJs": false,
     "strict": true,
-    "types": ["react"],
+    "types": ["react","vitest", "vite/client"],
     "lib": ["DOM","ESNext"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

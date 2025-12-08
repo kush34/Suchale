@@ -28,7 +28,7 @@ interface Post {
       username: string;
       content: string;
       profilePic: string;
-      createdAt: Date;
+      createdAt: string;
     }[];
     isLiked: boolean;
   };
