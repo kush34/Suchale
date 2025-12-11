@@ -10,6 +10,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
@@ -31,6 +42,16 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Create .env from sample + inject secrets
+        working-directory: backend
+        run: |
+          cp .env.sample .env
+          sed -i "s|MONGO_URL=.*|MONGO_URL=mongodb://localhost:27017/testdb|g" .env
+          sed -i "s|NODE_ENV=.*|NODE_ENV=test|g" .env
+          sed -i "s|JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|g" .env
+          sed -i "s|API_KEY=.*|API_KEY=${{ secrets.API_KEY }}|g" .env
+          sed -i "s|SOME_KEY=.*|SOME_KEY=${{ secrets.SOME_KEY }}|g" .env
+          
       - name: Build backend
         working-directory: backend
         run: npm run build 
