@@ -42,6 +42,12 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Create firebase serviceAccount file
+        working-directory: backend
+        run: |
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > secret.json
+
+
       - name: Create .env from sample + inject secrets
         working-directory: backend
         run: |
