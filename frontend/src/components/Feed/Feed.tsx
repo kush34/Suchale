@@ -76,6 +76,7 @@ const Feed = () => {
       ) : (
         posts.map((post) => <PostCard key={post._id} post={post} likeToggle={UpdateLike} />)
       )}
+      <span className="mb-10"></span>
     </div>
   );
 };

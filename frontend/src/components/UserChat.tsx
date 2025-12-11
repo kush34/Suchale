@@ -220,6 +220,7 @@ const UserChat = () => {
               </div>
             ))}
             <div ref={messagesEndRef} />
+            <span  className="mb-5"/>
           </>
         )}
         {!loading && chatArr?.length == 0 && (

@@ -142,3 +142,20 @@ input[type=number] {
     @apply bg-background text-foreground;
     }
 }
+
+::view-transition-group(root) {
+  animation-duration: 1.5s;
+}
+::view-transition-new(root){
+  animation: circle-in 1500ms;
+}
+
+@keyframes circle-in {
+  from {
+    clip-path: circle(0% at 50% 0%);
+  }
+
+  to {
+    clip-path: circle(130% at 50% 0%);
+  }
+}

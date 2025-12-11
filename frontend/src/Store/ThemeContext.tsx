@@ -3,6 +3,7 @@ import { createContext, useEffect, useState } from "react";
 type ThemeContextType = {
   theme: "light" | "dark";
   toggleTheme: () => void;
+  changeTheme: () => void;
 };
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -17,7 +18,15 @@ export const ThemeContextProvider = ({ children }: { children: React.ReactNode }
 
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
-
+  const changeTheme = () => {
+    if (!document.startViewTransition) {
+      toggleTheme()
+      return;
+    }
+    document.startViewTransition(() => {
+      toggleTheme();
+    })
+  }
   useEffect(() => {
     const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
     setTheme(savedTheme);
@@ -26,7 +35,7 @@ export const ThemeContextProvider = ({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme,changeTheme }}>
       {children}
     </ThemeContext.Provider>
   );

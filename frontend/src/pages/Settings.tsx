@@ -16,7 +16,7 @@ import { Bell, LogOut, Moon, Pencil, Sun, Undo2 } from "lucide-react";
 const Settings = () => {
   const themeCtx = useContext(ThemeContext);
   if (!themeCtx) return null;
-  const { theme, toggleTheme } = themeCtx;
+  const { theme, changeTheme } = themeCtx;
   const userCtx = useUser();
   if (!userCtx) return null;
   const { user } = userCtx;
@@ -137,7 +137,7 @@ const Settings = () => {
           <span className="font-bold">{user?.email}</span>
         </div>
 
-        <div className="flex justify-center m-5" onClick={toggleTheme}>
+        <div className="flex justify-center m-5" onClick={changeTheme}>
           <button className="flex gap-5 cursor-pointer border-b border-zinc-200 dark:border-zinc-800 py-2 w-full md:w-1/4 justify-center">
             {theme ? <Moon /> : <Sun />} Theme
           </button>
