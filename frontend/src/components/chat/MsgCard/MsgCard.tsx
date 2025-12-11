@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 
 import { toast } from "sonner";
 import api from "@/utils/axiosConfig";
@@ -124,7 +121,7 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
 
   return (
     <div
-      className="relative gap-2 items-center select-none"
+      className="relative  items-center select-none"
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
@@ -134,14 +131,15 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
         <ContextMenuTrigger asChild>
           <div className="w-full cursor-pointer">
             <MsgContent msg={msg} />
-            <MsgMeta msg={msg} />
           </div>
         </ContextMenuTrigger>
         <EmojiBar onReact={reactToMessage} />
       </ContextMenu>
-      {msg.reactions && msg.reactions?.length > 0 && (
-        <EmojiReactions reactions={msg.reactions} />
-      )}
+      <div className="absolute -bottom-5 -left-3 z-20">
+        {msg.reactions && msg.reactions.length > 0 && (
+          <EmojiReactions reactions={msg.reactions} />
+        )}
+      </div>
       {/* Left-hold menu (edit/delete) */}
       {showMenu && msg.fromUser === currentUser && (
         <MsgActions

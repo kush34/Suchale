@@ -21,8 +21,8 @@ const EmojiReactions = ({ reactions }: { reactions: EmojiReaction[] }) => {
             {[...reactionsCount.entries()].map(([emoji, count]) => (
                 <div
                     key={emoji}
-                    className="bg-zinc-800 text-white text-xs px-2 py-px rounded-full 
-                               flex items-center gap-1 border border-zinc-600 shadow"
+                    className="bg-sidebar text-xs px-2 py-px rounded-2xl 
+                               flex items-center gap-1 shadow"
                 >
                     <span>{emoji}</span>
                     <span>{count}</span>
