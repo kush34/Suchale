@@ -3,7 +3,7 @@ import Loader1 from '../loaders/Loader1';
 import { ImagePlay, SmilePlus, SendHorizontal, Undo2, Search } from "lucide-react";
 import EmojiPicker from '@/components/EmojiPicker';
 import { ChatContext } from "../Store/ChatContext";
-import MsgCard from "@/components/MsgCard";
+import MsgCard from "@/components/chat/MsgCard/MsgCard";
 import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
