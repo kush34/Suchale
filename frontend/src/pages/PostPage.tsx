@@ -7,6 +7,8 @@ import CommentCard from "@/components/CommentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostPageSkeleton from "@/components/skeletons/post-page";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/Store/UserContext";
+import LineLoader from "@/loaders/LineLoader";
 
 interface Post {
   _id: string;
@@ -40,7 +42,9 @@ const PostPage = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState("");
-
+  const [loadingCommentAdd, setLoadingCommentAdd] = useState<boolean>(false);
+  const user = useUser();
+  if (!user) return null;
   const fetchPost = async () => {
     setLoading(true);
     try {
@@ -90,25 +94,30 @@ const PostPage = () => {
   // Add comment
   const addComment = async () => {
     if (!comment.trim()) return;
-
+    setLoadingCommentAdd(true);
     try {
       const res = await api.post(`/post/comment/${postId}`, {
         content: comment,
       });
-
+      const newComment = {
+        ...res.data.data,
+        username: user.user?.username,
+        profilePic: user.user?.profilePic,
+      };
       setPost((prev) =>
         prev
           ? {
               ...prev,
               engagement: {
                 ...prev.engagement,
-                comments: [...prev.engagement.comments, res.data.data],
+                comments: [...prev.engagement.comments, newComment],
               },
             }
           : prev
       );
 
       setComment("");
+      setLoadingCommentAdd(false);
     } catch (err) {
       toast.error("Could not add comment");
     }
@@ -137,10 +146,12 @@ const PostPage = () => {
 
           <Button
             onClick={addComment}
+            disabled={loadingCommentAdd}
             className="mt-4"
           >
             Comment
           </Button>
+          <div className="mt-5">{loadingCommentAdd && <LineLoader />}</div>
         </div>
 
         {/* All Comments  */}
