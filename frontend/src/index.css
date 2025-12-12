@@ -144,10 +144,10 @@ input[type=number] {
 }
 
 ::view-transition-group(root) {
-  animation-duration: 1.5s;
+  animation-duration: 1s;
 }
 ::view-transition-new(root){
-  animation: circle-in 1500ms;
+  animation: circle-in 1000ms;
 }
 
 @keyframes circle-in {
