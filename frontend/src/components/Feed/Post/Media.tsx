@@ -10,7 +10,7 @@ interface MediaProps {
 
 const Media = ({ src }: MediaProps) => {
     return (
-        <div className='grid grid-cols-2'>
+        <div className='grid grid-cols-2 gap-1'>
             {src.map(
                 (item, index) =>
                     item?.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (

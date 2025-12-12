@@ -1,17 +1,38 @@
+import ChatImageViewer from "@/components/ChatImageViewer";
 import { Button } from "@/components/ui/button";
+import VideoViewer from "@/components/VideoViewer";
 import api from "@/utils/axiosConfig";
 import { Image } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
+type fileType = {
+  file: File;
+  type: "image" | "video" | "pdf";
+  url: string;
+};
 const CreatePost = () => {
   const [content, setContent] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const [media, setMedia] = useState<fileType[]>([]);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    setFiles(Array.from(e.target.files));
+
+    const picked = Array.from(e.target.files);
+
+    const newMedia = picked.map((file) => {
+      const url = URL.createObjectURL(file);
+
+      let type: "image" | "video" | "pdf" = "image";
+
+      if (file.type.startsWith("image/")) type = "image";
+      else if (file.type.startsWith("video/")) type = "video";
+      else if (file.type === "application/pdf") type = "pdf";
+
+      return { file, type, url };
+    });
+
+    setMedia((prev) => [...prev, ...newMedia]);
   };
 
   const uploadToCloudinary = async (file: File) => {
@@ -52,8 +73,10 @@ const CreatePost = () => {
     try {
       let mediaUrls: string[] = [];
 
-      if (files.length > 0) {
-        mediaUrls = await Promise.all(files.map(uploadToCloudinary));
+      if (media.length > 0) {
+        mediaUrls = await Promise.all(
+          media.map((m) => uploadToCloudinary(m.file))
+        );
       }
 
       await api.post("/post", {
@@ -64,7 +87,7 @@ const CreatePost = () => {
       toast("Post shared 🎉");
 
       setContent("");
-      setFiles([]);
+      setMedia([]);
     } catch (err) {
       toast.error("Could not share your post");
     } finally {
@@ -73,7 +96,34 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="w-full xl:w-2/5 border shadow-sm rounded-lg p-4 bg-card">
+    <div className="relative w-full xl:w-2/5 border shadow-sm rounded-lg p-4 bg-card">
+      {loading && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg">
+          <svg
+            className="animate-spin h-5 w-5 text-current"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            ></path>
+          </svg>
+
+          <p className="text-white mt-2 text-sm">Uploading...</p>
+        </div>
+      )}
+
       <textarea
         placeholder="Share your thoughts..."
         value={content}
@@ -81,11 +131,25 @@ const CreatePost = () => {
         className="w-full resize-none border  rounded p-3"
         rows={3}
       />
+      <div className="grid grid-cols-3 gap-3 mt-4">
+        {media.map((m, i) => (
+          <div key={i} className="relative w-full">
+            {m.type === "image" && <ChatImageViewer src={m.url} />}
 
+            {m.type === "video" && <VideoViewer src={m.url} />}
+
+            {m.type === "pdf" && (
+              <div className="w-full h-32 flex items-center justify-center bg-gray-200 rounded-lg text-sm font-medium">
+                PDF Preview
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
       {/* selected files preview count */}
-      {files.length > 0 && (
+      {media.length > 0 && (
         <p className="text-sm text-zinc-600 mt-2">
-          {files.length} file(s) selected
+          {media.length} file(s) selected
         </p>
       )}
 
@@ -97,7 +161,7 @@ const CreatePost = () => {
             type="file"
             className="hidden"
             multiple
-            accept="image/*"
+            accept="image/* , video/* , .pdf, .gif/*"
             onChange={handleFileSelect}
           />
         </label>

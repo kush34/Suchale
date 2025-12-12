@@ -71,7 +71,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
 
 
     return (
-        <div className='p-5 rounded border-accent shadow border flex flex-col gap-5'>
+        <div className='p-5 rounded border-accent shadow border flex flex-col gap-2'>
 
             <span className='flex justify-between'>
                 <Profile
@@ -80,8 +80,8 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
                 />
                 <span className='font-light'>{date}</span>
             </span>
-            {post.media && <Media src={post.media} />}
             <span onClick={() => navigate(`/post/${post._id}`)} className='text-xl cursor-pointer'>{post.content}</span>
+            {post.media && <Media src={post.media} />}
             <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />
         </div>
     )
