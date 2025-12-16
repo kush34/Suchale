@@ -96,7 +96,7 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="relative w-full xl:w-2/5 border shadow-sm rounded-lg p-4 bg-card">
+    <div className="relative w-full xl:w-1/2 border shadow-sm rounded-lg p-4 bg-card">
       {loading && (
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg">
           <svg

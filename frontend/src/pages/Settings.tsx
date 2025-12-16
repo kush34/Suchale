@@ -98,8 +98,8 @@ const Settings = () => {
     }
   };
   return (
-    <div className="h-screen bg-background">
-      <div className="head flex items-center justify-between xl:hidden">
+    <div className="h-screen bg-background flex flex-col items-center justify-center">
+      <div className="w-full head flex items-center justify-between xl:hidden">
         <div className="title text-lg md:text-4xl m-4 font-bold">Settings</div>
         <button
           onClick={() => navigate(-1)}
@@ -109,7 +109,7 @@ const Settings = () => {
         </button>
       </div>
 
-      <div className="m-5">
+      <div className="m-5 w-full">
         <div className="profilepic flex justify-center items-center">
           <img
             className="w-40 h-40 object-cover rounded-full"

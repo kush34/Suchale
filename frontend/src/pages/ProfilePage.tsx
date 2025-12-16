@@ -97,7 +97,7 @@ const ProfilePage = () => {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-xl mx-auto p-5">
+    <div className="w-full h-screen overflow-y-scroll no-scrollbar max-w-2xl mx-auto p-5">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <img
