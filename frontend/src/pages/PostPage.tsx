@@ -130,8 +130,8 @@ const PostPage = () => {
   if (loading || !post) return <PostPageSkeleton />;
 
   return (
-    <div className="flex flex-col justify-center items-center py-4">
-      <div className="w-full p-5 xl:w-2/5">
+    <div className="w-full h-screen flex flex-col  items-center py-4 overflow-y-scroll no-scrollbar">
+      <div className="w-full m-2 xl:w-1/2">
         <PostCard post={post} likeToggle={likeToggle} />
 
         <div className="mt-4 border p-4 rounded-xl">

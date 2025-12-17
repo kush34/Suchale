@@ -251,9 +251,15 @@ export const firebaseTokenVerify = async (req: Request<{}, {}, firebaseTokenVeri
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
         const { username } = req.params;
+        const userId = req.id;
 
         if (!username) return res.status(400).send({ message: "username required to get profile of user." })
-        const result = await userService.getUserProfile(username);
+        let result;
+        if (userId) {
+            result = await userService.getUserProfile(username, userId);
+        }else{
+            result = await userService.getUserProfile(username);
+        }
 
         return res.status(Number(result.code)).send(result)
     } catch (err) {
@@ -262,17 +268,47 @@ export const getUserProfile = async (req: Request, res: Response) => {
     }
 };
 
-export const blockUser = async (req:Request, res:Response)=>{
+export const blockUser = async (req: Request, res: Response) => {
     try {
-        const {usernameToBlock} = req.params
+        const { usernameToBlock } = req.params
         const userId = req.id;
-        if(!usernameToBlock) return res.status(400).send({message:"/user/block/:usernameToBlock is required to block a user."})
-        
-        const result = await userService.blockUserByUsername(usernameToBlock.toString(),userId as string);
+        if (!usernameToBlock) return res.status(400).send({ message: "/user/block/:usernameToBlock is required to block a user." })
+
+        const result = await userService.blockUserByUsername(usernameToBlock.toString(), userId as string);
         return res.status(Number(result.code)).send(result);
 
     } catch (error) {
         console.log(`Error: /user/block/:usernameToBlock userService:blockUser ${error}`)
-        return res.status(500).send({message:"Couldnt block the user"})
+        return res.status(500).send({ message: "Couldnt block the user" })
+    }
+}
+
+export const followUserByUsername = async (req: Request, res: Response) => {
+    try {
+        const { usernameToFollow } = req.params;
+        const userId = req.id;
+        if (!userId) return res.status(400).send({ success: "error", code: 400, message: "You need to login to access this endpoint." });
+
+        if (!usernameToFollow || usernameToFollow.trim() === "" || typeof usernameToFollow !== "string") return res.send({ error: "pls send usernameToFollow at /followUser/:usernameToFollow" });
+        const result = await userService.followUserByUsername(userId.toString(), usernameToFollow);
+        res.status(Number(result.code)).send(result);
+    } catch (error) {
+        console.log(`Error: /user/followUser/:usernameToFollow userService:followUserByUsername ${error}`)
+        return res.status(500).send({ message: "Couldnt block the user" })
+    }
+}
+
+export const unFollowUserByUsername = async (req: Request, res: Response) => {
+    try {
+        const { usernameToUnfollow } = req.params;
+        const userId = req.id;
+        if (!userId) return res.status(400).send({ success: "error", code: 400, message: "You need to login to access this endpoint." });
+
+        if (!usernameToUnfollow || usernameToUnfollow.trim() === "" || typeof usernameToUnfollow !== "string") return res.send({ error: "pls send usernameToFollow at /followUser/:usernameToFollow" });
+        const result = await userService.unFollowUserByUsername(userId.toString(), usernameToUnfollow);
+        res.status(Number(result.code)).send(result);
+    } catch (error) {
+        console.log(`Error: /user/followUser/:usernameToFollow userService:followUserByUsername ${error}`)
+        return res.status(500).send({ message: "Couldnt block the user" })
     }
 }

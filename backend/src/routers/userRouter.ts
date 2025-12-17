@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
-import { addContact, blockUser, firebaseTokenVerify, getUserProfile, login, profilePic, register, search, sendMail, subscribe, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, profilePic, register, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
 import upload from "../middlewares/multer";
 
 const router = express.Router();
@@ -30,8 +30,11 @@ router.post("/subscribe", verifyToken, subscribe);
 
 router.post("/firebaseTokenVerify", firebaseTokenVerify)
 
-router.get("/profile/:username",getUserProfile)
+router.get("/profile/:username",verifyToken,getUserProfile)
 
 router.post("/blockUser/:usernameToBlock",verifyToken,blockUser)
 
+router.post("/follow/:usernameToFollow",verifyToken,followUserByUsername)
+
+router.post("/unfollow/:usernameToUnfollow",verifyToken,unFollowUserByUsername)
 export default router;

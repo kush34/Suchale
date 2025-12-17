@@ -4,6 +4,8 @@ import api from "@/utils/axiosConfig";
 import PostCard from "@/components/Feed/PostCard";
 import { ProfileBlock } from "@/components/pages/profile/ProfileBlock";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/Store/UserContext";
+import { toast } from "sonner";
 
 interface post {
   _id: string;
@@ -29,11 +31,12 @@ interface post {
   };
 }
 interface UserProfile {
-  _id:string;
+  _id: string;
   username: string;
   profilePic: string;
   fullName: string;
   bio: string;
+  isFollowing?: boolean;
   followers: number;
   following: number;
   posts: post[];
@@ -45,6 +48,8 @@ const ProfilePage = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<post[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const userCtx = useUser();
+
 
   const getProfile = async (username: string) => {
     setLoading(true);
@@ -87,6 +92,48 @@ const ProfilePage = () => {
         })
     );
   };
+  const FollowUser = async (usernameToFollow: String) => {
+    try {
+      const response = await api.post(`/user/follow/${usernameToFollow}`);
+      if (response.status === 200) {
+        toast.success(`following ${usernameToFollow}`);
+        setUser((prev) =>
+          prev
+            ? {
+              ...prev,
+              followers: prev.followers + 1,
+              isFollowing: true,
+            }
+            : prev
+        );
+
+      }
+    } catch (error: any) {
+      if (error.response.data.message || error.response.data.error)
+        toast.error(`${error.response.data.error}`)
+    }
+  }
+  const unFollowUser = async (usernameToFollow: String) => {
+    try {
+      const response = await api.post(`/user/unfollow/${usernameToFollow}`);
+      if (response.status === 200) {
+        toast.success(`unfollowed ${usernameToFollow}`);
+        setUser((prev) =>
+          prev
+            ? {
+              ...prev,
+              followers: Math.max(0, prev.followers - 1),
+              isFollowing: false,
+            }
+            : prev
+        );
+
+      }
+    } catch (error: any) {
+      if (error.response.data.message || error.response.data.error)
+        toast.error(`${error.response.data.error}`)
+    }
+  }
   useEffect(() => {
     if (!username) return;
     getProfile(username);
@@ -95,7 +142,9 @@ const ProfilePage = () => {
   if (loading) return <p className="text-center p-4">Loading...</p>;
   if (error) return <p className="text-center p-4 text-red-500">{error}</p>;
   if (!user) return null;
-
+  if (!username) return null;
+  if (!userCtx) return null;
+  if (!userCtx.user) return null;
   return (
     <div className="w-full h-screen overflow-y-scroll no-scrollbar max-w-2xl mx-auto p-5">
       {/* Header */}
@@ -118,7 +167,8 @@ const ProfilePage = () => {
             <span>{posts && posts.length} Posts</span>
           </div>
           <div className="actions mt-5">
-            <Button>Follow</Button>
+            {!user.isFollowing && <Button onClick={() => FollowUser(username)}>Follow</Button>}
+            {user.isFollowing && <Button variant={"outline"} onClick={() => unFollowUser(username)}>UnFollow</Button>}
           </div>
         </div>
       </div>

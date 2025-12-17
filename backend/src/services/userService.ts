@@ -366,7 +366,7 @@ export const firebaseTokenVerify = async (token: string) => {
 };
 
 
-export const getUserProfile = async (username: string) => {
+export const getUserProfile = async (username: string, currentUserId?: string) => {
 
   const user = await User.findOne({ username }).select(
     "username fullName bio profilePic followers following"
@@ -381,41 +381,97 @@ export const getUserProfile = async (username: string) => {
     .select("media content engagement")
     .lean();
 
+
+  const isFollowing =
+    !!currentUserId &&
+    user.followers.some((id) => id.toString() === currentUserId);
+
+  const payload = {
+    _id: user._id,
+    username: user.username,
+    fullName: user.fullName,
+    bio: user.bio,
+    profilePic: user.profilePic,
+    followers: user.followers.length,
+    following: user.following.length,
+    isFollowing,
+    posts: posts.map((p) => ({
+      _id: p._id,
+      media: p.media,
+      content: p.content,
+      engagement: p.engagement,
+      user: {
+        username: user.username,
+        profilePic: user.profilePic,
+      },
+    })),
+  };
+
   return {
     status: "succes", code: 200, data: {
-      user: {
-        _id:user._id,
-        username: user.username,
-        fullName: user.fullName,
-        bio: user.bio,
-        profilePic: user.profilePic,
-        followers: user.followers?.length || 0,
-        following: user.following?.length || 0,
-        posts: posts.map((p) => ({
-          _id: p._id,
-          media: p.media,
-          content: p.content,
-          engagement: p.engagement,
-          user: {
-            username: user.username,
-            profilePic: user.profilePic,
-          },
-        })),
-      },
+      user: payload
     }
   };
 }
 
-export const blockUserByUsername = async (usernameToBlock:string,userId:string)=>{
-  const userGettingBlocked = await User.findOne({username:usernameToBlock});
-  if(!userGettingBlocked) return {status:"error",code:404,message:"user to block does not exists."};
+export const blockUserByUsername = async (usernameToBlock: string, userId: string) => {
+  const userGettingBlocked = await User.findOne({ username: usernameToBlock });
+  if (!userGettingBlocked) return { status: "error", code: 404, message: "user to block does not exists." };
 
   const userBlockingUsername = await User.findByIdAndUpdate(
     userId,
-    {$set:{blockedUsers:userGettingBlocked._id}},
-    {new:true}
+    { $set: { blockedUsers: userGettingBlocked._id } },
+    { new: true }
   )
   console.log(userBlockingUsername);
-  if(!userBlockingUsername) return {status:"error",code:400,message:"could not block the user."};
-  return {status:"success",code:200,message:"user blocked"};
+  if (!userBlockingUsername) return { status: "error", code: 400, message: "could not block the user." };
+  return { status: "success", code: 200, message: "user blocked" };
 }
+
+export const followUserByUsername = async (currentUserId: string, usernameToFollow: string) => {
+  const usernameToFollowDB = await User.findOne({ username: usernameToFollow });
+  if (!usernameToFollowDB) return { status: 'error', code: 404, message: "username doesnt not exists." }
+  const currentUser = await User.findByIdAndUpdate(
+    currentUserId,
+    { $push: { following: usernameToFollowDB._id } },
+    { new: true }
+  )
+  if (!currentUser) return { success: "error", code: 404, message: "could not follow the request user." }
+  usernameToFollowDB.followers.push(currentUser._id);
+  await usernameToFollowDB.save();
+  return { success: "success", code: 200, message: `following user ${usernameToFollow}` };
+}
+
+export const unFollowUserByUsername = async (
+  currentUserId: string,
+  usernameToUnFollow: string
+) => {
+  const targetUser = await User.findOne({ username: usernameToUnFollow });
+  if (!targetUser)
+    return { status: "error", code: 404, message: "username does not exist" };
+
+  const currentUser = await User.findByIdAndUpdate(
+    currentUserId,
+    { $pull: { following: targetUser._id } },
+    { new: true }
+  );
+
+  if (!currentUser)
+    return {
+      status: "error",
+      code: 404,
+      message: "could not unfollow the requested user",
+    };
+
+  await User.findByIdAndUpdate(targetUser._id, {
+    $pull: { followers: currentUser._id },
+  });
+
+  return {
+    status: "success",
+    code: 200,
+    message: `unfollowed user ${usernameToUnFollow}`,
+  };
+};
+
+
