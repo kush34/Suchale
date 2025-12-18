@@ -1,65 +1,104 @@
-import { createContext, useContext, useEffect } from 'react';
-import socket from '../utils/socketService';
-import { useUser } from './UserContext';
-import { toast } from 'sonner';
-import { ChatContext } from './ChatContext';
-import { Message, User, Group } from '@/types';
+import { createContext, useContext, useEffect } from "react";
+import socket from "@/utils/socketService";
+import { useUser } from "./UserContext";
+import { ChatContext } from "./ChatContext";
+import { toast } from "sonner";
+import { Message } from "@/types";
 
-export const SocketContext = createContext<typeof socket | null>(null);
+type SocketContextType = {
+  socket: typeof socket;
+};
+
+const SocketContext = createContext<SocketContextType | null>(null);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-    const userCtx = useUser();
-    const user = userCtx?.user;
-    const chatCtx = useContext(ChatContext);
+  const userCtx = useUser();
+  const chatCtx = useContext(ChatContext);
 
-    if (!chatCtx) {
-        console.error("ChatContext missing. Wrap SocketProvider inside ChatContextProvider.");
-        return <>{children}</>; 
-    }
+  if (!chatCtx) {
+    throw new Error("SocketProvider must be inside ChatContextProvider");
+  }
 
-    const { chat, groupFlag, setChatArr } = chatCtx;
+  const { chat, setChatArr } = chatCtx;
+  const user = userCtx?.user;
 
-    useEffect(() => {
-        if (!user?.username) return;
+  // ---- connect / disconnect ----
+  useEffect(() => {
+    if (!user) return;
 
-        socket.emit('addUser', user.username);
+    socket.connect();
 
-        // ---- DM HANDLER ----
-        const handleMsg = (message: Message) => {
-            if (chat && "username" in chat && chat.username === message.fromUser) {
-                setChatArr(prev => [...prev, message]);
-            } else {
-                toast(`New message from ${message.fromUser}`, {
-                    duration: 5000,
-                    position: 'top-right',
-                });
-            }
-        };
+    socket.on("connect", () => {
+      console.log("✅ socket connected:", socket.id);
+    });
 
-        // ---- GROUP HANDLER ----
-        const handleGroupMsg = (message: Message) => {
-            if (chat && "name" in chat && chat._id === message.groupId) {
-                setChatArr(prev => [...prev, message]);
-            } else {
-                toast(`New group message`, {
-                    duration: 5000,
-                    position: 'top-right',
-                });
-            }
-        };
+    socket.on("connect_error", (err) => {
+      console.error("❌ socket error:", err.message);
+    });
 
-        socket.on("sendMsg", handleMsg);
-        socket.on("sendMsgGrp", handleGroupMsg);
+    return () => {
+      socket.disconnect();
+      socket.removeAllListeners();
+    };
+  }, [user]);
 
-        return () => {
-            socket.off("sendMsg", handleMsg);
-            socket.off("sendMsgGrp", handleGroupMsg);
-        };
-    }, [user, chat, groupFlag]);
+  // ---- direct messages ----
+  useEffect(() => {
+    const onDM = (message: Message) => {
+      if (chat && "username" in chat && chat.username === message.fromUser) {
+        setChatArr((prev) => [...prev, message]);
+      } else {
+        toast(`New message from ${message.fromUser}`);
+      }
+    };
 
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    );
+    socket.on("sendMsg", onDM);
+    return () => {
+      socket.off("sendMsg", onDM);
+    };
+  }, [chat]);
+
+  // ---- group messages ----
+  useEffect(() => {
+    const onGroupMsg = ({ groupId, message }: any) => {
+      if (chat && "_id" in chat && chat._id === groupId) {
+        setChatArr((prev) => [...prev, message]);
+      } else {
+        toast("New group message");
+      }
+    };
+
+    socket.on("newGroupMessage", onGroupMsg);
+    return () => {
+      socket.off("newGroupMessage", onGroupMsg);
+    };
+  }, [chat]);
+
+  // ---- presence ----
+  useEffect(() => {
+    socket.on("friendOnline", (username: string) => {
+      toast(`${username} is online`);
+    });
+
+    socket.on("friendOffline", (username: string) => {
+      toast(`${username} went offline`);
+    });
+
+    return () => {
+      socket.off("friendOnline");
+      socket.off("friendOffline");
+    };
+  }, []);
+
+  return (
+    <SocketContext.Provider value={{ socket }}>
+      {children}
+    </SocketContext.Provider>
+  );
+};
+
+export const useSocket = () => {
+  const ctx = useContext(SocketContext);
+  if (!ctx) throw new Error("useSocket must be used inside SocketProvider");
+  return ctx.socket;
 };
