@@ -340,7 +340,7 @@ export const firebaseTokenVerify = async (token: string) => {
     });
 
     console.log("New user created:", username);
-    const restoken = jwt.sign(
+    restoken = jwt.sign(
       {
         username: user.username,
         email: user.email,
@@ -385,9 +385,9 @@ export const firebaseTokenVerify = async (token: string) => {
     code: 200,
     message: "Token verified",
     refreshtoken,
-    token,
+    token:restoken,
     user: {
-      token: token,
+      token: restoken,
       id: user._id,
       username: user.username,
       email: user.email,

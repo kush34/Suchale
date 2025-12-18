@@ -94,9 +94,9 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_URL}/user/login`, { username, password });
+      const res = await axios.post(`${import.meta.env.VITE_URL}/user/login`, { username, password },{withCredentials:true});
       if (res.status === 200) {
-        localStorage.setItem("token", res.data.token);
+        // localStorage.setItem("token", res.data.token);
         toast("Login Successful");
         navigate("/feed");
       } else {

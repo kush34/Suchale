@@ -39,19 +39,11 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         if (result.status === "error") {
             return res.status(Number(result.code)).json({ status: "error", message: result.message });
         }
-        res.cookie('token', result.token, {
-            httpOnly: process.env.NODE_ENV != "dev",
-            secure: process.env.NODE_ENV != "dev",
-            sameSite: 'lax'
-        }
-        )
-        res.cookie('refreshtoken', result.refreshtoken, {
-            httpOnly: process.env.NODE_ENV != "dev",
-            secure: process.env.NODE_ENV != "dev",
-            sameSite: 'lax'
-        })
+        
+        res.cookie('token', result.token)
+        res.cookie('refreshtoken', result.refreshtoken)
 
-        return res.status(200).json({ status: "success", token: result.token });
+        return res.json({ status: "success", token: result.token });
     } catch (err: any) {
         console.error(err);
         return res.status(500).json({ status: "error", message: "Internal server error" });
@@ -246,31 +238,40 @@ interface firebaseTokenVerifyPayload {
 }
 
 
-export const firebaseTokenVerify = async (req: Request<{}, {}, firebaseTokenVerifyPayload>, res: Response) => {
-    try {
-        const { token } = req.body;
+export const firebaseTokenVerify = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { token } = req.body;
 
-        const result = await userService.firebaseTokenVerify(token);
-        if (result.status === "error") return res.status(Number(result.code)).send()
-        res.cookie('token', result.token, {
-            httpOnly: process.env.NODE_ENV != "dev",
-            secure: process.env.NODE_ENV != "dev",
-            sameSite: 'lax'
-        }
-        )
-        res.cookie('refreshtoken', result.refreshtoken, {
-            httpOnly: process.env.NODE_ENV != "dev",
-            secure: process.env.NODE_ENV != "dev",
-            sameSite: 'lax'
-        })
-        res.status(result.code).json(result);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ status: "error", message: "Something went wrong" });
+    if (!token) {
+      return res.status(400).json({ message: "Firebase token required" });
     }
-}
 
+    const result = await userService.firebaseTokenVerify(token);
+
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    });
+
+    res.cookie("refreshToken", result.refreshtoken, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    });
+
+    return res.status(200).json({
+      status: "success",
+      user: result.user,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ message: "Invalid Firebase token" });
+  }
+};
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
         const { username } = req.params;
@@ -332,6 +333,17 @@ export const unFollowUserByUsername = async (req: Request, res: Response) => {
         res.status(Number(result.code)).send(result);
     } catch (error) {
         console.log(`Error: /user/followUser/:usernameToFollow userService:followUserByUsername ${error}`)
+        return res.status(500).send({ message: "Couldnt block the user" })
+    }
+}
+
+export const logoutUser = async (req:Request,res:Response)=>{
+    try {
+        res.cookie("token","")
+        res.cookie("refreshtoken","")
+        res.send({message:"user logged out successfully"})
+    } catch (error) {
+        console.log(`Error: /user/logout userService:logoutUser ${error}`)
         return res.status(500).send({ message: "Couldnt block the user" })
     }
 }
