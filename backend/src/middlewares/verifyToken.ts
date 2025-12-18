@@ -43,22 +43,16 @@ const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction) 
 };
 
 
-
-export const verifySocketToken = (
-  socket: Socket,
-  next: (err?: Error) => void
-) => {
+export const verifySocketToken = (socket: Socket, next: (err?: Error) => void) => {
   try {
     const rawCookie = socket.handshake.headers.cookie;
-    // console.log(rawCookie)
+
     if (!rawCookie) {
-      return next(new Error("No cookies. Not logged in."));
+      return next(new Error("No cookies. Login required."));
     }
 
-    const parsed = cookie.parse(rawCookie);
-    // console.log(parsed)  
-    const token = parsed.token;
-    // console.log(token)  
+    const cookies = cookie.parse(rawCookie);
+    const token = cookies.token; 
 
     if (!token) {
       return next(new Error("Missing auth token"));
@@ -66,20 +60,20 @@ export const verifySocketToken = (
 
     const secret = process.env.jwt_Secret;
     if (!secret) {
-      return next(new Error("Missing JWT secret"));
+      return next(new Error("JWT secret missing"));
     }
 
-    const decoded = jwt.verify(token, secret) as {
-      id: string;
-      username: string;
-      email: string;
+    const decoded = jwt.verify(token, secret) as any;
+
+    // attach user ONCE
+    socket.data.user = {
+      id: decoded.id,
+      username: decoded.username,
+      email: decoded.email,
     };
 
-    socket.data.user = decoded;
-
     next();
-  } catch (err) {
-    console.error("Socket auth error:", err);
+  } catch {
     next(new Error("Invalid or expired token"));
   }
 };
