@@ -64,10 +64,19 @@ export const loginUser = async (payload: LoginPayload) => {
       id: dbUser._id
     },
     jwtSecret,
+    { expiresIn: "24h" }
+  );
+  const refreshtoken = jwt.sign(
+    {
+      username: dbUser.username,
+      email: dbUser.email,
+      id: dbUser._id
+    },
+    jwtSecret,
     { expiresIn: "7d" }
   );
 
-  return { status: "success", token };
+  return { status: "success", token, refreshtoken };
 };
 
 
@@ -301,7 +310,8 @@ export const firebaseTokenVerify = async (token: string) => {
   let user = await User.findOne({ email: decoded.email });
 
   // If user does NOT exist → create one
-  let resToken: string;
+  let restoken: string;
+  let refreshtoken: string;
   const jwtSecret = process.env.jwt_Secret;
   if (!jwtSecret) throw new Error("JWT secret missing in environment");
 
@@ -330,7 +340,16 @@ export const firebaseTokenVerify = async (token: string) => {
     });
 
     console.log("New user created:", username);
-    resToken = jwt.sign(
+    restoken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        id: user._id
+      },
+      jwtSecret,
+      { expiresIn: "24h" }
+    );
+    refreshtoken = jwt.sign(
       {
         username: user.username,
         email: user.email,
@@ -339,8 +358,18 @@ export const firebaseTokenVerify = async (token: string) => {
       jwtSecret,
       { expiresIn: "7d" }
     );
+
   } else {
-    resToken = jwt.sign(
+    restoken = jwt.sign(
+      {
+        username: user.username,
+        email: user.email,
+        id: user._id
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+    refreshtoken = jwt.sign(
       {
         username: user.username,
         email: user.email,
@@ -355,8 +384,10 @@ export const firebaseTokenVerify = async (token: string) => {
     status: "success",
     code: 200,
     message: "Token verified",
-    token: resToken,
+    refreshtoken,
+    token:restoken,
     user: {
+      token: restoken,
       id: user._id,
       username: user.username,
       email: user.email,

@@ -8,6 +8,7 @@ import messageRouter from "./routers/messageRouter";
 import postRouter from "./routers/postRouter"
 import cors from 'cors';
 import socketHandler from "./socket";
+import cookieParser from "cookie-parser";
 
 const allowedOrigins: string[] = [
   process.env.DOMAIN_1,
@@ -26,6 +27,7 @@ const io = new Server(server, {
 });
 
 connectDB();
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(cors({

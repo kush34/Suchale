@@ -22,8 +22,11 @@ const Settings = () => {
   const { user } = userCtx;
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const logOut = () => {
-    localStorage.setItem("token", "");
+  const logOut = async () => {
+    const res = await api("/user/logout");
+    if (res.status === 200) {
+      toast("logged out!")
+    }
     navigate("/login");
   };
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

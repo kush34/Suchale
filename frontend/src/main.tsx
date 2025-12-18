@@ -12,10 +12,8 @@ import AddContacts from "./pages/AddContacts";
 import Settings from "./pages/Settings";
 
 import { UserContextProvider } from "./Store/UserContext";
-// import { SocketProvider } from './Store/SocketContext';
 import { ChatContextProvider } from "./Store/ChatContext";
 import { ThemeContextProvider } from "./Store/ThemeContext";
-import { SocketProvider } from "./Store/SocketContext";
 import { registerServiceWorker } from "./utils/register-service-worker";
 import FeedPage from "./pages/FeedPage";
 import { SidebarProvider } from "./components/ui/sidebar";
@@ -34,11 +32,9 @@ function ProtectedRoutes() {
       <ThemeContextProvider>
         <SidebarProvider>
         <ChatContextProvider>
-          <SocketProvider>
             <Main>
               <Outlet />
             </Main>
-          </SocketProvider>
         </ChatContextProvider>
         </SidebarProvider>
       </ThemeContextProvider>

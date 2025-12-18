@@ -32,9 +32,10 @@ const getFirebaseToken = async () => {
 
         const response = await axios.post(
             `${import.meta.env.VITE_URL}/user/firebaseTokenVerify`,
-            { token }
+            { token },
+            { withCredentials: true }
         );
-
+        
         if (response.status === 200)
             return { ok: true, token: response.data.token };
 
