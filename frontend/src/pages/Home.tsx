@@ -8,6 +8,7 @@ import { ChatContext } from "@/Store/ChatContext";
 import Loader1 from "../loaders/Loader1";
 import { ThemeContext } from "@/Store/ThemeContext";
 import { Chat } from "@/types";
+import { SocketProvider } from "@/Store/SocketContext";
 const Home = () => {
   const navigate = useNavigate();
   const [userChatList, setUserChatList] = useState<Chat[]>([]);
@@ -68,28 +69,30 @@ const Home = () => {
     );
   }
   return (
-    <div className={`xl:flex h-screen bg-card overflow-none`}>
-      <div
-        className={`xl:w-1/4 h-screen ${chat ? "hidden" : "block"} xl:block`}
-      >
-        <UserList userChatList={userChatList} />
-      </div>
-
-      {chat ? (
-        <div className={`w-full xl:w-3/4 h-screen overflow-none`}>
-          <UserChat />
-        </div>
-      ) : (
+    <SocketProvider>
+      <div className={`xl:flex h-screen bg-card overflow-none`}>
         <div
-          className={`bg-card hidden xl:flex items-center justify-center w-full xl:w-3/4 h-screen text-zinc-500`}
+          className={`xl:w-1/4 h-screen ${chat ? "hidden" : "block"} xl:block`}
         >
-          <span className="w-1/2 flex justify-center flex-col items-center gap-5 ">
-            <img src="./icon.png" className="w-15 h-15" alt="logo img" />
-            Please select a chat to view messages
-          </span>
+          <UserList userChatList={userChatList} />
         </div>
-      )}
-    </div>
+
+        {chat ? (
+          <div className={`w-full xl:w-3/4 h-screen overflow-none`}>
+            <UserChat />
+          </div>
+        ) : (
+          <div
+            className={`bg-card hidden xl:flex items-center justify-center w-full xl:w-3/4 h-screen text-zinc-500`}
+          >
+            <span className="w-1/2 flex justify-center flex-col items-center gap-5 ">
+              <img src="./icon.png" className="w-15 h-15" alt="logo img" />
+              Please select a chat to view messages
+            </span>
+          </div>
+        )}
+      </div>
+    </SocketProvider>
   );
 };
 

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import User from '../models/userModel';
 
 interface AuthRequest extends Request {
     username?: string;
@@ -7,10 +8,11 @@ interface AuthRequest extends Request {
     id?:string
 }
 
-const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
+        const cookieToken = req.cookies.token;
+        const token = (authHeader && authHeader.split(' ')[1]) || cookieToken;
 
         if (!token) return res.status(401).send('Please Login First');
 
@@ -21,6 +23,9 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
         const result = jwt.verify(token as string, secret as jwt.Secret) as any;
         if (!result) return res.status(401).send('pls login again');
 
+        const userDB = await User.findById(result.id);
+        if(!userDB) return res.status(401).send('invalid token.');
+        
         req.username = result.username;
         req.email = result.email;
         req.id = result.id;

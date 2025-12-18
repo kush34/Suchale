@@ -39,6 +39,17 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         if (result.status === "error") {
             return res.status(Number(result.code)).json({ status: "error", message: result.message });
         }
+        res.cookie('token', result.token, {
+            httpOnly: process.env.NODE_ENV != "dev",
+            secure: process.env.NODE_ENV != "dev",
+            sameSite: 'lax'
+        }
+        )
+        res.cookie('refreshtoken', result.refreshtoken, {
+            httpOnly: process.env.NODE_ENV != "dev",
+            secure: process.env.NODE_ENV != "dev",
+            sameSite: 'lax'
+        })
 
         return res.status(200).json({ status: "success", token: result.token });
     } catch (err: any) {
@@ -240,6 +251,18 @@ export const firebaseTokenVerify = async (req: Request<{}, {}, firebaseTokenVeri
         const { token } = req.body;
 
         const result = await userService.firebaseTokenVerify(token);
+        if (result.status === "error") return res.status(Number(result.code)).send()
+        res.cookie('token', result.token, {
+            httpOnly: process.env.NODE_ENV != "dev",
+            secure: process.env.NODE_ENV != "dev",
+            sameSite: 'lax'
+        }
+        )
+        res.cookie('refreshtoken', result.refreshtoken, {
+            httpOnly: process.env.NODE_ENV != "dev",
+            secure: process.env.NODE_ENV != "dev",
+            sameSite: 'lax'
+        })
         res.status(result.code).json(result);
 
     } catch (error) {
@@ -257,7 +280,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
         let result;
         if (userId) {
             result = await userService.getUserProfile(username, userId);
-        }else{
+        } else {
             result = await userService.getUserProfile(username);
         }
 

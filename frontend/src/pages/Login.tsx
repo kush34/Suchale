@@ -113,7 +113,7 @@ const Login = () => {
     setLoading(true)
     const res = await googleSignInPopUp();
     if (res?.ok) {
-      localStorage.setItem("token", res.token);
+      // localStorage.setItem("token", res.token);
       navigate("/feed");
     }
     setLoading(false)
