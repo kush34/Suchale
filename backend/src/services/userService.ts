@@ -417,6 +417,7 @@ export const getUserProfile = async (username: string, currentUserId?: string) =
     !!currentUserId &&
     user.followers.some((id) => id.toString() === currentUserId);
 
+
   const payload = {
     _id: user._id,
     username: user.username,
@@ -435,6 +436,9 @@ export const getUserProfile = async (username: string, currentUserId?: string) =
         username: user.username,
         profilePic: user.profilePic,
       },
+      isLiked: p.engagement?.likes?.some(
+        (like: any) => like.user.toString() === currentUserId
+      )
     })),
   };
 

@@ -20,6 +20,7 @@ const Footer = ({
     _id
 }: PostFooterProps) => {
     const navigate = useNavigate();
+    console.log("isLiked", isLiked)
     const onCopy = () => {
         navigator.clipboard.writeText(`${import.meta.env.VITE_SITE_URL}/post/${_id}`)
         toast("Url copied")

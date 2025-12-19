@@ -27,14 +27,14 @@ interface PostCardProps {
                 content: string;
                 createdAt: string;
             }[];
-            isLiked: boolean;
         };
+        isLiked: boolean;
     };
     likeToggle: (id: string) => void;
 }
 
 const PostCard = ({ post, likeToggle }: PostCardProps) => {
-    const [liked, setLiked] = useState(post.engagement.isLiked);
+    const [liked, setLiked] = useState(post.isLiked);
     const [likeCount, setLikeCount] = useState(post.engagement.likes.length);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate()

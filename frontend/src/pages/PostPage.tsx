@@ -32,8 +32,8 @@ interface Post {
       profilePic: string;
       createdAt: string;
     }[];
-    isLiked: boolean;
   };
+  isLiked: boolean;
   likeToggle: (id: string) => void;
 }
 
@@ -61,7 +61,6 @@ const PostPage = () => {
     if (!post) return;
 
     try {
-      await api.post(`/post/like/${id}`);
 
       setPost((prev) =>
         prev
@@ -69,8 +68,8 @@ const PostPage = () => {
               ...prev,
               engagement: {
                 ...prev.engagement,
-                isLiked: !prev.engagement.isLiked,
-                likes: prev.engagement.isLiked
+                isLiked: !prev.isLiked,
+                likes: prev.isLiked
                   ? prev.engagement.likes.filter(
                       (l) => l.user !== "CURRENT_USER_ID"
                     )

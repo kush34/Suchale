@@ -220,7 +220,7 @@ export const commentPost = async (req: Request, res: Response) => {
 export const getPostById = async (req: Request, res: Response) => {
     try {
         const { postId } = req.params;
-        const userId = req.id; 
+        const userId = req.id;
 
         if (!postId) {
             return res.status(400).json({ message: "postId required" });
@@ -255,8 +255,10 @@ export const getPostById = async (req: Request, res: Response) => {
             engagement: {
                 likes: post.engagement.likes,
                 comments: formattedComments,
-                isLiked: post.engagement.likes.some(like => like.user.toString() === userId),
-            }
+            },
+            isLiked: post.engagement?.likes?.some(
+                (like: any) => like.user.toString() === userId
+            )
         };
 
         return res.status(200).json({

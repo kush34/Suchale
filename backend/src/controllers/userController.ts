@@ -284,7 +284,6 @@ export const getUserProfile = async (req: Request, res: Response) => {
         } else {
             result = await userService.getUserProfile(username);
         }
-
         return res.status(Number(result.code)).send(result)
     } catch (err) {
         console.log(err);
