@@ -23,8 +23,8 @@ interface post {
       content: string;
       createdAt: string;
     }[];
-    isLiked: boolean;
   };
+  isLiked: boolean;
   user: {
     username: string;
     profilePic: string;
@@ -56,14 +56,8 @@ const ProfilePage = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Not logged in");
 
-      const res = await api.get(`/user/profile/${username}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get(`/user/profile/${username}`);
 
       setUser(res.data.data.user);
       setPosts(res.data.data.user.posts);
@@ -84,7 +78,7 @@ const ProfilePage = () => {
               ...post,
               engagement: {
                 ...post.engagement,
-                isLiked: !post.engagement.isLiked,
+                isLiked: !post.isLiked,
               },
             };
           }

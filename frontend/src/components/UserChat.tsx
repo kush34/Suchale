@@ -6,6 +6,7 @@ import {
   SendHorizontal,
   Undo2,
   Search,
+  ArrowDown,
 } from "lucide-react";
 import EmojiPicker from "@/components/EmojiPicker";
 import { ChatContext } from "../Store/ChatContext";
@@ -17,6 +18,7 @@ import LineLoader from "../loaders/LineLoader";
 import { toast } from "sonner";
 import { Message } from "@/types";
 import Profile from "./Feed/Post/Profile";
+import { Button } from "./ui/button";
 
 const UserChat = () => {
   const chatCtx = useContext(ChatContext);
@@ -52,6 +54,15 @@ const UserChat = () => {
   const mediaInpRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+
+  const [toBottomBtnFlag, setToBottonBtnFlag] = useState<boolean>(false);
+
+  const handleScrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  };
 
   // Mouse tracking for info window
   useEffect(() => {
@@ -153,6 +164,21 @@ const UserChat = () => {
   }, [chatDivRef, hasMore, getMessages]);
 
   useEffect(() => {
+    const div = chatDivRef.current;
+    if (!div) return;
+
+    const handleScroll = () => {
+      const isNearBottom =
+        div.scrollHeight - div.scrollTop - div.clientHeight < 50;
+
+      setToBottonBtnFlag(!isNearBottom);
+    };
+
+    div.addEventListener("scroll", handleScroll);
+    return () => div.removeEventListener("scroll", handleScroll);
+  }, [chatDivRef]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, []);
 
@@ -198,29 +224,26 @@ const UserChat = () => {
             {chatArr.map((msg) => (
               <div
                 key={msg?._id}
-                className={`w-full flex ${
-                  msg.fromUser === user.username
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
+                className={`w-full flex ${msg.fromUser === user.username
+                  ? "justify-end"
+                  : "justify-start"
+                  }`}
               >
                 <span
-                  className={`w-fit max-w-[75%] m-2 rounded ${
-                    /\.(jpeg|jpg|gif|png|webp|mp4)$/i.test(msg.content)
-                      ? ""
-                      : `${
-                          msg.fromUser === user.username
-                            ? "bg-muted"
-                            : "bg-accent"
-                        } px-3 py-2`
-                  }`}
+                  className={`w-fit max-w-[75%] m-2 rounded ${/\.(jpeg|jpg|gif|png|webp|mp4)$/i.test(msg.content)
+                    ? ""
+                    : `${msg.fromUser === user.username
+                      ? "bg-muted"
+                      : "bg-accent"
+                    } px-3 py-2`
+                    }`}
                 >
                   <MsgCard msg={msg} currentUser={user.username} />
                 </span>
               </div>
             ))}
             <div ref={messagesEndRef} />
-            <span  className="mb-5"/>
+            <span className="mb-5" />
           </>
         )}
         {!loading && chatArr?.length == 0 && (
@@ -229,7 +252,12 @@ const UserChat = () => {
           </div>
         )}
       </div>
-
+      <div className="flex items-center justify-center mb-2 z-20">
+        {
+          toBottomBtnFlag &&
+          <Button onClick={handleScrollToBottom} className="rounded-full p-2 shadow-xl"><ArrowDown /></Button>
+        }
+      </div>
       <div
         className={`flex media-emojis-textbar-sendbtn bg-muted text-muted-foreground py-2`}
       >
