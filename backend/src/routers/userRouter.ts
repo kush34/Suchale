@@ -1,7 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
 import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, profilePic, register, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
-import upload from "../middlewares/multer";
 
 const router = express.Router();
 
@@ -20,7 +19,7 @@ router.get('/userList', verifyToken, userList)
 
 router.post("/search", verifyToken, search);
 
-router.post("/profilepic", verifyToken, upload.single('file'), profilePic)
+router.post("/profilepic", verifyToken, profilePic)
 
 router.post('/addContact', verifyToken, addContact);
 

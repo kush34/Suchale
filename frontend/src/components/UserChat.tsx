@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import Loader1 from "../loaders/Loader1";
 import {
   ImagePlay,
   SmilePlus,
@@ -88,36 +87,75 @@ const UserChat = () => {
   const mediaTrigger = () => {
     if (mediaInpRef.current) mediaInpRef.current.click();
   };
+  const uploadToCloudinary = async (file: File) => {
+    try {
+      // 1. Get pre-signed signature from backend
+      const { data } = await api.get("/post/preSignedUrl");
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", data.apiKey);
+      formData.append("timestamp", data.timestamp);
+      formData.append("signature", data.signature);
+      formData.append("folder", data.folder);
+
+      // 2. Upload to Cloudinary
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${data.cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await uploadRes.json();
+
+      if (!result.secure_url) throw new Error("Upload failed");
+
+      return result.secure_url;
+    } catch (err) {
+      throw err;
+    }
+  };
 
   const sendMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoading(true);
     const target = e.target as HTMLInputElement;
     const files = target.files;
-    if (files == null || !files[0]) return;
-    if (!chat) return;
-    const formData = new FormData();
-    formData.append("file", files[0]);
-    formData.append("toUser", chat?.username);
+
+    if (!files || !files[0] || !chat) return;
+
+    setLoading(true);
 
     try {
-      const res = await api.post("/message/media", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const file = files[0];
+
+      // 1. Upload directly to Cloudinary
+      const mediaUrl = await uploadToCloudinary(file);
+
+      // 2. Send URL to backend
+      const res = await api.post("/message/media", {
+        toUser: chat.username,
+        mediaUrl,
       });
+
       if (res.status === 200) {
         setChatArr((prev) => [
           ...prev,
           {
             fromUser: user.username,
-            toUser: chat?.username,
-            content: res.data.url,
+            toUser: chat.username,
+            content: mediaUrl,
           } as Message,
         ]);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Send media failed:", err);
+    } finally {
+      setLoading(false);
+      target.value = ""; 
     }
-    setLoading(false);
   };
+
   const updateReaction = (updatedMsg: Message) => {
     setChatArr((prev) =>
       prev.map((m) =>

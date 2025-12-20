@@ -214,15 +214,14 @@ export const searchUsers = async (query: string) => {
 };
 
 
-export const updateProfilePic = async (username: string, filePath: string) => {
-  const updatedUser = await User.findOneAndUpdate(
+export const updateProfilePic = async (username: string, imageUrl: string) => {
+  return User.findOneAndUpdate(
     { username },
-    { profilePic: filePath },
+    { profilePic: imageUrl },
     { new: true }
   );
-
-  return updatedUser;
 };
+
 
 
 

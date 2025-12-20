@@ -29,31 +29,63 @@ const Settings = () => {
     }
     navigate("/login");
   };
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formData = new FormData();
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      formData.append("file", e.target.files[0]);
-      // use file
-    }
-
-    try {
-      const res = await api.post("/user/profilepic", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log("Uploaded URL:", res.data.url);
-    } catch (err) {
-      console.error(err);
-    }
-  };
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!e.target.files || e.target.files.length === 0) return;
 
+      const file = e.target.files[0];
+
+      // 1. Upload directly to Cloudinary
+      const imageUrl = await uploadToCloudinary(file);
+
+      // 2. Send URL to backend
+      const res = await api.post("/user/profilepic", {
+        imageUrl,
+      });
+
+      console.log("Profile pic updated:", res.data.url);
+    } catch (err) {
+      console.error("Profile pic upload failed:", err);
+    } finally {
+      // optional but good UX
+      e.target.value = "";
+    }
+  };
+  const uploadToCloudinary = async (file: File) => {
+    try {
+      // 1. Get pre-signed signature from backend
+      const { data } = await api.get("/post/preSignedUrl");
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", data.apiKey);
+      formData.append("timestamp", data.timestamp);
+      formData.append("signature", data.signature);
+      formData.append("folder", data.folder);
+
+      // 2. Upload to Cloudinary
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${data.cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await uploadRes.json();
+
+      if (!result.secure_url) throw new Error("Upload failed");
+
+      return result.secure_url;
+    } catch (err) {
+      throw err;
+    }
+  };
   const subscribeUser = async () => {
     try {
       const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
