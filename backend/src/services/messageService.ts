@@ -222,14 +222,25 @@ export const getMessagesService = async ({
   };
 };
 
-export const sendMediaService = async (fromUser: string, toUser: string, filePath: string) => {
-  const newMsg = await Message.create({ fromUser, toUser, content: filePath });
+export const sendMediaService = async (
+  fromUser: string,
+  toUser: string,
+  mediaUrl: string
+) => {
+  const newMsg = await Message.create({
+    fromUser,
+    toUser,
+    content: mediaUrl,
+  });
 
   const receiverSocketId = await redis.hget("onlineUsers", toUser);
-  if (receiverSocketId) io.to(receiverSocketId).emit("sendMsg", newMsg);
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("sendMsg", newMsg);
+  }
 
-  return { url: filePath, newMsg };
+  return { url: mediaUrl, newMsg };
 };
+
 
 export const createGroupService = async ({ name, photoURL, users, adminId }: CreateGroupPayload) => {
   const newGroup = await Group.create({
@@ -283,7 +294,7 @@ export const searchUserMsgs = async (
   };
 
   if (toUser) {
-    baseFilter.toUser = toUser;  
+    baseFilter.toUser = toUser;
   }
 
   const messages = await Message.find(baseFilter);

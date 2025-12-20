@@ -134,23 +134,39 @@ interface ProfilePicRequest extends Request {
 }
 
 export const profilePic = async (req: ProfilePicRequest, res: Response) => {
-    try {
-        const username = req.username;
-        const filePath = req.file?.path;
+  try {
+    const username = req.username;
+    const { imageUrl } = req.body;
 
-        if (!username) return res.status(401).json({ status: "error", message: "Unauthorized" });
-        if (!filePath) return res.status(400).json({ status: "error", message: "File not uploaded" });
-
-        const updatedUser = await userService.updateProfilePic(username, filePath);
-
-        if (!updatedUser) return res.status(404).json({ status: "error", message: "User not found" });
-
-        res.status(200).json({ status: "success", url: filePath });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ status: "error", message: "Something went wrong" });
+    if (!username) {
+      return res.status(401).json({ status: "error", message: "Unauthorized" });
     }
+
+    if (!imageUrl) {
+      return res.status(400).json({ status: "error", message: "Image URL is required" });
+    }
+
+    // Minimal sanity check — don’t blindly store garbage
+    if (!imageUrl.startsWith("https://res.cloudinary.com/")) {
+      return res.status(400).json({ status: "error", message: "Invalid image URL" });
+    }
+
+    const updatedUser = await userService.updateProfilePic(username, imageUrl);
+
+    if (!updatedUser) {
+      return res.status(404).json({ status: "error", message: "User not found" });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      url: updatedUser.profilePic,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: "error", message: "Something went wrong" });
+  }
 };
+
 
 interface AddContactRequest extends Request {
     username?: string;

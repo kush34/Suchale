@@ -98,20 +98,36 @@ export const getMessages = async (req: Request, res: Response) => {
 };
 
 export const media = async (req: Request, res: Response) => {
-    try {
-        const username = req.username;
-        if (!username) return res.status(401).send({ error: "Unauthorized" });
-
-        const { toUser } = req.body;
-        if (!req.file || !toUser) return res.status(400).json({ error: "No file uploaded" });
-
-        const result = await messageService.sendMediaService(username, toUser, req.file.path);
-        res.status(200).json(result);
-    } catch (err: any) {
-        console.log(`ERROR media : ${err}`)
-        res.status(500).json({ message: "Something went wrong" });
+  try {
+    const username = req.username;
+    if (!username) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
+
+    const { toUser, mediaUrl } = req.body;
+
+    if (!toUser || !mediaUrl) {
+      return res.status(400).json({ error: "toUser and mediaUrl are required" });
+    }
+
+    // Basic sanity check — cheap but effective
+    if (!mediaUrl.startsWith("https://res.cloudinary.com/")) {
+      return res.status(400).json({ error: "Invalid media URL" });
+    }
+
+    const result = await messageService.sendMediaService(
+      username,
+      toUser,
+      mediaUrl
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(`ERROR media :`, err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
 };
+
 
 export const createGroup = async (req: Request, res: Response) => {
     try {

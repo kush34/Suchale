@@ -1,6 +1,5 @@
 import express from 'express';
 import verifyToken from '../middlewares/verifyToken'
-import upload from '../middlewares/multer';
 import { createGroup, deletedMsgById, getMembersByGroupId, getMessages, media, reactToMsg, searchUserMsgs, sendMsg, updateMsgById } from '../controllers/messageController';
 
 
@@ -17,7 +16,7 @@ router.post('/updateMsg', verifyToken, updateMsgById);
 
 router.post("/getMessages", verifyToken, getMessages);
 
-router.post('/media', verifyToken, upload.single('file'), media)
+router.post('/media', verifyToken, media)
 
 router.post("/createGroup", verifyToken, createGroup)
 
