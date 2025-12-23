@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
-import { Settings, UserRoundPlus, X } from 'lucide-react';
+import { Settings, ShieldBan, UserRoundPlus, X } from 'lucide-react';
 import UserCard from './UserCard';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,10 +10,15 @@ import { Chat, Message } from '@/types';
 import api from '@/utils/axiosConfig';
 import { toast } from 'sonner';
 import { UserContext, useUser } from '@/Store/UserContext';
+import { SocketContext, useSocket } from '@/Store/SocketContext';
 
 const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   const [dispChat, setDispChat] = useState<Chat[]>(userChatList);
   const userCtx = useContext(UserContext);
+  const socketCtx = useSocket();
+  if(!socketCtx) return null;
+  const socketError = socketCtx?.socketError;
+
   if(!userCtx) return null;
   const user = userCtx.user;
   const navigate = useNavigate();
@@ -69,7 +74,11 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   return (
     <div className={`bg-card p-4 md:p-0 h-full border-r-2 `}>
       <div className="top flex justify-end 1/6">
-
+      {socketError != null && 
+        <span className='text-red-500 flex gap-2 items-center text-sm bg-red-200 rounded p-2 m-5'>
+          <ShieldBan /> Could not connect to server  
+        </span>
+       }
         <div className="settings flex justify-center items-center xl:m-3">
           <button onClick={() => setIsSearchOpen((prev) => !prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
             <Search />

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import socket from "@/utils/socketService";
 import { useUser } from "./UserContext";
 import { ChatContext } from "./ChatContext";
@@ -7,14 +7,15 @@ import { Message } from "@/types";
 
 type SocketContextType = {
   socket: typeof socket;
+  socketError: string | null;
 };
 
-const SocketContext = createContext<SocketContextType | null>(null);
+export const SocketContext = createContext<SocketContextType | null>(null);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const userCtx = useUser();
   const chatCtx = useContext(ChatContext);
-
+  const [socketError,setSocketError] = useState<string | null>(null);
   if (!chatCtx) {
     throw new Error("SocketProvider must be inside ChatContextProvider");
   }
@@ -29,10 +30,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     socket.connect();
 
     socket.on("connect", () => {
+      setSocketError(null)
       console.log("✅ socket connected:", socket.id);
     });
 
     socket.on("connect_error", (err) => {
+      setSocketError(err.message);
       console.error("❌ socket error:", err.message);
     });
 
@@ -91,7 +94,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <SocketContext.Provider value={{ socket }}>
+    <SocketContext.Provider value={{ socket,socketError }}>
       {children}
     </SocketContext.Provider>
   );
@@ -100,5 +103,5 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 export const useSocket = () => {
   const ctx = useContext(SocketContext);
   if (!ctx) throw new Error("useSocket must be used inside SocketProvider");
-  return ctx.socket;
+  return ctx;
 };
