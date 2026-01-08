@@ -1,18 +1,23 @@
-const emojis = ['😀', '😂', '🥰', '😎', '👍', '🔥'];
+import { ThemeContext } from "@/Store/ThemeContext";
+import EmojiPickerLib, { EmojiClickData, Theme } from "emoji-picker-react";
+import { useContext } from "react";
 
-function EmojiQuickPicker({ onEmojiClick }: { onEmojiClick: (str: string) => void }) {
+type Props = {
+  onEmojiClick: (emoji: string) => void;
+};
+
+function EmojiPicker({ onEmojiClick }: Props) {
+  const themeCtx = useContext(ThemeContext);
+  const theme = themeCtx?.theme;
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    onEmojiClick(emojiData.emoji);
+  };
+
   return (
-    <div className="p-2 border  rounded-2xl shadow">
-      {emojis.map((emoji) => (
-        <button
-          key={emoji}
-          onClick={() => onEmojiClick(emoji)}
-          className="text-2xl m-1 hover:scale-125 cursor-pointer ease-in duration-200"
-        >
-          {emoji}
-        </button>
-      ))}
+    <div className="p-2 border rounded-2xl shadow">
+      <EmojiPickerLib theme={theme == "dark" ? Theme.DARK : Theme.LIGHT} onEmojiClick={handleEmojiClick} />
     </div>
   );
 }
-export default EmojiQuickPicker
+
+export default EmojiPicker;

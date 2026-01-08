@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Message } from "@/types";
 import Profile from "./Feed/Post/Profile";
 import { Button } from "./ui/button";
+import { EmojiClickData } from "emoji-picker-react";
 
 const UserChat = () => {
   const chatCtx = useContext(ChatContext);
@@ -81,8 +82,11 @@ const UserChat = () => {
     }, 2000);
   };
 
-  const handleEmojiClick = (emojiData: string) =>
-    setMessage((prev) => prev + emojiData);
+  const handleEmojiClick = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+  };
+
+
 
   const mediaTrigger = () => {
     if (mediaInpRef.current) mediaInpRef.current.click();
@@ -152,7 +156,7 @@ const UserChat = () => {
       console.error("Send media failed:", err);
     } finally {
       setLoading(false);
-      target.value = ""; 
+      target.value = "";
     }
   };
 
