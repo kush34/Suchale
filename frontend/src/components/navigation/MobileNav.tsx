@@ -26,7 +26,7 @@ const MobileNav = () => {
         },
     ];
     return (
-        <div className='absolute z-100 p-5 bottom-0 bg-accent w-full gap-15 h-14 flex justify-center items-center xl:hidden'>
+        <div className='fixed z-100 p-5 bottom-0 left-0 h-[var(--nav-h)] bg-accent w-full gap-15 flex justify-center items-center xl:hidden'>
             {items.map((item) => (
                 <Link
                     to={item.url}

@@ -1,24 +1,15 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import {
-  ImagePlay,
-  SmilePlus,
-  SendHorizontal,
-  Undo2,
-  Search,
-  ArrowDown,
-} from "lucide-react";
-import EmojiPicker from "@/components/EmojiPicker";
 import { ChatContext } from "../Store/ChatContext";
-import MsgCard from "@/components/chat/MsgCard/MsgCard";
 import { useUser } from "../Store/UserContext";
 import socket from "../utils/socketService";
 import api from "../utils/axiosConfig";
 import LineLoader from "../loaders/LineLoader";
-import { toast } from "sonner";
 import { Message } from "@/types";
-import Profile from "./Feed/Post/Profile";
-import { Button } from "./ui/button";
-import { EmojiClickData } from "emoji-picker-react";
+import MsgBar from "@/components/user-chat/msg-bar";
+import ToBottomBtn from "@/components/user-chat/to-bottom-chat.btn";
+import TopBar from "@/components/user-chat/top-bar";
+import ChatDisplay from "@/components/user-chat/chat-display";
+import HoverCard from "@/components/user-chat/HoverCard";
 
 const UserChat = () => {
   const chatCtx = useContext(ChatContext);
@@ -235,157 +226,12 @@ const UserChat = () => {
     <div
       className={`shadow-2xl bg-card text-card-foreground flex flex-col justify-between md:w-full h-full overflow-none`}
     >
-      <span
-        onClick={ViewChatInfo}
-        onMouseEnter={() => setHoverTopbar(true)}
-        onMouseLeave={() => setHoverTopbar(false)}
-        className={`bg-secondary text-secondary-foreground profile-username-typingindicator-back_btn py-3 px-5 flex items-center gap-2 font-medium text-2xl`}
-      >
-        <Profile username={chat.username || chat.name} src={chat?.profilePic} />
-        <div>
-          {isTyping && <div className="text-green-500 text-sm">typing...</div>}
-        </div>
-        <div className="xl:hidden back_btn">
-          <button
-            className="text-sm cursor-pointer"
-            onClick={() => setChat(null)}
-          >
-            <Undo2 />
-          </button>
-        </div>
-      </span>
-
+      <TopBar isTyping={isTyping} chat={chat} setChat={setChat} ViewChatInfo={ViewChatInfo} setHoverTopbar={setHoverTopbar} />
       {loading && <LineLoader />}
-
-      <div
-        ref={chatDivRef}
-        className="chats-msgs flex flex-col h-full w-full overflow-y-scroll no-scrollbar"
-      >
-        {chatArr && chatArr.length > 0 && (
-          <>
-            {chatArr.map((msg) => (
-              <div
-                key={msg?._id}
-                className={`w-full flex ${msg.fromUser === user.username
-                  ? "justify-end"
-                  : "justify-start"
-                  }`}
-              >
-                <span
-                  className={`w-fit max-w-[75%] m-2 rounded ${/\.(jpeg|jpg|gif|png|webp|mp4)$/i.test(msg.content)
-                    ? ""
-                    : `${msg.fromUser === user.username
-                      ? "bg-muted"
-                      : "bg-accent"
-                    } px-3 py-2`
-                    }`}
-                >
-                  <MsgCard msg={msg} currentUser={user.username} />
-                </span>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-            <span className="mb-5" />
-          </>
-        )}
-        {!loading && chatArr?.length == 0 && (
-          <div className="flex justify-center items-center mt-10 text-zinc-500">
-            No messages found
-          </div>
-        )}
-      </div>
-      <div className="flex items-center justify-center mb-2 z-20">
-        {
-          toBottomBtnFlag &&
-          <Button onClick={handleScrollToBottom} className="rounded-full p-2 shadow-xl"><ArrowDown /></Button>
-        }
-      </div>
-      <div
-        className={`flex media-emojis-textbar-sendbtn bg-muted text-muted-foreground py-2`}
-      >
-        <div className="w-1/7 items-center flex justify-evenly">
-          <div
-            onClick={mediaTrigger}
-            className="cursor-pointer flex items-center justify-center hover:text-zinc-400 ease-in duration-100 hover:scale-110"
-          >
-            <ImagePlay />
-            <input
-              ref={mediaInpRef}
-              onChange={sendMedia}
-              type="file"
-              className="hidden"
-            />
-          </div>
-          <div className="relative">
-            {showPicker && (
-              <div className="absolute bottom-full mb-2 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
-              </div>
-            )}
-            <button
-              className="cursor-pointer flex items-center justify-center ease-in duration-100 hover:scale-110"
-              onClick={() => setShowPicker(!showPicker)}
-            >
-              <SmilePlus />
-            </button>
-          </div>
-        </div>
-        <div className="w-3/4 flex items-center justify-center mb-2">
-          <input
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-              handleTyping();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMsg(message);
-                setMessage("");
-              }
-            }}
-            type="text"
-            className={` w-full outline-none rounded px-2 py-1`}
-            placeholder="type your message here"
-          />
-        </div>
-        <div
-          onClick={() => {
-            sendMsg(message);
-            setMessage("");
-          }}
-          className="cursor-pointer flex items-center justify-center w-1/10 ease-in duration-100 hover:scale-110"
-        >
-          <SendHorizontal />
-        </div>
-      </div>
-
-      {hoverTopbar && infoWindow && infoWindow.length > 0 && (
-        <div
-          style={{
-            position: "fixed",
-            top: mousePos.y + 15,
-            left: mousePos.x + 15,
-            padding: "0.5rem",
-            borderRadius: "0.5rem",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            zIndex: 1000,
-            width: "200px",
-          }}
-          className="bg-popover text-popover-foreground shadow p-2 rounded"
-        >
-          <div className="font-bold mb-2">Members</div>
-          {infoWindow.map((member) => (
-            <div key={member._id} className="flex items-center mb-1">
-              <img
-                className="w-8 h-8 rounded-full mr-2"
-                src={member.profilePic}
-                alt={member.username}
-              />
-              <span>{member.username}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <ChatDisplay chatDivRef={chatDivRef} chatArr={chatArr} user={user} loading={loading} messagesEndRef={messagesEndRef} />
+      <ToBottomBtn handleScrollToBottom={handleScrollToBottom} toBottomBtnFlag={toBottomBtnFlag} />
+      <MsgBar sendMsg={sendMsg} message={message} setMessage={setMessage} sendMedia={sendMedia} mediaInpRef={mediaInpRef} mediaTrigger={mediaTrigger} handleEmojiClick={handleEmojiClick} handleTyping={handleTyping} showPicker={showPicker} setShowPicker={setShowPicker} />
+      <HoverCard hoverTopbar={hoverTopbar} infoWindow={infoWindow} mousePos={mousePos}/>
     </div>
   );
 };
