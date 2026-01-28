@@ -4,6 +4,7 @@ import Message from "./models/messageModel";
 import User from "./models/userModel";
 import redis from "./utils/redis";
 import { verifySocketToken } from "./middlewares/verifyToken";
+import Call from "./models/callModel";
 
 // Define the shape of the data attached to the socket via middleware
 interface SocketData {
@@ -79,7 +80,7 @@ export default function socketHandler(io: Server) {
                 });
 
                 await Group.findByIdAndUpdate(groupId, { $push: { messages: message._id } });
-                
+
                 // Emit to everyone in the room (including sender)
                 io.to(groupId).emit("newGroupMessage", { groupId, message });
             } catch (error) {
@@ -94,13 +95,25 @@ export default function socketHandler(io: Server) {
                     { from: fromUser, to: userId, read: false },
                     { $set: { read: true } }
                 );
-                
+
                 const fromSocketId = await redis.hget('onlineUsers', fromUser);
                 if (fromSocketId) {
                     io.to(fromSocketId).emit("messagesReadBy", { byUser: username });
                 }
             } catch (error) {
                 console.error("Read receipt error:", error);
+            }
+        });
+
+
+        socket.on("initiateAudioCall", async ({ to_username }) => {
+            console.log(`Call Initaited from ${username} to ${to_username}`)
+            const recipientSocketId = await redis.hget('onlineUsers', to_username);
+            if (recipientSocketId) {
+                console.log(`Calling socket ID:${recipientSocketId}`)
+                io.to(recipientSocketId).emit("incomingAudioCall", { from: username });
+            } else {
+                console.log("user not found inline")
             }
         });
 

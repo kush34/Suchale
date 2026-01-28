@@ -92,6 +92,30 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       socket.off("friendOffline");
     };
   }, []);
+  // ---- AudioCall ----
+  useEffect(() => {
+    socket.on("incomingAudioCall", ({from}) => {
+      const audio = new Audio("/calling-sound.mp3")
+      audio.play();
+      
+      toast(`${from} is calling.`,  {
+          description:" You have an incoming Audio Call",
+          action:{
+            label:"Pick",
+            onClick:()=>console.log("Audio Call picked Up.")
+          }
+      });
+    });
+
+    socket.on("friendOffline", (username: string) => {
+      toast(`${username} went offline`);
+    });
+
+    return () => {
+      socket.off("friendOnline");
+      socket.off("friendOffline");
+    };
+  }, []);
 
   return (
     <SocketContext.Provider value={{ socket,socketError }}>
