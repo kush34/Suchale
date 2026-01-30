@@ -1,4 +1,4 @@
-import { Undo2 } from "lucide-react"
+import { Camera, Undo2 } from "lucide-react"
 import Profile from "@/components/Feed/Post/Profile"
 import { Chat } from "@/types"
 import { SetStateAction } from "react"
@@ -13,15 +13,16 @@ type Props = {
     ViewChatInfo: () => void;
 }
 export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, isTyping }: Props) {
-    const { audioCallUser,setAudioCallUser } = useSocket()
-    const audioCall = (to_username: string) => {
-        console.log(`audioCall fired`)
-        if(!chat.username || !chat.profilePic){
+    const { setCallUser, callUser, setCallType } = useSocket()
+    const initiateCall = (to_username: string, type: "audio" | "video") => {
+        console.log(`call fired`)
+        if (!chat.username || !chat.profilePic) {
             throw new Error("Chat username or chat profilepic does not exits");
         }
-        setAudioCallUser({ username: chat.username, profilePic: chat.profilePic })
-        console.log("Audio Call User",audioCallUser)
-        socket.emit("initiateAudioCall", { to_username: to_username })
+        setCallUser({ username: chat.username, profilePic: chat.profilePic })
+        setCallType(type);
+        console.log(`${type} Call User`, callUser)
+        socket.emit("initiateCall", { to: to_username, type })
     }
     return (
         <span
@@ -35,13 +36,16 @@ export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, is
                 {isTyping && <div className="text-green-500 text-sm">typing...</div>}
             </div>
             <div>
-                <button onClick={() => audioCall(chat.username)}>
+            </div>
+            <div className="flex gap-5 back_btn">
+                <button onClick={() => initiateCall(chat.username, "video")}>
+                    <Camera />
+                </button>
+                <button onClick={() => initiateCall(chat.username, "audio")}>
                     <Phone />
                 </button>
-            </div>
-            <div className="xl:hidden back_btn">
                 <button
-                    className="text-sm cursor-pointer"
+                    className="xl:hidden text-sm cursor-pointer"
                     onClick={() => setChat(null)}
                 >
                     <Undo2 />
