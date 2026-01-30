@@ -5,13 +5,14 @@ import UserList from "@/components/UserList";
 import Loader1 from "@/loaders/Loader1";
 import { ChatContext } from "@/Store/ChatContext";
 import { ThemeContext } from "@/Store/ThemeContext";
-import { SocketProvider } from "@/Store/SocketContext";
+import { SocketProvider, useSocket } from "@/Store/SocketContext";
 import { Chat } from "@/types";
+import AudioCallComp from "@/components/audio-call/audio-call";
 
 const Home = () => {
   const [userChatList, setUserChatList] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const { audioCallUser } = useSocket();
   const chatCtx = useContext(ChatContext);
   const themeCtx = useContext(ThemeContext);
   if (!chatCtx || !themeCtx) return null;
@@ -39,23 +40,27 @@ const Home = () => {
   }
 
   return (
-    <SocketProvider>
-      <div className="xl:flex h-screen bg-card">
-        <div className={`xl:w-1/4 ${chat ? "hidden" : "block"} xl:block`}>
-          <UserList userChatList={userChatList} />
-        </div>
-
-        {chat ? (
-          <div className="xl:w-3/4">
-            <UserChat />
-          </div>
-        ) : (
-          <div className="hidden xl:flex items-center justify-center w-3/4 text-zinc-500">
-            Select a chat
-          </div>
-        )}
+    <div className="xl:flex h-screen bg-card">
+      <div className={`xl:w-1/4 ${chat ? "hidden" : "block"} xl:block`}>
+        <UserList userChatList={userChatList} />
       </div>
-    </SocketProvider>
+
+      {audioCallUser == null && chat && (
+        <div className="xl:w-3/4">
+          <UserChat />
+        </div>
+      )
+      }
+      {audioCallUser == null && !chat &&(
+      <div className="hidden xl:flex items-center justify-center w-3/4 text-zinc-500">
+        Select a chat
+      </div>
+      )}
+
+      {audioCallUser != null && <div className="w-full xl:w-3/4">
+        <AudioCallComp profilePic={audioCallUser.profilePic} username={audioCallUser.username} />
+      </div>}
+    </div>
   );
 };
 

@@ -13,17 +13,23 @@ const callSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     required: true,
     index: true,
-    ref:'User'
+    ref: 'User'
   },
   to_user_id: {
     type: mongoose.Types.ObjectId,
     required: true,
     index: true,
-    ref:'User'
+    ref: 'User'
+  },
+  pickedAt: {
+    type: Date
+  },
+  endedAt: {
+    type: Date
   },
   duration: {
     type: Number,
-    default:0
+    default: 0
   }
 }, { timestamps: true })
 

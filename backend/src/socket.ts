@@ -5,6 +5,7 @@ import User from "./models/userModel";
 import redis from "./utils/redis";
 import { verifySocketToken } from "./middlewares/verifyToken";
 import Call from "./models/callModel";
+import { error } from 'node:console';
 
 // Define the shape of the data attached to the socket via middleware
 interface SocketData {
@@ -105,16 +106,89 @@ export default function socketHandler(io: Server) {
             }
         });
 
-
         socket.on("initiateAudioCall", async ({ to_username }) => {
             console.log(`Call Initaited from ${username} to ${to_username}`)
             const recipientSocketId = await redis.hget('onlineUsers', to_username);
             if (recipientSocketId) {
-                console.log(`Calling socket ID:${recipientSocketId}`)
-                io.to(recipientSocketId).emit("incomingAudioCall", { from: username });
+                // console.log(`Calling socket ID:${recipientSocketId}`)
+                const toDbUser = await User.findOne({ username: to_username })
+                if (!toDbUser) {
+                    throw new error("Could not call the user. as user does not exists.")
+                }
+                const audioCall = await Call.create({
+                    user_id: userId,
+                    to_user_id: toDbUser._id
+                })
+                io.to(recipientSocketId).emit("incomingAudioCall", { from: username, callId: audioCall._id });
             } else {
                 console.log("user not found inline")
             }
+        });
+        socket.on("answerIncomingAudioCall", async ({ from, callId }) => {
+            console.log(`Answering Call from ${username} to ${from}`)
+            const recipientSocketId = await redis.hget('onlineUsers', from);
+            if (recipientSocketId) {
+                await Call.findByIdAndUpdate(
+                    callId
+                    , {
+                        pickedAt: Date.now()
+                    })
+                io.to(recipientSocketId).emit("callAnswered", { from: username, callId });
+            } else {
+                console.log("user not found inline")
+            }
+        });
+        socket.on("sendOffer", async ({ to, callId, offer }) => {
+            const recipientSocketId = await redis.hget("onlineUsers", to);
+            if (!recipientSocketId) return;
+
+            io.to(recipientSocketId).emit("receiveOffer", {
+                from: username,
+                callId,
+                offer,
+            });
+        });
+        socket.on("sendAnswer", async ({ to, callId, answer }) => {
+            const recipientSocketId = await redis.hget("onlineUsers", to);
+            if (!recipientSocketId) return;
+
+            io.to(recipientSocketId).emit("receiveAnswer", {
+                from: username,
+                callId,
+                answer,
+            });
+        });
+        socket.on("endAudioCall", async ({ callId, to }) => {
+            const call = await Call.findById(callId);
+            if (!call) return;
+
+            const endedAt = new Date();
+
+            const startTime = call.pickedAt ?? call.createdAt;
+            const durationSeconds = Math.floor(
+                (endedAt.getTime() - startTime.getTime()) / 1000
+            );
+
+            await Call.findByIdAndUpdate(callId, {
+                endedAt,
+                duration: durationSeconds,
+            });
+
+            const recipientSocketId = await redis.hget("onlineUsers", to);
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("audioCallEnded", { callId });
+            }
+        });
+
+        socket.on("sendCandidate", async ({ to, callId, candidate }) => {
+            const recipientSocketId = await redis.hget("onlineUsers", to);
+            if (!recipientSocketId) return;
+
+            io.to(recipientSocketId).emit("receiveCandidate", {
+                from: username,
+                callId,
+                candidate,
+            });
         });
 
         socket.on('disconnect', async () => {

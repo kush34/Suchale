@@ -4,6 +4,7 @@ import { Chat } from "@/types"
 import { SetStateAction } from "react"
 import { Phone } from "lucide-react";
 import socket from "@/utils/socketService";
+import { useSocket } from "@/Store/SocketContext";
 type Props = {
     chat: Chat,
     isTyping: boolean
@@ -12,9 +13,15 @@ type Props = {
     ViewChatInfo: () => void;
 }
 export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, isTyping }: Props) {
+    const { audioCallUser,setAudioCallUser } = useSocket()
     const audioCall = (to_username: string) => {
         console.log(`audioCall fired`)
-        socket.emit("initiateAudioCall", {to_username:to_username})
+        if(!chat.username || !chat.profilePic){
+            throw new Error("Chat username or chat profilepic does not exits");
+        }
+        setAudioCallUser({ username: chat.username, profilePic: chat.profilePic })
+        console.log("Audio Call User",audioCallUser)
+        socket.emit("initiateAudioCall", { to_username: to_username })
     }
     return (
         <span
@@ -28,7 +35,7 @@ export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, is
                 {isTyping && <div className="text-green-500 text-sm">typing...</div>}
             </div>
             <div>
-                <button onClick={()=>audioCall(chat.username)}>
+                <button onClick={() => audioCall(chat.username)}>
                     <Phone />
                 </button>
             </div>
