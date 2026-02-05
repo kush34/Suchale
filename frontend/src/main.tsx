@@ -20,6 +20,7 @@ import { SidebarProvider } from "./components/ui/sidebar";
 import ProfilePage from "./pages/ProfilePage";
 import PostPage from "./pages/PostPage";
 import Main from "./components/layouts/main";
+import { SocketProvider } from "./Store/SocketContext";
 const root = document.getElementById("root");
 
 type Props = {
@@ -31,11 +32,13 @@ function ProtectedRoutes() {
     <UserContextProvider>
       <ThemeContextProvider>
         <SidebarProvider>
-        <ChatContextProvider>
-            <Main>
-              <Outlet />
-            </Main>
-        </ChatContextProvider>
+          <ChatContextProvider>
+            <SocketProvider>
+              <Main>
+                <Outlet />
+              </Main>
+            </SocketProvider>
+          </ChatContextProvider>
         </SidebarProvider>
       </ThemeContextProvider>
     </UserContextProvider>
