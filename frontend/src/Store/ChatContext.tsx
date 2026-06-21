@@ -2,6 +2,7 @@ import { createContext, useEffect, useRef, useState } from "react";
 import api from '../utils/axiosConfig';
 import { UserContextType, useUser } from './UserContext';
 import { Chat, Group, Message, User } from "@/types/index";
+import { trackEvent } from "@/lib/posthog";
 
 type SendMessagePayload =
     | { content: string; isGroup: true; groupId: string }
@@ -91,6 +92,10 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
                 };
 
                 setChatArr(prev => [...(prev ?? []), newMessage]);
+                trackEvent("message_sent", {
+                    chat_type: groupFlag ? "group" : "direct",
+                    recipient: "username" in chat ? chat.username : chat.name,
+                });
             }
         } catch (error) {
             console.log(error);
@@ -137,6 +142,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
         try {
             const response = await api.post(`/message/getMembers/${chat._id}`);
             setInfoWindow(response.data);
+            trackEvent("chat_info_viewed", { group_id: chat._id });
         } catch (error) {
             console.error(error);
         }

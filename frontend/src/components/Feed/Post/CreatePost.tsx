@@ -5,6 +5,7 @@ import api from "@/utils/axiosConfig";
 import { Image } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/posthog";
 
 type fileType = {
   file: File;
@@ -69,6 +70,7 @@ const CreatePost = () => {
   const handlePost = async () => {
     if (!content.trim()) return toast.error("Say something first");
     setLoading(true);
+    trackEvent("create_post_clicked", { has_media: media.length > 0 });
 
     try {
       let mediaUrls: string[] = [];
@@ -85,11 +87,13 @@ const CreatePost = () => {
       });
 
       toast("Post shared 🎉");
+      trackEvent("post_shared", { media_count: mediaUrls.length });
 
       setContent("");
       setMedia([]);
     } catch (err) {
       toast.error("Could not share your post");
+      trackEvent("post_share_failed");
     } finally {
       setLoading(false);
     }

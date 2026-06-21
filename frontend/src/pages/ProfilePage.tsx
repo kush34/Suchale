@@ -6,6 +6,7 @@ import { ProfileBlock } from "@/components/pages/profile/ProfileBlock";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/Store/UserContext";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/posthog";
 
 interface post {
   _id: string;
@@ -91,6 +92,7 @@ const ProfilePage = () => {
       const response = await api.post(`/user/follow/${usernameToFollow}`);
       if (response.status === 200) {
         toast.success(`following ${usernameToFollow}`);
+        trackEvent("follow_clicked", { username: usernameToFollow });
         setUser((prev) =>
           prev
             ? {
@@ -112,6 +114,7 @@ const ProfilePage = () => {
       const response = await api.post(`/user/unfollow/${usernameToFollow}`);
       if (response.status === 200) {
         toast.success(`unfollowed ${usernameToFollow}`);
+        trackEvent("unfollow_clicked", { username: usernameToFollow });
         setUser((prev) =>
           prev
             ? {
@@ -130,6 +133,7 @@ const ProfilePage = () => {
   }
   useEffect(() => {
     if (!username) return;
+    trackEvent("profile_viewed", { username });
     getProfile(username);
   }, [username]);
 
@@ -169,9 +173,9 @@ const ProfilePage = () => {
 
       {/* Posts */}
       <div className="flex flex-col gap-4">
-        {posts &&
+          {posts &&
           posts.map((p) => (
-            <PostCard key={p._id} post={p} likeToggle={UpdateLike} />
+            <PostCard key={p._id} post={p} likeToggle={UpdateLike} source="profile" />
           ))}
       </div>
     </div>

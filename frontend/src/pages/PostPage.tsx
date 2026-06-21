@@ -9,6 +9,7 @@ import PostPageSkeleton from "@/components/skeletons/post-page";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/Store/UserContext";
 import LineLoader from "@/loaders/LineLoader";
+import { trackEvent } from "@/lib/posthog";
 
 interface Post {
   _id: string;
@@ -61,6 +62,7 @@ const PostPage = () => {
     if (!post) return;
 
     try {
+      trackEvent("post_liked", { post_id: id });
 
       setPost((prev) =>
         prev
@@ -117,6 +119,7 @@ const PostPage = () => {
 
       setComment("");
       setLoadingCommentAdd(false);
+      trackEvent("comment_added", { post_id: postId });
     } catch (err) {
       toast.error("Could not add comment");
     }
@@ -124,6 +127,7 @@ const PostPage = () => {
 
   useEffect(() => {
     if (postId) fetchPost();
+    trackEvent("post_viewed", { post_id: postId });
   }, []);
 
   if (loading || !post) return <PostPageSkeleton />;

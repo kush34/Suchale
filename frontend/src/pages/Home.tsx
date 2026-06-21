@@ -8,6 +8,7 @@ import { ThemeContext } from "@/Store/ThemeContext";
 import { useSocket } from "@/Store/SocketContext";
 import { Chat } from "@/types";
 import CallComp from "@/components/call/call-comp";
+import { trackEvent } from "@/lib/posthog";
 
 const Home = () => {
   const [userChatList, setUserChatList] = useState<Chat[]>([]);
@@ -19,6 +20,10 @@ const Home = () => {
 
   const { chat } = chatCtx;
   const { theme } = themeCtx;
+
+  useEffect(() => {
+    trackEvent("messages_viewed");
+  }, []);
 
   useEffect(() => {
     const loadChats = async () => {

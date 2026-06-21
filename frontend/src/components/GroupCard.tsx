@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { ChatContext } from '../Store/ChatContext';
 import { Chat, Group } from '@/types';
 import { Infinity } from 'lucide-react';
+import { trackEvent } from '@/lib/posthog';
 
 
 export function formatChatTime(dateString: string) {
@@ -64,6 +65,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
     if (chat?._id !== group?._id) {
       setChat(group);
       setGroupFlag(true);
+      trackEvent("chat_opened", { chat_type: "group", group_id: group._id, group_name: group.name });
     }
   };
 

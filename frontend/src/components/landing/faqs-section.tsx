@@ -1,4 +1,5 @@
 import React from 'react'
+import { trackEvent } from '@/lib/posthog'
 
 export const FAQs = () => {
     return (
@@ -29,7 +30,7 @@ export function AccordionDemo() {
             defaultValue="item-1"
         >
             <AccordionItem value="item-1">
-                <AccordionTrigger>Product Information</AccordionTrigger>
+                <AccordionTrigger onClick={() => trackEvent("faq_opened", { faq_item: "product_information" })}>Product Information</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">
                     <p>
                         Our chat application delivers real-time messaging with zero lag, clean UI, and end-to-end encryption (* in future). Built for speed, privacy, and scale — whether you're chatting one-on-one or running massive group conversations.
@@ -42,7 +43,7 @@ export function AccordionDemo() {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-                <AccordionTrigger>Account & Security</AccordionTrigger>
+                <AccordionTrigger onClick={() => trackEvent("faq_opened", { faq_item: "account_security" })}>Account & Security</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">
                     <p>
                         We use secure authentication and industry-standard encryption to protect every message. Your chats stay on your device and our servers only store what's required for delivery — nothing else.
@@ -54,7 +55,7 @@ export function AccordionDemo() {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-                <AccordionTrigger>Device Support</AccordionTrigger>
+                <AccordionTrigger onClick={() => trackEvent("faq_opened", { faq_item: "device_support" })}>Device Support</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">
                     <p>
                         The app works smoothly across modern browsers and mobile devices. No installation required. Just sign in and start chatting.

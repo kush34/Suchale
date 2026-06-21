@@ -10,6 +10,7 @@ import ToBottomBtn from "@/components/user-chat/to-bottom-chat.btn";
 import TopBar from "@/components/user-chat/top-bar";
 import ChatDisplay from "@/components/user-chat/chat-display";
 import HoverCard from "@/components/user-chat/HoverCard";
+import { trackEvent } from "@/lib/posthog";
 
 const UserChat = () => {
   const chatCtx = useContext(ChatContext);
@@ -142,6 +143,11 @@ const UserChat = () => {
             content: mediaUrl,
           } as Message,
         ]);
+        trackEvent("file_shared_in_chat", {
+          chat_type: chat.username ? "direct" : "group",
+          recipient: chat.username || chat.name,
+          file_type: file.type,
+        });
       }
     } catch (err) {
       console.error("Send media failed:", err);

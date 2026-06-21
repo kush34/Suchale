@@ -4,6 +4,7 @@ import { ThemeContext } from '../Store/ThemeContext';
 import { Infinity } from 'lucide-react';
 import { formatChatTime } from './GroupCard';
 import { Chat, User } from '@/types';
+import { trackEvent } from '@/lib/posthog';
 
 
 const UserCard = ({ user }: { user: Chat }) => {
@@ -18,6 +19,7 @@ const UserCard = ({ user }: { user: Chat }) => {
         if (chat?.username != user?.username) {
             setChat(user);
             setGroupFlag(false);
+            trackEvent("chat_opened", { chat_type: "direct", username: user.username });
             console.log(`setting User:${user}`)
         }
     }

@@ -24,6 +24,7 @@ import { formatChatTime } from './GroupCard';
 import { Message } from '@/types';
 import EmojiReactions from './EmojiReactions';
 import { ChatContext } from '@/Store/ChatContext';
+import { trackEvent } from '@/lib/posthog';
 
 type MsgCardProps = {
     msg: Message;
@@ -54,6 +55,7 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                 msg.content = udpatedContent;
                 msg.isEdited = true;
                 toast.success("Edited the message.")
+                trackEvent("message_edited", { message_id: messageId });
             }
         } catch (error: any) {
             console.log(error)
@@ -72,6 +74,7 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                 msg.content = "Msg Deleted By User";
                 msg.isDeleted = true;
                 toast.success("Deleted the message.")
+                trackEvent("message_deleted", { message_id: messageId });
             }
         } catch (error: any) {
             console.log(error)
@@ -100,6 +103,7 @@ const MsgCard = ({ msg, currentUser }: MsgCardProps) => {
                             : m
                     )
                 );
+                trackEvent("emoji_reaction_added", { message_id: msg._id, emoji });
             }
         } catch (err) {
             toast.error("Could not React to the Msg");

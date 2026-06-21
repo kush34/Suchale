@@ -5,6 +5,7 @@ import Media from './Post/Media';
 import api from '@/utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { formatChatTime } from '../GroupCard';
+import { trackEvent } from '@/lib/posthog';
 
 interface PostCardProps {
     post: {
@@ -31,9 +32,10 @@ interface PostCardProps {
         isLiked: boolean;
     };
     likeToggle: (id: string) => void;
+    source?: "feed" | "profile";
 }
 
-const PostCard = ({ post, likeToggle }: PostCardProps) => {
+const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
     const [liked, setLiked] = useState(post.isLiked);
     const [likeCount, setLikeCount] = useState(post.engagement.likes.length);
     const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +50,7 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
 
         try {
             const newLikedState = !previousLiked;
+            trackEvent(source === "feed" ? "post_liked_from_feed" : "profile_like_clicked", { post_id: post._id });
 
             setLiked(newLikedState);
             setLikeCount(prev =>
@@ -80,12 +83,14 @@ const PostCard = ({ post, likeToggle }: PostCardProps) => {
                 />
                 <span className='font-light'>{date}</span>
             </span>
-            <span onClick={() => navigate(`/post/${post._id}`)} className='text-xl cursor-pointer'>{post.content}</span>
+            <span onClick={() => {
+                trackEvent(source === "feed" ? "post_opened_from_feed" : "profile_post_opened", { post_id: post._id });
+                navigate(`/post/${post._id}`);
+            }} className='text-xl cursor-pointer'>{post.content}</span>
             {post.media && <Media src={post.media} />}
-            <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} />
+            <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} source={source} />
         </div>
     )
 }
 
 export default PostCard
-

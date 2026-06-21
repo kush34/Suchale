@@ -1,7 +1,7 @@
-import { ReactNode, StrictMode } from "react";
+import { ReactNode, StrictMode, useEffect } from "react";
 import * as ReactDOM from "react-dom/client";
 import "./index.css";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 
 import App from "./App";
@@ -21,11 +21,31 @@ import ProfilePage from "./pages/ProfilePage";
 import PostPage from "./pages/PostPage";
 import Main from "./components/layouts/main";
 import { SocketProvider } from "./Store/SocketContext";
+import { trackEvent } from "./lib/posthog";
 const root = document.getElementById("root");
 
 type Props = {
   children: ReactNode;
 };
+
+function RouteTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const pageName = location.pathname === "/" ? "landing" : location.pathname.replace(/^\//, "");
+    const authState = ["/", "/login", "/register"].includes(location.pathname)
+      ? "guest"
+      : "authenticated";
+
+    trackEvent("page_view", {
+      page_name: pageName,
+      path: location.pathname,
+      auth_state: authState,
+    });
+  }, [location.pathname]);
+
+  return null;
+}
 
 function ProtectedRoutes() {
   return (
@@ -49,6 +69,7 @@ registerServiceWorker();
 if (root) {
   ReactDOM.createRoot(root).render(
     <BrowserRouter>
+      <RouteTracker />
       <Toaster richColors closeButton position="top-right" />
       <Routes>
         <Route path="/" element={<App />} />

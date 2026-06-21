@@ -2,6 +2,7 @@ import React from 'react'
 import { Button } from '../ui/button'
 import { Languages } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { trackEvent } from '@/lib/posthog'
 
 export const Navbar = () => {
     const navigate = useNavigate();
@@ -16,11 +17,14 @@ export const Navbar = () => {
                 </ul>
             </span>
             <span className='flex gap-5 items-center text-sm'>
-                <span className='flex gap-1'>
+                <span className='flex gap-1 cursor-pointer' onClick={() => trackEvent("landing_language_clicked")}>
                     <Languages strokeWidth={1}/> Language
                 </span>
                 <span>
-                    <Button className='rounded-2xl text-sm' onClick={()=>navigate("/login")}>
+                    <Button className='rounded-2xl text-sm' onClick={() => {
+                        trackEvent("landing_register_clicked");
+                        navigate("/login");
+                    }}>
                         Register
                     </Button>
                 </span>

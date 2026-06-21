@@ -5,6 +5,7 @@ import Loader1 from '@/loaders/Loader1';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { googleSignInPopUp } from '@/config/firebaseConfig';
+import { trackEvent } from '@/lib/posthog';
 
 type InputProps = {
   id: string;
@@ -83,12 +84,18 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    trackEvent("login_viewed");
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFlag1(false); setFlag2(false); setFlag3(false);
+    trackEvent("login_submitted");
 
     if (!username || !password) {
       setFlag1(true);
+      trackEvent("login_failed", { reason: "missing_credentials" });
       return;
     }
 
@@ -98,25 +105,37 @@ const Login = () => {
       if (res.status === 200) {
         // localStorage.setItem("token", res.data.token);
         toast("Login Successful");
+        trackEvent("manual_login_completed", { username });
         navigate("/feed");
       } else {
         setFlag3(true);
+        trackEvent("login_failed", { reason: "unexpected_status" });
       }
     } catch {
       setFlag3(true);
+      trackEvent("login_failed", { reason: "request_error" });
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true)
-    const res = await googleSignInPopUp();
-    if (res?.ok) {
-      // localStorage.setItem("token", res.token);
-      navigate("/feed");
+    setLoading(true);
+    trackEvent("login_google_clicked");
+    try {
+      const res = await googleSignInPopUp();
+      if (res?.ok) {
+        // localStorage.setItem("token", res.token);
+        trackEvent("google_login_completed");
+        navigate("/feed");
+      } else {
+        trackEvent("login_failed", { reason: "google_signin_failed" });
+      }
+    } catch {
+      trackEvent("login_failed", { reason: "google_signin_error" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false)
   };
 
 

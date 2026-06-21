@@ -12,6 +12,7 @@ import { ThemeContext } from "../Store/ThemeContext";
 import { registerServiceWorker } from "@/utils/register-service-worker";
 import { toast } from "sonner";
 import { Bell, LogOut, Moon, Pencil, Sun, Undo2 } from "lucide-react";
+import { trackEvent } from "@/lib/posthog";
 
 const Settings = () => {
   const themeCtx = useContext(ThemeContext);
@@ -22,7 +23,11 @@ const Settings = () => {
   const { user } = userCtx;
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    trackEvent("settings_viewed");
+  }, []);
   const logOut = async () => {
+    trackEvent("logout_clicked");
     const res = await api("/user/logout");
     if (res.status === 200) {
       toast("logged out!")
@@ -39,6 +44,7 @@ const Settings = () => {
       if (!e.target.files || e.target.files.length === 0) return;
 
       const file = e.target.files[0];
+      trackEvent("profile_picture_upload_started", { file_type: file.type, file_size: file.size });
 
       // 1. Upload directly to Cloudinary
       const imageUrl = await uploadToCloudinary(file);
@@ -49,8 +55,10 @@ const Settings = () => {
       });
 
       console.log("Profile pic updated:", res.data.url);
+      trackEvent("profile_picture_upload_success");
     } catch (err) {
       console.error("Profile pic upload failed:", err);
+      trackEvent("profile_picture_upload_failed");
     } finally {
       // optional but good UX
       e.target.value = "";
@@ -117,6 +125,7 @@ const Settings = () => {
       });
       if (response.status == 201) {
         toast("Notification Enabled on this Device");
+        trackEvent("notifications_subscribed");
       }
     } catch (error) {
       console.log(error);
@@ -124,6 +133,7 @@ const Settings = () => {
     }
   };
   const askNotificationPermission = async () => {
+    trackEvent("notifications_permission_requested");
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       console.log("Notification permission granted.");
@@ -172,7 +182,10 @@ const Settings = () => {
           <span className="font-bold">{user?.email}</span>
         </div>
 
-        <div className="flex justify-center m-5" onClick={changeTheme}>
+        <div className="flex justify-center m-5" onClick={() => {
+          trackEvent("theme_changed");
+          changeTheme();
+        }}>
           <button className="flex gap-5 cursor-pointer border-b border-zinc-200 dark:border-zinc-800 py-2 w-full md:w-1/4 justify-center">
             {theme ? <Moon /> : <Sun />} Theme
           </button>

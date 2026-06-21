@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import VerifyOtp from '@/components/VerifyOtp';
 import { Button, Input } from './Login';
+import { trackEvent } from '@/lib/posthog';
 
 
 const ErrorMessage = ({ children }: { children: ReactNode }) => (
@@ -30,6 +31,10 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
+    useEffect(() => {
+        trackEvent("register_viewed");
+    }, []);
+
     const validateEmail = (email: string) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return emailRegex.test(email);
@@ -42,20 +47,24 @@ const Register = () => {
         }
 
         setLoading(true);
+        trackEvent("register_username_checked", { username });
         try {
             const request = await axios.post(`${import.meta.env.VITE_URL}/user/usernameCheck`, { username });
 
             if (request.data.status === "1") {
                 setFlag1(true);  // Available
                 setFlag2(false); // Check initiated/passed
+                trackEvent("register_username_available", { username });
             } else {
                 setFlag1(false); // Not available
                 setFlag2(false); // Check initiated/failed
+                trackEvent("register_username_taken", { username });
             }
         } catch (error) {
             console.error(error);
             setFlag1(false); // Assume unavailable or error
             setFlag2(false);
+            trackEvent("register_error", { stage: "username_check" });
         } finally {
             setLoading(false);
         }
@@ -93,10 +102,14 @@ const Register = () => {
 
         if (flag2 || !flag1) {
             setFlag3(true);
+            trackEvent("register_error", { stage: "validation" });
             return;
         }
 
-        if (!validate()) return;
+        if (!validate()) {
+            trackEvent("register_error", { stage: "client_validation" });
+            return;
+        }
 
         setLoading(true);
         try {
@@ -108,8 +121,10 @@ const Register = () => {
             console.log(res)
             if (res.status === 200) {
                 setOtpRequest(true);
+                trackEvent("register_otp_requested", { username, email });
             } else {
                 toast(`${res.data.message}`)
+                trackEvent("register_error", { stage: "otp_request_failed", message: res.data.message });
             }
         } catch (error: any) {
             console.error(error);
@@ -120,6 +135,7 @@ const Register = () => {
             } else {
                 toast(error.message || "Could not register your account. Pls Retry");
             }
+            trackEvent("register_error", { stage: "otp_request_exception", message: backendMsg || error.message });
         } finally {
             setLoading(false);
         }

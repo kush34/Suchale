@@ -3,6 +3,7 @@ import { Button } from '../ui/button'
 import { ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom'
+import { trackEvent } from '@/lib/posthog'
 
 export const Hero = () => {
     const badge = ["->  latest  ->", "-> positive ->", "-> trending ->"]
@@ -35,7 +36,10 @@ export const Hero = () => {
                 <h1 className='font-semibold text-xl md:text-6xl my-5 text-center'>Real and Live Stories <br />with data safety & no toxicity</h1>
                 <p className='hidden md:inline max-w-2xl text-center font-light'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum illum inventore corrupti quisquam earum repudiandae amet atque   animi numquam fugiat.</p>
                 <span className='mt-8'>
-                    <Button className='rounded-4xl cursor-pointer' onClick={()=>navigate('/login')}>
+                    <Button className='rounded-4xl cursor-pointer' onClick={() => {
+                        trackEvent("landing_get_started_clicked");
+                        navigate('/login');
+                    }}>
                         Get Started <ArrowRight />
                     </Button>
                 </span>

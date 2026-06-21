@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Loader1 from "../loaders/Loader1";
 import { ThemeContext } from "../Store/ThemeContext";
 import { User } from "@/types";
+import { trackEvent } from "@/lib/posthog";
 const AddContacts = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState<string>("");
@@ -13,22 +14,33 @@ const AddContacts = () => {
   const [contact, setContact] = useState();
   const [loading, setLoading] = useState<boolean>(false);
   const [users, setUsers] = useState<User[]>([]);
+  useEffect(() => {
+    trackEvent("add_contacts_viewed");
+  }, []);
   const getContacts = async () => {
     setLoading(true);
     if (username == "") {
       setLoading(false);
       return;
     }
+    trackEvent("contact_search_started", { query: username });
     const response = await api.post("/user/search", { query: username });
     // console.log(response.data);
     setUsers(response.data.users);
+    trackEvent("contact_search_results_loaded", { query: username, result_count: response.data.users?.length || 0 });
     setLoading(false);
   };
   const addContact = async (usernameToAdd: string) => {
-    const response = await api.post("/user/addContact", {
-      contact: usernameToAdd,
-    });
-    // console.log(response.data);
+    try {
+      const response = await api.post("/user/addContact", {
+        contact: usernameToAdd,
+      });
+      if (response.status === 200) {
+        trackEvent("contact_added", { username: usernameToAdd });
+      }
+    } catch (error) {
+      trackEvent("contact_add_failed", { username: usernameToAdd });
+    }
   };
   useEffect(() => {
     if (username.trim() === "") return;

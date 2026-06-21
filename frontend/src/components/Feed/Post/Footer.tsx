@@ -2,6 +2,7 @@ import { Heart, MessageCircle, Share } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { trackEvent } from '@/lib/posthog';
 
 interface PostFooterProps {
     like: number,
@@ -10,6 +11,7 @@ interface PostFooterProps {
     onLikeToggle: () => void;
     isLoading?: boolean;
     _id: string;
+    source?: "feed" | "profile";
 }
 const Footer = ({
     like,
@@ -17,13 +19,15 @@ const Footer = ({
     isLiked,
     onLikeToggle,
     isLoading,
-    _id
+    _id,
+    source = "feed"
 }: PostFooterProps) => {
     const navigate = useNavigate();
     console.log("isLiked", isLiked)
     const onCopy = () => {
         navigator.clipboard.writeText(`${import.meta.env.VITE_SITE_URL}/post/${_id}`)
         toast("Url copied")
+        trackEvent("post_shared", { post_id: _id, method: "copy_link" });
     }
     return (
         <span className='flex justify-between mt-5 text-zinc-500'>
@@ -38,7 +42,10 @@ const Footer = ({
                 <Heart fill={isLiked ? "currentColor" : "none"} />
                 {like}
             </button>
-            <button className='flex gap-2' onClick={()=>navigate(`/post/${_id}`)}>
+            <button className='flex gap-2' onClick={() => {
+                trackEvent(source === "feed" ? "comment_opened_from_feed" : "comment_opened", { post_id: _id });
+                navigate(`/post/${_id}`)
+            }}>
                 <MessageCircle />
                 {comments}
             </button>

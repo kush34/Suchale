@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from './ui/button';
 import { Input } from '@/pages/Login';
+import { trackEvent } from '@/lib/posthog';
 
 const VerifyOtp = ({ email, password, username }: { email: string, password: string, username: string }) => {
   const navigate = useNavigate();
@@ -17,10 +18,12 @@ const VerifyOtp = ({ email, password, username }: { email: string, password: str
         otp,
       });
       if (response.status === 200) {
+        trackEvent("register_completed", { username, email });
         navigate('/login');
       }
     } catch (error: any) {
       console.log(error.response?.data || error.message);
+      trackEvent("register_error", { stage: "otp_verification", message: error?.message });
     }
   }
   return (
