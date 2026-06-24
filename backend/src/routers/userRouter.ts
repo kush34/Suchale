@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
-import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, profilePic, register, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, mentionUser, profilePic, register, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
 
 const router = express.Router();
 
@@ -22,6 +22,8 @@ router.post("/search", verifyToken, search);
 router.post("/profilepic", verifyToken, profilePic)
 
 router.post('/addContact', verifyToken, addContact);
+
+router.get('/mention',verifyToken,mentionUser)
 
 router.get("/userInfo", verifyToken, userInfo);
 

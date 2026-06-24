@@ -39,7 +39,7 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         if (result.status === "error") {
             return res.status(Number(result.code)).json({ status: "error", message: result.message });
         }
-        
+
         res.cookie('token', result.token)
         res.cookie('refreshtoken', result.refreshtoken)
 
@@ -134,37 +134,37 @@ interface ProfilePicRequest extends Request {
 }
 
 export const profilePic = async (req: ProfilePicRequest, res: Response) => {
-  try {
-    const username = req.username;
-    const { imageUrl } = req.body;
+    try {
+        const username = req.username;
+        const { imageUrl } = req.body;
 
-    if (!username) {
-      return res.status(401).json({ status: "error", message: "Unauthorized" });
+        if (!username) {
+            return res.status(401).json({ status: "error", message: "Unauthorized" });
+        }
+
+        if (!imageUrl) {
+            return res.status(400).json({ status: "error", message: "Image URL is required" });
+        }
+
+        // Minimal sanity check — don’t blindly store garbage
+        if (!imageUrl.startsWith("https://res.cloudinary.com/")) {
+            return res.status(400).json({ status: "error", message: "Invalid image URL" });
+        }
+
+        const updatedUser = await userService.updateProfilePic(username, imageUrl);
+
+        if (!updatedUser) {
+            return res.status(404).json({ status: "error", message: "User not found" });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            url: updatedUser.profilePic,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: "error", message: "Something went wrong" });
     }
-
-    if (!imageUrl) {
-      return res.status(400).json({ status: "error", message: "Image URL is required" });
-    }
-
-    // Minimal sanity check — don’t blindly store garbage
-    if (!imageUrl.startsWith("https://res.cloudinary.com/")) {
-      return res.status(400).json({ status: "error", message: "Invalid image URL" });
-    }
-
-    const updatedUser = await userService.updateProfilePic(username, imageUrl);
-
-    if (!updatedUser) {
-      return res.status(404).json({ status: "error", message: "User not found" });
-    }
-
-    return res.status(200).json({
-      status: "success",
-      url: updatedUser.profilePic,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ status: "error", message: "Something went wrong" });
-  }
 };
 
 
@@ -188,12 +188,33 @@ export const addContact = async (req: AddContactRequest, res: Response) => {
 
         const result = await userService.addContactService(username, contact);
 
-        res.status(result.code).json({ status: result.status, message: result.message });
+        return res.status(result.code).json({ status: result.status, message: result.message });
     } catch (error) {
         console.error("Error in /addContact:", error);
         res.status(500).json({ status: "error", message: "Internal server error" });
     }
 };
+
+
+export const mentionUser = async (req: Request, res: Response) => {
+    try {
+        const queryTerm =
+            typeof req.query.q === "string"
+                ? req.query.q
+                : "";
+
+        if (!queryTerm) return res.status(401).json({ status: "error", message: "Invalid query" });
+
+        const result = await userService.mentionUser(queryTerm);
+
+        return res.status(result.code).json({ status: result.status, message: result.message,data:result.data });
+    } catch (error) {
+        console.error("Error in /addContact:", error);
+        res.status(500).json({ status: "error", message: "Internal server error" });
+
+    }
+}
+
 
 
 interface CustomRequest extends Request {
@@ -255,38 +276,38 @@ interface firebaseTokenVerifyPayload {
 
 
 export const firebaseTokenVerify = async (
-  req: Request,
-  res: Response
+    req: Request,
+    res: Response
 ) => {
-  try {
-    const { token } = req.body;
+    try {
+        const { token } = req.body;
 
-    if (!token) {
-      return res.status(400).json({ message: "Firebase token required" });
+        if (!token) {
+            return res.status(400).json({ message: "Firebase token required" });
+        }
+
+        const result = await userService.firebaseTokenVerify(token);
+
+        res.cookie("token", result.token, {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+        });
+
+        res.cookie("refreshToken", result.refreshtoken, {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+        });
+
+        return res.status(200).json({
+            status: "success",
+            user: result.user,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(401).json({ message: "Invalid Firebase token" });
     }
-
-    const result = await userService.firebaseTokenVerify(token);
-
-    res.cookie("token", result.token, {
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-    });
-
-    res.cookie("refreshToken", result.refreshtoken, {
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-    });
-
-    return res.status(200).json({
-      status: "success",
-      user: result.user,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(401).json({ message: "Invalid Firebase token" });
-  }
 };
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
@@ -352,11 +373,11 @@ export const unFollowUserByUsername = async (req: Request, res: Response) => {
     }
 }
 
-export const logoutUser = async (req:Request,res:Response)=>{
+export const logoutUser = async (req: Request, res: Response) => {
     try {
-        res.cookie("token","")
-        res.cookie("refreshtoken","")
-        res.send({message:"user logged out successfully"})
+        res.cookie("token", "")
+        res.cookie("refreshtoken", "")
+        res.send({ message: "user logged out successfully" })
     } catch (error) {
         console.log(`Error: /user/logout userService:logoutUser ${error}`)
         return res.status(500).send({ message: "Couldnt block the user" })

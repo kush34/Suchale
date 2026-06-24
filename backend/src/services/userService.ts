@@ -255,7 +255,27 @@ export const addContactService = async (username: string, contactUsername: strin
   return { status: "success", code: 200, message: "User added successfully" };
 };
 
+export const mentionUser = async (query: string) => {
+  const username = query.trim();
 
+  if (!username) return {status:"error",code:400,message:"No Mention User Found"};
+
+  if (username.length > 30) return {status:"error",code:400,message:"Cant Mention username > 30 chars"};
+
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    return {status:"error",code:400,message:"Invalid Quert"};
+  }
+
+  const mentionList = await User.find({
+    username: {
+      $regex: new RegExp(`^${username}`, "i"),
+    },
+  })
+    .select("_id username profilePic")
+    .limit(10)
+    .lean();
+  return {status:"success",code:200,message:"Mention List Fetched", data:mentionList}
+};
 
 export const getUserInfoService = async (username: string) => {
   const user = await User.findOne({ username }).select("-password");
