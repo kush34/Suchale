@@ -15,7 +15,8 @@ const MENTION_DEBOUNCE_MS = 250;
 
 export function useMentions(
   value: string,
-  onChange: (value: string) => void
+  onChange: (value: string) => void,
+  onSelectMention?: (user: MentionUser) => void
 ) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const valueRef = useRef(value);
@@ -96,6 +97,7 @@ export function useMentions(
     const user = mentionUsers[activeIndex];
     if (!user) return;
 
+    onSelectMention?.(user);
     selectMention(user.username);
   };
 

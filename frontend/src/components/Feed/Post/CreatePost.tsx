@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import VideoViewer from "@/components/VideoViewer";
 import api from "@/utils/axiosConfig";
 import { Image } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/posthog";
 import MentionInput, { Mention } from "../mention/mention-input";
@@ -103,7 +103,9 @@ const CreatePost = () => {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    console.log("mentions state", mentions);
+  }, [mentions]);
   return (
     <div className="relative w-full xl:w-1/2 border shadow-sm rounded-lg p-4 bg-card">
       {loading && (

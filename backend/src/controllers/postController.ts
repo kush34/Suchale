@@ -3,6 +3,28 @@ import Post from "../models/postModel";
 import User from "../models/userModel";
 import mongoose from "mongoose";
 import cloudinary from "cloudinary";
+import { notifyMentionedUsers } from "../services/notificationService";
+
+type IncomingMention = {
+    id: string;
+    username?: string;
+};
+
+const formatMentions = (mentions: any[] = []) =>
+    mentions.map((mention) => ({
+        userId: mention.userId?._id ?? mention.userId,
+        username: mention.username ?? mention.userId?.username ?? "",
+    }));
+
+const formatPostForResponse = (post: any, userId?: string) => ({
+    ...post,
+    mentions: formatMentions(post.mentions || []),
+    isLiked: userId
+        ? post.engagement?.likes?.some(
+              (like: any) => like.user.toString() === userId
+          )
+        : post.isLiked,
+});
 
 // -----------------------------
 // GET PRESIGNED URL
@@ -43,8 +65,14 @@ export const getPresignedUrl = async (req: Request, res: Response) => {
 export const createPost = async (req: Request, res: Response) => {
     try {
         const userId = req.id;
-        const { content, media } = req.body;
-
+        const actorUsername = req.username;
+        const { content, media, mentions = [] } = req.body as {
+            content?: string;
+            media?: string[];
+            mentions?: IncomingMention[];
+        };
+        console.log(`New Post Received for ${actorUsername}`)
+        console.log("mentions", mentions);  
         if (!userId) {
             return res.status(401).send({ message: "Unauthorized" });
         }
@@ -55,15 +83,89 @@ export const createPost = async (req: Request, res: Response) => {
                 .send({ message: "Post must have either content or media." });
         }
 
+        if (!Array.isArray(mentions)) {
+            return res.status(400).send({ message: "mentions must be an array" });
+        }
+
+        const hasInvalidMention = mentions.some((mention) => {
+            const mentionId = mention?.id?.trim();
+            return !mentionId || !mongoose.isValidObjectId(mentionId);
+        });
+
+        if (hasInvalidMention) {
+            return res.status(400).send({
+                message: "Each mention must include a valid user id.",
+            });
+        }
+
+        const seenMentionIds = new Set<string>();
+        const mentionIds = mentions
+            .map((mention) => mention?.id?.trim())
+            .filter((id): id is string => Boolean(id))
+            .filter((id) => {
+                if (seenMentionIds.has(id)) {
+                    return false;
+                }
+
+                seenMentionIds.add(id);
+                return true;
+            });
+
+        const mentionedUsers = mentionIds.length
+            ? await User.find({ _id: { $in: mentionIds } })
+                .select("_id username profilePic pushSubscription")
+                .lean()
+            : [];
+
+        if (mentionIds.length !== mentionedUsers.length) {
+            return res.status(400).send({
+                message: "One or more mentioned users were not found.",
+            });
+        }
+        console.log(`New Post contains tags : ${mentionIds}`)
+        const usersById = new Map(
+            mentionedUsers.map((user) => [user._id.toString(), user])
+        );
+        const normalizedMentions = mentionIds
+            .map((id) => usersById.get(id))
+            .filter((user): user is (typeof mentionedUsers)[number] => Boolean(user))
+            .map((user) => ({
+                userId: user._id,
+                username: user.username,
+            }));
+
         const newPost = await Post.create({
             user: userId,
             content,
             media: media || [],
+            mentions: normalizedMentions,
         });
+
+        const populatedPost = await newPost.populate([
+            { path: "user", select: "username profilePic" },
+            { path: "mentions.userId", select: "username profilePic" },
+        ]);
+
+        if (normalizedMentions.length > 0 && actorUsername) {
+            console.log(`Notifing users for ${actorUsername} for ${normalizedMentions}`)
+            void notifyMentionedUsers({
+                actorId: userId,
+                actorUsername,
+                postId: (newPost._id as mongoose.Types.ObjectId).toString(),
+                postContent: content || "",
+                recipients: mentionedUsers
+                    .filter((user) => user._id.toString() !== userId)
+                    .map((user) => ({
+                        _id: user._id,
+                        username: user.username,
+                        pushSubscription: user.pushSubscription,
+                    })),
+            });
+        }
 
         return res.status(201).json({
             message: "Post created successfully",
-            post: newPost,
+            post: formatPostForResponse(populatedPost.toObject(), userId),
         });
 
     } catch (error) {
@@ -83,12 +185,13 @@ export const getPost = async (req: Request, res: Response) => {
         }
 
         const post = await Post.findById(postId)
-            .populate("user", "username profilePic") // only fields needed
+            .populate("user", "username profilePic")
+            .populate("mentions.userId", "username profilePic")
             .lean();
 
         if (!post) return res.status(404).send({ message: "Post not found" });
 
-        return res.json(post);
+        return res.json(formatPostForResponse(post));
 
     } catch (error) {
         console.log("Error fetching post:", error);
@@ -109,13 +212,11 @@ export const getFeed = async (req: Request, res: Response) => {
             .skip(skip)
             .limit(limit)
             .populate("user", "username profilePic")
+            .populate("mentions.userId", "username profilePic")
             .lean();
 
         const feed = posts.map(post => ({
-            ...post,
-            isLiked: post.engagement?.likes?.some(
-                (like: any) => like.user.toString() === userId
-            )
+            ...formatPostForResponse(post, userId),
         }));
 
         return res.json({ page, posts: feed });
@@ -228,6 +329,7 @@ export const getPostById = async (req: Request, res: Response) => {
 
         const post = await Post.findById(postId)
             .populate("user", "username profilePic")
+            .populate("mentions.userId", "username profilePic")
             .populate("engagement.comments.userId", "username profilePic");
 
         if (!post) {
@@ -252,6 +354,7 @@ export const getPostById = async (req: Request, res: Response) => {
             },
             media: post.media,
             content: post.content,
+            mentions: formatMentions(post.mentions || []),
             engagement: {
                 likes: post.engagement.likes,
                 comments: formattedComments,

@@ -4,6 +4,10 @@ export interface IPost extends Document {
   user: mongoose.Types.ObjectId;
   content: string;
   media?: string[];
+  mentions: {
+    userId: mongoose.Types.ObjectId;
+    username: string;
+  }[];
   engagement: {
     likes: {
       user: mongoose.Types.ObjectId;
@@ -40,6 +44,21 @@ const postSchema = new Schema<IPost>(
         trim: true,
       },
     ],
+    mentions: [
+      {
+        userId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+          index: true,
+        },
+        username: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+      },
+    ],
     engagement: {
       likes: [
         {
@@ -63,6 +82,7 @@ postSchema.index({ createdAt: -1 });
 
 postSchema.index({ "engagement.like": -1 });
 postSchema.index({ "engagement.comments": -1 });
+postSchema.index({ "mentions.userId": 1 });
 
 postSchema.index({ user: 1, createdAt: -1 });
 

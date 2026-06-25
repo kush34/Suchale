@@ -109,7 +109,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   }, [chat]);
 
   /* ================= RTC HELPERS ================= */
-
+  type NotificationType = {
+    _id: string;
+    recipient: string;
+    actor: string;
+    post: string;
+    type: "mention" | string;
+    message: string;
+    read: boolean;
+    createdAt: string;
+  };
+  const handleNewNotification = (
+    notification: NotificationType
+  ) => {
+    toast(notification.message);
+  };
   const createRTC = async (
     type: CallType,
     from: string,
@@ -212,6 +226,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     socket.on("callEnded", endCall);
 
+    socket.on("newNotification", handleNewNotification)
     return () => {
       socket.off("incomingCall");
       socket.off("callAnswered");
@@ -219,6 +234,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       socket.off("receiveAnswer");
       socket.off("receiveCandidate");
       socket.off("callEnded");
+      socket.off("newNofification")
     };
   }, [callType]);
 

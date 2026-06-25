@@ -114,31 +114,9 @@ export default function MentionInput({
     setMentions,
     placeholder,
 }: Props) {
-    const {
-        textareaRef,
-        handleInputChange,
-        handleKeyDown,
-        mentionUsers,
-        activeIndex,
-        isLoading,
-        showMentions,
-        selectMention,
-        closeMentions,
-    } = useMentions(value, onChange);
-
-    const highlightedText = useMemo(
-        () => renderHighlightedText(value, mentions),
-        [value, mentions]
-    );
-
-    const handleSelectMention = (user: User) => {
-        selectMention(user.username);
-
+    const addMention = (user: User) => {
         setMentions((prev) => {
-            const exists = prev.some(
-                (m) => m.id === user._id
-            );
-
+            const exists = prev.some((m) => m.id === user._id);
             if (exists) return prev;
 
             return [
@@ -151,6 +129,29 @@ export default function MentionInput({
         });
     };
 
+    const {
+        textareaRef,
+        handleInputChange,
+        handleKeyDown,
+        mentionUsers,
+        activeIndex,
+        isLoading,
+        showMentions,
+        selectMention,
+        closeMentions,
+    } = useMentions(value, onChange, addMention);
+
+    const highlightedText = useMemo(
+        () => renderHighlightedText(value, mentions),
+        [value, mentions]
+    );
+
+    const handleSelectMention = (user: User) => {
+        console.log("SELECTED USER", user);
+
+        addMention(user);
+        selectMention(user.username);
+    };
     useEffect(() => {
         setMentions((prev) =>
             prev.filter((mention) =>
@@ -248,7 +249,7 @@ export default function MentionInput({
                                     <CommandItem
                                         key={user._id}
                                         value={user.username}
-                                        onSelect={() => handleSelectMention(user)}
+                                        onMouseDown={() => handleSelectMention(user)}
                                         className={`flex items-center gap-3 ${index === activeIndex
                                             ? "bg-accent text-accent-foreground"
                                             : ""
@@ -260,7 +261,7 @@ export default function MentionInput({
                                                 alt={user.username}
                                             />
                                         </Avatar>
-                                        <span>@{user.username}</span>
+                                        <span>{user.username}</span>
                                     </CommandItem>
                                 ))}
                             </CommandGroup>
