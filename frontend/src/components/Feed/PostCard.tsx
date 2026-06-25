@@ -16,7 +16,7 @@ interface PostCardProps {
         };
         media?: string[];
         content: string;
-        createdAt:string;
+        createdAt: string;
         engagement: {
             likes: {
                 user: string;
@@ -34,6 +34,8 @@ interface PostCardProps {
     likeToggle: (id: string) => void;
     source?: "feed" | "profile";
 }
+
+
 
 const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
     const [liked, setLiked] = useState(post.isLiked);
@@ -71,7 +73,31 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
             setIsLoading(false);
         }
     };
+    const renderContent = (text: string) => {
+        const parts = text.split(/(@[a-zA-Z0-9_]+)/g);
 
+        return parts.map((part, index) => {
+            if (part.startsWith("@")) {
+                return (
+                    <span
+                        key={index}
+                        className="font-medium text-blue-500 hover:underline cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+
+                            const username = part.slice(1);
+
+                            navigate(`/profile/${username}`);
+                        }}
+                    >
+                        {part}
+                    </span>
+                );
+            }
+
+            return <React.Fragment key={index}>{part}</React.Fragment>;
+        });
+    };
 
     return (
         <div className='p-5 rounded border-accent shadow border flex flex-col gap-2'>
@@ -83,10 +109,21 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
                 />
                 <span className='font-light'>{date}</span>
             </span>
-            <span onClick={() => {
-                trackEvent(source === "feed" ? "post_opened_from_feed" : "profile_post_opened", { post_id: post._id });
-                navigate(`/post/${post._id}`);
-            }} className='text-xl cursor-pointer'>{post.content}</span>
+            <span
+                onClick={() => {
+                    trackEvent(
+                        source === "feed"
+                            ? "post_opened_from_feed"
+                            : "profile_post_opened",
+                        { post_id: post._id }
+                    );
+
+                    navigate(`/post/${post._id}`);
+                }}
+                className="text-xl cursor-pointer whitespace-pre-wrap break-words"
+            >
+                {renderContent(post.content)}
+            </span>
             {post.media && <Media src={post.media} />}
             <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} source={source} />
         </div>

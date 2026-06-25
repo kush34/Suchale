@@ -6,6 +6,8 @@ import { Image } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/posthog";
+import MentionInput, { Mention } from "../mention/mention-input";
+import { useNavigate } from "react-router-dom";
 
 type fileType = {
   file: File;
@@ -15,6 +17,7 @@ type fileType = {
 const CreatePost = () => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mentions, setMentions] = useState<Mention[]>([])
   const [media, setMedia] = useState<fileType[]>([]);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -84,12 +87,14 @@ const CreatePost = () => {
       await api.post("/post", {
         content,
         media: mediaUrls,
+        mentions,
       });
 
       toast("Post shared 🎉");
       trackEvent("post_shared", { media_count: mediaUrls.length });
 
       setContent("");
+      setMentions([]);
       setMedia([]);
     } catch (err) {
       toast.error("Could not share your post");
@@ -128,12 +133,12 @@ const CreatePost = () => {
         </div>
       )}
 
-      <textarea
-        placeholder="Share your thoughts..."
+      <MentionInput
         value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="w-full resize-none border  rounded p-3"
-        rows={3}
+        onChange={setContent}
+        mentions={mentions}
+        setMentions={setMentions}
+        placeholder="Share your thoughts..."
       />
       <div className="grid grid-cols-3 gap-3 mt-4">
         {media.map((m, i) => (
