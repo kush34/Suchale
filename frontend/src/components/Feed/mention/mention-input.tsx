@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/command";
 
 import { useMentions } from "@/hooks/use-mention";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface Mention {
     id: string;
@@ -162,68 +163,7 @@ export default function MentionInput({
 
     return (
         <div className="relative">
-            <div className="relative">
-                {/* Highlight Layer */}
-                <div
-                    className="
-            absolute
-            inset-0
-            pointer-events-none
-
-            whitespace-pre-wrap
-            break-words
-
-            rounded-md
-            border
-
-            p-3
-
-            text-sm
-            leading-6
-
-            text-foreground
-          "
-                >
-                    {highlightedText}
-                </div>
-
-                {/* Actual Input */}
-                <textarea
-                    ref={textareaRef}
-                    value={value}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    onBlur={closeMentions}
-                    placeholder={placeholder}
-                    className="
-            relative
-            z-10
-
-            min-h-[120px]
-            w-full
-
-            resize-y
-
-            rounded-md
-            border
-
-            bg-transparent
-
-            p-3
-            
-            text-sm
-            leading-6
-
-            text-transparent
-            caret-foreground
-
-            focus:outline-none
-            focus:ring-2
-            focus:ring-ring
-          "
-                />
-            </div>
-
+            <Textarea value={value} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={placeholder} ref={textareaRef}/>
             {showMentions && (
                 <div
                     onMouseDown={(e) => e.preventDefault()} // ✅ prevents textarea blur before onSelect fires
