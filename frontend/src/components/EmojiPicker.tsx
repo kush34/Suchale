@@ -1,6 +1,9 @@
+import { lazy, Suspense, useContext } from "react";
+import type { EmojiClickData } from "emoji-picker-react";
+
 import { ThemeContext } from "@/Store/ThemeContext";
-import EmojiPickerLib, { EmojiClickData, Theme } from "emoji-picker-react";
-import { useContext } from "react";
+
+const EmojiPickerLib = lazy(() => import("emoji-picker-react"));
 
 type Props = {
   onEmojiClick: (emoji: string) => void;
@@ -8,15 +11,20 @@ type Props = {
 
 function EmojiPicker({ onEmojiClick }: Props) {
   const themeCtx = useContext(ThemeContext);
-  const theme = themeCtx?.theme;
+
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     onEmojiClick(emojiData.emoji);
   };
 
   return (
-    <div className="p-2 border rounded-2xl shadow">
-      <EmojiPickerLib theme={theme == "dark" ? Theme.DARK : Theme.LIGHT} onEmojiClick={handleEmojiClick} />
-    </div>
+    <Suspense fallback={null}>
+      <div className="rounded-2xl border p-2 shadow">
+        <EmojiPickerLib
+          theme={themeCtx?.theme === "dark" ? "dark" : "light"}
+          onEmojiClick={handleEmojiClick}
+        />
+      </div>
+    </Suspense>
   );
 }
 

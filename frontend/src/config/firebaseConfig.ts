@@ -48,13 +48,49 @@ const getFirebaseToken = async () => {
 
 
 export const googleSignInPopUp = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-        return await getFirebaseToken();
-    } catch (error) {
-        console.error("Google Sign-in Error:", error);
-        return { ok: false };
+  try {
+    const { initializeApp } = await import("firebase/app");
+    const {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+    } = await import("firebase/auth");
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    await signInWithPopup(auth, provider);
+
+    const user = auth.currentUser;
+
+    if (!user) {
+      return { ok: false };
     }
+
+    const token = await user.getIdToken(true);
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_URL}/user/firebaseTokenVerify`,
+      { token },
+      { withCredentials: true }
+    );
+
+    if (response.status === 200) {
+      return {
+        ok: true,
+        token: response.data.token,
+      };
+    }
+
+    return {
+      ok: false,
+      message: response.data.message,
+    };
+  } catch (err) {
+    console.error(err);
+    return { ok: false };
+  }
 };
 
 
