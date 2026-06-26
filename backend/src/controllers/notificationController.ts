@@ -36,3 +36,18 @@ export const readNotification = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Failed to mark notifications as read" });
   }
 };
+
+
+export const getUnreadCount = async (req: AuthRequest, res: Response) => {
+  try {
+    const count = await Notification.countDocuments({
+      recipient: req.id,
+      read: false,
+    });
+ 
+    res.status(200).json({ count });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch unread count" });
+  }
+};
+ 
