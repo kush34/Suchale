@@ -218,8 +218,12 @@ export const getFeed = async (req: Request, res: Response) => {
         const feed = posts.map(post => ({
             ...formatPostForResponse(post, userId),
         }));
-
-        return res.json({ page, posts: feed });
+        const totalPosts = await Post.countDocuments();
+        return res.json({
+            page,
+            posts: feed,
+            hasMore: skip + posts.length < totalPosts,
+        });
 
     } catch (error) {
         console.log("Error fetching feed:", error);
