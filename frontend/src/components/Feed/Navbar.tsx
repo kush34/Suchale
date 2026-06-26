@@ -1,4 +1,4 @@
-import { Home, Inbox, Search, Settings } from "lucide-react";
+import { Bell, Home, Inbox, Search, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import Profile from "./Post/Profile";
 import { useUser } from "@/Store/UserContext";
@@ -21,6 +21,11 @@ const items = [
     icon: Search,
   },
   {
+    title: "Notification",
+    url: "/notification",
+    icon: Bell,
+  },
+  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
@@ -36,7 +41,7 @@ export function AppSidebar() {
       <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide ">
         Suchale
       </div>
-      <div  className="grid gap-4">
+      <div className="grid gap-4">
         {items.map((item) => (
           <Link
             className="flex text-xl gap-3 px-3 py-2 hover:scale-101 hover:text-foreground hover:bg-card rounded-xl duration-200 transition-ease-in"

@@ -22,6 +22,7 @@ import PostPage from "./pages/PostPage";
 import Main from "./components/layouts/main";
 import { SocketProvider } from "./Store/SocketContext";
 import { trackEvent } from "./lib/posthog";
+import { NotificationPage } from "./pages/notification-page";
 const root = document.getElementById("root");
 
 type Props = {
@@ -79,6 +80,7 @@ if (root) {
         {/* All protected routes */}
         <Route element={<ProtectedRoutes />}>
           <Route path="/messages" element={<Home />} />
+          <Route path="/notification" element={<NotificationPage />} />
           <Route path="/addContacts" element={<AddContacts />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/feed" element={<FeedPage />} />
