@@ -75,7 +75,7 @@ export const NotificationPage = () => {
 
         if (unreadIds.length > 0) {
           // Fire and forget — UI is already updated optimistically below
-          api.patch("/notifications/read", { ids: unreadIds }).catch(() => {});
+          api.post("/notifications/", { ids: unreadIds }).catch(() => {});
           // Optimistically flip all to read in local state
           setNotifications((prev) =>
             prev.map((n) => (n.read ? n : { ...n, read: true }))
