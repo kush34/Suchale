@@ -82,7 +82,6 @@ postSchema.index({ createdAt: -1 });
 
 postSchema.index({ "engagement.like": -1 });
 postSchema.index({ "engagement.comments": -1 });
-postSchema.index({ "mentions.userId": 1 });
 
 postSchema.index({ user: 1, createdAt: -1 });
 
