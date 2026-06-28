@@ -9,7 +9,7 @@ import { UserContext } from "@/Store/UserContext";
 import { useSocket } from "@/Store/SocketContext";
 
 import CreateGroupDialog from "./CreateGroupDialog";
-import ChatCard from "./UserCard";
+import ChatCard from "./chat-card";
 
 const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   const [dispChat, setDispChat] = useState<Chat[]>(userChatList);
@@ -74,73 +74,73 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
     run();
   }, [searchBar, userChatList]);
 
-  return (
-    <div className="bg-card h-full border-r-2 p-4 md:p-0">
-      <div className="flex justify-end">
-        {socketError && (
-          <span className="m-5 flex items-center gap-2 rounded bg-red-200 p-2 text-sm text-red-500">
-            <ShieldBan />
-            Could not connect to server
-          </span>
-        )}
+    return (
+      <div className="flex h-full flex-col border-r bg-card">
+        {/* Header */}
+        <div className="border-b px-5 py-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">Chats</h2>
 
-        <div className="m-3 flex items-center">
-          <button
-            onClick={() => setIsSearchOpen((prev) => !prev)}
-            className="m-1 cursor-pointer transition hover:scale-110"
-          >
-            <Search />
-          </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/addContacts")}
+                className="rounded-lg p-2 transition hover:bg-accent"
+              >
+                <UserRoundPlus size={20} />
+              </button>
 
-          <button
-            onClick={() => navigate("/addContacts")}
-            className="m-1 cursor-pointer transition hover:scale-110"
-          >
-            <UserRoundPlus />
-          </button>
+              <CreateGroupDialog />
+            </div>
+          </div>
 
-          <CreateGroupDialog />
+          {socketError && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-500">
+              <ShieldBan size={18} />
+              Could not connect to server
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className="px-4">
-        {isSearchOpen && (
-          <div className="bg-accent flex items-center rounded">
+        {/* Search */}
+        <div className="border-b p-4">
+          <div className="bg-accent flex items-center rounded-xl px-3">
+            <Search
+              size={18}
+              className="text-muted-foreground"
+            />
+
             <input
               value={searchBar}
               onChange={(e) => setSearchBar(e.target.value)}
-              placeholder="Search"
-              className="w-full rounded py-1 text-center outline-none"
+              placeholder="Search conversations"
+              className="h-10 flex-1 bg-transparent px-3 outline-none"
             />
 
             {searchBar && (
-              <button
-                onClick={() => setSearchBar("")}
-                className="px-2"
-              >
-                <X />
+              <button onClick={() => setSearchBar("")}>
+                <X size={18} />
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="m-3 h-5/6">
-        {dispChat.length > 0 ? (
-          <div className="h-full overflow-y-auto no-scrollbar">
-            {dispChat.map((chat) => (
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {dispChat.length ? (
+            dispChat.map((chat) => (
               <ChatCard
                 key={`${chat.isGroup ? "group" : "user"}-${chat._id}`}
                 chatItem={chat}
               />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center">No Chats Found</div>
-        )}
+            ))
+          ) : (
+            <div className="mt-10 text-center text-muted-foreground">
+              No conversations found
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default UserList;
