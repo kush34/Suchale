@@ -9,6 +9,7 @@ import { useSocket } from "@/Store/SocketContext";
 import { Chat } from "@/types";
 import CallComp from "@/components/call/call-comp";
 import { trackEvent } from "@/lib/posthog";
+import ChatAssetsDrawer from "@/components/user-chat/chat-assests";
 
 const Home = () => {
   const [userChatList, setUserChatList] = useState<Chat[]>([]);
@@ -18,9 +19,9 @@ const Home = () => {
   const themeCtx = useContext(ThemeContext);
   if (!chatCtx || !themeCtx) return null;
 
-  const { chat } = chatCtx;
+  const { chat,assetsOpen,setAssetsOpen } = chatCtx;
   const { theme } = themeCtx;
-
+  
   useEffect(() => {
     trackEvent("messages_viewed");
   }, []);
@@ -45,26 +46,46 @@ const Home = () => {
   }
 
   return (
-    <div className="xl:flex h-screen bg-card">
-      <div className={`xl:w-1/4 ${chat ? "hidden" : "block"} xl:block`}>
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Sidebar */}
+      <div
+        className={`border-r xl:w-[360px] ${
+          chat ? "hidden xl:block" : "block w-full"
+        }`}
+      >
         <UserList userChatList={userChatList} />
       </div>
 
-      {callUser == null && chat && (
-        <div className="xl:w-3/4">
-          <UserChat />
-        </div>
-      )
-      }
-      {callUser == null && !chat && (
-        <div className="hidden xl:flex items-center justify-center w-3/4 text-zinc-500">
-          Select a chat
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="relative flex flex-1 overflow-hidden">
+        {callUser ? (
+          <CallComp
+            profilePic={callUser.profilePic}
+            username={callUser.username}
+          />
+        ) : chat ? (
+          <>
+            <div className="flex-1">
+              <UserChat/>
+            </div>
 
-      {callUser != null && <div className="w-full xl:w-3/4">
-        <CallComp profilePic={callUser.profilePic} username={callUser.username} />
-      </div>}
+            <ChatAssetsDrawer
+              open={assetsOpen}
+              onClose={() => setAssetsOpen(false)}
+            />
+          </>
+        ) : (
+          <div className="hidden flex-1 items-center justify-center xl:flex">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold">Welcome 👋</h2>
+
+              <p className="mt-2 text-muted-foreground">
+                Select a conversation to start chatting.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

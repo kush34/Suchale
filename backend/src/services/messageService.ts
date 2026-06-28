@@ -242,6 +242,97 @@ export const sendMediaService = async (
 };
 
 
+export const getChatAssets = async (
+  currentUser: string,
+  query: any
+) => {
+  const {
+    username,
+    groupId,
+    search = "",
+  } = query;
+
+  if (!username && !groupId)
+    throw new Error("Chat not specified");
+
+  const match: any = groupId
+    ? {
+        groupId,
+      }
+    : {
+        $or: [
+          {
+            fromUser: currentUser,
+            toUser: username,
+          },
+          {
+            fromUser: username,
+            toUser: currentUser,
+          },
+        ],
+      };
+
+  const messages = await Message.find(match)
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const media: any[] = [];
+  const files: any[] = [];
+  const links: any[] = [];
+  const searchResults: any[] = [];
+
+  const imageRegex =
+    /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+
+  const videoRegex =
+    /\.(mp4|mov|avi|mkv|webm)$/i;
+
+  const fileRegex =
+    /\.(pdf|doc|docx|ppt|pptx|xls|xlsx|zip|rar|txt)$/i;
+
+  const urlRegex =
+    /(https?:\/\/[^\s]+)/i;
+
+  const lowerSearch = search.toLowerCase();
+
+  for (const msg of messages) {
+    const content = msg.content || "";
+
+    if (
+      imageRegex.test(content) ||
+      videoRegex.test(content)
+    ) {
+      media.push(msg);
+    }
+
+    if (fileRegex.test(content)) {
+      files.push(msg);
+    }
+
+    if (urlRegex.test(content)) {
+      links.push(msg);
+    }
+
+    if (
+      search &&
+      content
+        .toLowerCase()
+        .includes(lowerSearch)
+    ) {
+      searchResults.push(msg);
+    }
+  }
+
+  return {
+    media,
+    files,
+    links,
+    messages: search
+      ? searchResults
+      : [],
+  };
+};
+
 export const createGroupService = async ({ name, photoURL, users, adminId }: CreateGroupPayload) => {
   const newGroup = await Group.create({
     name,

@@ -1,6 +1,6 @@
 import express from 'express';
 import verifyToken from '../middlewares/verifyToken'
-import { createGroup, deletedMsgById, getMembersByGroupId, getMessages, media, reactToMsg, searchUserMsgs, sendMsg, updateMsgById } from '../controllers/messageController';
+import { createGroup, deletedMsgById, getChatAssets, getMembersByGroupId, getMessages, media, reactToMsg, searchUserMsgs, sendMsg, updateMsgById } from '../controllers/messageController';
 
 
 const router = express.Router();
@@ -17,6 +17,8 @@ router.post('/updateMsg', verifyToken, updateMsgById);
 router.post("/getMessages", verifyToken, getMessages);
 
 router.post('/media', verifyToken, media)
+
+router.get('/chat-assets', verifyToken, getChatAssets)
 
 router.post("/createGroup", verifyToken, createGroup)
 

@@ -1,6 +1,7 @@
 import User, { IUser } from '../models/userModel';
 import { Request, Response } from 'express';
 import * as messageService from "../services/messageService"
+import { AuthRequest } from '../middlewares/verifyToken';
 
 export const sendMsg = async (req: Request, res: Response) => {
     try {
@@ -128,6 +129,29 @@ export const media = async (req: Request, res: Response) => {
   }
 };
 
+export const getChatAssets = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    if (!req.username) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+    const result = await messageService.getChatAssets(
+      req.username,
+      req.query
+    );
+
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : "Internal Server Error",
+    });
+  }
+
+};
 
 export const createGroup = async (req: Request, res: Response) => {
     try {

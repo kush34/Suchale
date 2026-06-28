@@ -4,7 +4,7 @@ import User from '../models/userModel';
 import { Socket } from 'socket.io';
 import * as cookie from "cookie";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   username?: string;
   email?: string;
   id?: string

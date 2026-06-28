@@ -1,10 +1,11 @@
-import { Camera, Undo2 } from "lucide-react"
+import { Camera, Search, Undo2 } from "lucide-react"
 import Profile from "@/components/Feed/Post/Profile"
 import { Chat } from "@/types"
 import { SetStateAction } from "react"
 import { Phone } from "lucide-react";
 import socket from "@/utils/socketService";
 import { useSocket } from "@/Store/SocketContext";
+import { useChat } from "@/Store/ChatContext";
 type Props = {
     chat: Chat,
     isTyping: boolean
@@ -13,7 +14,8 @@ type Props = {
     ViewChatInfo: () => void;
 }
 export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, isTyping }: Props) {
-    const { setCallUser, callUser, setCallType } = useSocket()
+  const { setCallUser, callUser, setCallType } = useSocket()
+  const { setAssetsOpen } = useChat();
     const initiateCall = (to_username: string, type: "audio" | "video") => {
         console.log(`call fired`)
         if (!chat.username || !chat.profilePic) {
@@ -37,7 +39,10 @@ export default function TopBar({ chat, ViewChatInfo, setHoverTopbar, setChat, is
             </div>
             <div>
             </div>
-            <div className="flex gap-5 back_btn">
+        <div className="flex gap-5 back_btn">
+                <button onClick={() => setAssetsOpen((prev)=>!prev)}>
+                    <Search/>
+                </button>
                 <button onClick={() => initiateCall(chat.username, "video")}>
                     <Camera />
                 </button>

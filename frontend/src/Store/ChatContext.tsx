@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import api from '../utils/axiosConfig';
 import { UserContextType, useUser } from './UserContext';
 import { Chat, Group, Message, User } from "@/types/index";
@@ -30,7 +30,10 @@ type ChatContextType = {
 
     infoWindow: any[];
     setInfoWindow: React.Dispatch<React.SetStateAction<any[]>>;
-    ViewChatInfo: () => void;
+  ViewChatInfo: () => void;
+
+  assetsOpen: boolean;
+  setAssetsOpen:React.Dispatch<React.SetStateAction<boolean>>
 };
 
 export const ChatContext = createContext<ChatContextType | null>(null);
@@ -46,7 +49,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
     const [infoWindow, setInfoWindow] = useState<any[]>([]);
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(false);
-
+    const [assetsOpen, setAssetsOpen] = useState(false);
     const chatDivRef = useRef<HTMLDivElement | null>(null);
 
     const sendMsg = async (content: string) => {
@@ -171,9 +174,21 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
                 infoWindow,
                 setInfoWindow,
                 ViewChatInfo,
+                assetsOpen,
+                setAssetsOpen
             }}
         >
             {children}
         </ChatContext.Provider>
     );
+};
+
+export const useChat = () => {
+  const context = useContext(ChatContext);
+
+  if (!context) {
+    throw new Error("useChat must be used within a ChatProvider");
+  }
+
+  return context;
 };
