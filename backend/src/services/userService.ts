@@ -126,80 +126,147 @@ export const usernameCheck = async (username: string) => {
 
 export const getUserList = async (username: string) => {
   const dbUser = await User.findOne({ username });
-  if (!dbUser) return { error: "User not found" };
 
-  // Fetch contacts
-  // const contacts = dbUser.contacts || [];
+  if (!dbUser) {
+    return { error: "User not found" };
+  }
 
-  const contactIds = dbUser.contacts.map(c => c.userId);
+  // Contacts
+  const contactIds = dbUser.contacts.map((c) => c.userId);
 
-  const resUser = await User.find({ _id: { $in: contactIds } }, "username profilePic");
+  const resUser = await User.find(
+    { _id: { $in: contactIds } },
+    "username profilePic"
+  );
 
-  // Fetch groups
-  const resGrp = await Group.find({ users: dbUser._id }, "name profilePic");
+  // Groups
+  const resGrp = await Group.find(
+    { users: dbUser._id },
+    "name profilePic"
+  );
 
-  // Fetch online users from Redis
-  const onlineUsersMap = new Map(Object.entries(await redis.hgetall("onlineUsers")));
-  resUser.forEach(contact => {
-    // @ts-ignore: adding status dynamically
-    contact.status = onlineUsersMap.has(contact.username) ? "Online" : "Offline";
+  // Online status
+  const onlineUsersMap = new Map(
+    Object.entries(await redis.hgetall("onlineUsers"))
+  );
+
+  resUser.forEach((contact: any) => {
+    contact.status = onlineUsersMap.has(contact.username)
+      ? "Online"
+      : "Offline";
   });
 
-  // Last 1-on-1 messages
+  const contactUsernames = resUser.map((u) => u.username);
+
+  // Last DM messages
   const lastMessages = await Message.aggregate([
     {
       $match: {
         $or: [
-          { fromUser: username, toUser: { $in: resUser.map(u => u.username) } },
-          { toUser: username, fromUser: { $in: resUser.map(u => u.username) } }
-        ]
-      }
+          {
+            fromUser: username,
+            toUser: { $in: contactUsernames },
+          },
+          {
+            toUser: username,
+            fromUser: { $in: contactUsernames },
+          },
+        ],
+      },
     },
     { $sort: { createdAt: -1 } },
     {
       $group: {
         _id: {
-          $cond: [{ $eq: ["$fromUser", username] }, "$toUser", "$fromUser"]
+          $cond: [
+            { $eq: ["$fromUser", username] },
+            "$toUser",
+            "$fromUser",
+          ],
         },
-        lastMessage: { $first: "$$ROOT" }
-      }
-    }
+        lastMessage: { $first: "$$ROOT" },
+      },
+    },
   ]);
 
   // Last group messages
   const groups = dbUser.groups || [];
+
   const lastGroupMessages = await Message.aggregate([
-    { $match: { groupId: { $in: groups } } },
+    {
+      $match: {
+        groupId: { $in: groups },
+      },
+    },
     { $sort: { createdAt: -1 } },
-    { $group: { _id: "$groupId", lastMessage: { $first: "$$ROOT" } } }
+    {
+      $group: {
+        _id: "$groupId",
+        lastMessage: { $first: "$$ROOT" },
+      },
+    },
   ]);
 
-  // Map last messages for easier access
-  const lastMsgMap: Record<string, IMessage> = {};
-  lastMessages.forEach(m => {
-    lastMsgMap[m._id] = m.lastMessage;
+  // Unread DM counts
+  const unreadMessages = await Message.aggregate([
+    {
+      $match: {
+        toUser: username,
+        fromUser: { $in: contactUsernames },
+        read: false,
+      },
+    },
+    {
+      $group: {
+        _id: "$fromUser",
+        unreadCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Maps
+  const lastMsgMap: Record<string, any> = {};
+  lastMessages.forEach((msg) => {
+    lastMsgMap[msg._id] = msg.lastMessage;
   });
 
-  const lastGroupMsgMap: Record<string, IMessage> = {};
-  lastGroupMessages.forEach(g => {
-    lastGroupMsgMap[g._id.toString()] = g.lastMessage;
+  const lastGroupMsgMap: Record<string, any> = {};
+  lastGroupMessages.forEach((grp) => {
+    lastGroupMsgMap[grp._id.toString()] = grp.lastMessage;
   });
 
-  // Combine data
-  const updatedContacts = resUser.map(contact => ({
+  const unreadMap: Record<string, number> = {};
+  unreadMessages.forEach((msg) => {
+    unreadMap[msg._id] = msg.unreadCount;
+  });
+
+  // Contacts
+  const updatedContacts = resUser.map((contact) => ({
     ...contact.toObject(),
-    lastMessage: lastMsgMap[contact.username] || null
+    lastMessage: lastMsgMap[contact.username] || null,
+    unreadCount: unreadMap[contact.username] ?? 0,
   }));
 
-  const updatedGroups = resGrp.map(grp => ({
+  // Groups
+  const updatedGroups = resGrp.map((grp) => ({
     ...grp.toObject(),
     isGroup: true,
-    lastMessage: lastGroupMsgMap[grp._id.toString()] || null
+    lastMessage: lastGroupMsgMap[grp._id.toString()] || null,
+    unreadCount: 0, // TODO: implement group unread tracking
   }));
 
-  return [...updatedGroups, ...updatedContacts];
+  return [...updatedGroups, ...updatedContacts].sort((a, b) => {
+      const aTime = a.lastMessage?.createdAt
+          ? new Date(a.lastMessage.createdAt).getTime()
+          : 0;
+  
+      const bTime = b.lastMessage?.createdAt
+          ? new Date(b.lastMessage.createdAt).getTime()
+          : 0;
+  
+      return bTime - aTime;
+  });
 };
-
 
 
 export const searchUsers = async (query: string) => {

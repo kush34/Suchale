@@ -1,40 +1,42 @@
-import { useContext, useEffect, useState } from 'react'
-import { Settings, ShieldBan, UserRoundPlus, X } from 'lucide-react';
-import UserCard from './UserCard';
-import { Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { ThemeContext } from '../Store/ThemeContext';
-import GroupCard from './GroupCard';
-import CreateGroupDialog from './CreateGroupDialog';
-import { Chat, Message } from '@/types';
-import api from '@/utils/axiosConfig';
-import { toast } from 'sonner';
-import { UserContext, useUser } from '@/Store/UserContext';
-import { SocketContext, useSocket } from '@/Store/SocketContext';
+import { useContext, useEffect, useState } from "react";
+import { Search, ShieldBan, UserRoundPlus, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+import api from "@/utils/axiosConfig";
+import { Chat } from "@/types";
+import { UserContext } from "@/Store/UserContext";
+import { useSocket } from "@/Store/SocketContext";
+
+import CreateGroupDialog from "./CreateGroupDialog";
+import ChatCard from "./UserCard";
 
 const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
   const [dispChat, setDispChat] = useState<Chat[]>(userChatList);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchBar, setSearchBar] = useState("");
+
   const userCtx = useContext(UserContext);
   const socketCtx = useSocket();
-  if(!socketCtx) return null;
-  const socketError = socketCtx?.socketError;
 
-  if(!userCtx) return null;
-  const user = userCtx.user;
+  if (!userCtx || !socketCtx) return null;
+
   const navigate = useNavigate();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchBar, setSearchBar] = useState<string>('');
+  const socketError = socketCtx.socketError;
+
   const searchMsgs = async (query: string) => {
     try {
-      const response = await api.get(`/message/search?term=${query}`)
+      const response = await api.get(`/message/search?term=${query}`);
+
       if (response.status === 200) {
-        return response.data.data
+        return response.data.data;
       }
-    } catch (error) {
+    } catch {
       toast("No results found");
-      return null;
     }
-  }
+
+    return [];
+  };
 
   useEffect(() => {
     const q = searchBar.trim().toLowerCase();
@@ -45,23 +47,25 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
     }
 
     const run = async () => {
-      // 1. Local results
       const local = userChatList.filter((item) => {
-        const uname = item.username?.toLowerCase() || "";
-        const gname = item.name?.toLowerCase() || "";
-        return uname.includes(q) || gname.includes(q);
+        return (
+          item.username?.toLowerCase().includes(q) ||
+          item.name?.toLowerCase().includes(q)
+        );
       });
 
-      // 2. API results → normalize
-      const msgRes = await searchMsgs(q);
+      const apiResults = await searchMsgs(q);
 
-      // 3. Merge
-      const merged = [...local, ...msgRes || []];
+      const merged = [...local, ...apiResults];
 
-      // 4. Remove duplicates (use username or groupId)
       const unique = merged.filter(
-        (v, i, arr) =>
-          i === arr.findIndex((x) => x.username === v.username)
+        (item, index, arr) =>
+          index ===
+          arr.findIndex(
+            (x) =>
+              x._id === item._id &&
+              x.isGroup === item.isGroup
+          )
       );
 
       setDispChat(unique);
@@ -70,63 +74,73 @@ const UserList = ({ userChatList }: { userChatList: Chat[] }) => {
     run();
   }, [searchBar, userChatList]);
 
-
   return (
-    <div className={`bg-card p-4 md:p-0 h-full border-r-2 `}>
-      <div className="top flex justify-end 1/6">
-      {socketError != null && 
-        <span className='text-red-500 flex gap-2 items-center text-sm bg-red-200 rounded p-2 m-5'>
-          <ShieldBan /> Could not connect to server  
-        </span>
-       }
-        <div className="settings flex justify-center items-center xl:m-3">
-          <button onClick={() => setIsSearchOpen((prev) => !prev)} className='cursor-pointer hover:scale-115 ease-in  duration-120 m-1'>
+    <div className="bg-card h-full border-r-2 p-4 md:p-0">
+      <div className="flex justify-end">
+        {socketError && (
+          <span className="m-5 flex items-center gap-2 rounded bg-red-200 p-2 text-sm text-red-500">
+            <ShieldBan />
+            Could not connect to server
+          </span>
+        )}
+
+        <div className="m-3 flex items-center">
+          <button
+            onClick={() => setIsSearchOpen((prev) => !prev)}
+            className="m-1 cursor-pointer transition hover:scale-110"
+          >
             <Search />
           </button>
-          <div onClick={() => navigate('/addContacts')} className='cursor-pointer m-1 hover:scale-115 ease-in duration-120'>
+
+          <button
+            onClick={() => navigate("/addContacts")}
+            className="m-1 cursor-pointer transition hover:scale-110"
+          >
             <UserRoundPlus />
-          </div>
-          <div className=''>
-            <CreateGroupDialog />
-          </div>
+          </button>
+
+          <CreateGroupDialog />
         </div>
       </div>
-      <div className="searchbar px-4">
-        {
-          isSearchOpen &&
-          <div className={`bg-accent flex items-center rounded`}>
-            <input onChange={(e) => setSearchBar(e.target.value as string)} value={searchBar} className={` rounded outline-none w-full text-center py-1`} placeholder='Search' type="text" name="" id="" />
-            {searchBar.length > 0 && <button onClick={() => setSearchBar('')} className='px-2'><X /></button>}
-          </div>
-        }
-      </div>
-      <div className="userlist flex flex-col gap-2 m-3 h-5/6">
-        {
-          dispChat.length > 0 ?
-            <div className='overflow-y-scroll no-scrollbar h-full'>
-              {dispChat?.map((user, index) => {
-                return (
-                  <div key={index}>
-                    {
-                      user.isGroup
-                        ?
 
-                        <GroupCard group={user} />
-                        :
-                        <UserCard user={user} />
-                    }
-                  </div>
-                )
-              })}
-            </div>
-            :
-            <div className='text-center'>
-              No Chats Found
-            </div>
-        }
+      <div className="px-4">
+        {isSearchOpen && (
+          <div className="bg-accent flex items-center rounded">
+            <input
+              value={searchBar}
+              onChange={(e) => setSearchBar(e.target.value)}
+              placeholder="Search"
+              className="w-full rounded py-1 text-center outline-none"
+            />
+
+            {searchBar && (
+              <button
+                onClick={() => setSearchBar("")}
+                className="px-2"
+              >
+                <X />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="m-3 h-5/6">
+        {dispChat.length > 0 ? (
+          <div className="h-full overflow-y-auto no-scrollbar">
+            {dispChat.map((chat) => (
+              <ChatCard
+                key={`${chat.isGroup ? "group" : "user"}-${chat._id}`}
+                chatItem={chat}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center">No Chats Found</div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserList
+export default UserList;
