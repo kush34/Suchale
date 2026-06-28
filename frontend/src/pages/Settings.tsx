@@ -143,71 +143,146 @@ const Settings = () => {
     }
   };
   return (
-    <div className="h-screen bg-background flex flex-col items-center justify-center">
-      <div className="w-full head flex items-center justify-between xl:hidden">
-        <div className="title text-lg md:text-4xl m-4 font-bold">Settings</div>
-        <button
-          onClick={() => navigate(-1)}
-          className="m-5 rounded-full px-2 py-2"
-        >
-          <Undo2 />
-        </button>
+    <div className="flex h-screen flex-col bg-background">
+    
+      {/* Header */}
+      <div className="border-b bg-background">
+        <div className="mx-auto flex max-w-3xl items-center gap-3 px-6 py-5">
+    
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-lg p-2 transition hover:bg-accent xl:hidden"
+          >
+            <Undo2 size={20} />
+          </button>
+    
+          <h1 className="text-2xl font-bold">
+            Settings
+          </h1>
+    
+        </div>
       </div>
-
-      <div className="m-5 w-full">
-        <div className="profilepic flex justify-center items-center">
-          <img
-            className="w-40 h-40 object-cover rounded-full"
-            src={user?.profilePic || "836.jpg"}
-            alt="User profile"
-          />
-          <div className="edit m-5 cursor-pointer">
-            <input
-              type="file"
-              className="hidden"
-              onChange={handleUpload}
-              ref={fileInputRef}
-            />
-            <button
-              onClick={triggerFileInput}
-              className="cursor-pointer border-2 border-black dark:border-white px-2 py-2 rounded-full font-bold hover:text-sky-500 hover:border-sky-500"
-            >
-              <Pencil />
-            </button>
+    
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+    
+        <div className="mx-auto max-w-3xl px-6 py-8">
+    
+          {/* Profile */}
+    
+          <div className="flex items-center gap-6 border-b pb-8">
+    
+            <div className="relative">
+    
+              <img
+                src={user?.profilePic || "836.jpg"}
+                alt="Profile"
+                className="h-28 w-28 rounded-full object-cover"
+              />
+    
+              <button
+                onClick={triggerFileInput}
+                className="absolute bottom-1 right-1 rounded-full border bg-card p-2 transition hover:bg-accent"
+              >
+                <Pencil size={16} />
+              </button>
+    
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleUpload}
+                className="hidden"
+              />
+    
+            </div>
+    
+            <div>
+    
+              <h2 className="text-2xl font-semibold">
+                {user?.username}
+              </h2>
+    
+              <p className="mt-1 text-muted-foreground">
+                {user?.email}
+              </p>
+    
+            </div>
+    
           </div>
+    
+          {/* Preferences */}
+    
+          <div className="mt-8">
+    
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Preferences
+            </h3>
+    
+            <div className="overflow-hidden rounded-xl border">
+    
+              <button
+                onClick={() => {
+                  trackEvent("theme_changed");
+                  changeTheme();
+                }}
+                className="flex w-full items-center justify-between border-b px-5 py-4 transition hover:bg-accent"
+              >
+                <div className="flex items-center gap-4">
+                  {theme ? <Moon size={20} /> : <Sun size={20} />}
+                  <span>Appearance</span>
+                </div>
+    
+                <span className="text-sm text-muted-foreground">
+                  {theme ? "Dark" : "Light"}
+                </span>
+              </button>
+    
+              <button
+                onClick={askNotificationPermission}
+                className="flex w-full items-center justify-between px-5 py-4 transition hover:bg-accent"
+              >
+                <div className="flex items-center gap-4">
+                  <Bell size={20} />
+                  <span>Notifications</span>
+                </div>
+    
+                <span className="text-sm text-muted-foreground">
+                  Configure
+                </span>
+              </button>
+    
+            </div>
+    
+          </div>
+    
+          {/* Danger Zone */}
+    
+          <div className="mt-10">
+    
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-red-500">
+              Danger Zone
+            </h3>
+    
+            <div className="overflow-hidden rounded-xl border border-red-200 dark:border-red-900">
+    
+              <button
+                onClick={logOut}
+                className="flex w-full items-center gap-4 px-5 py-4 text-red-500 transition hover:bg-red-500/10"
+              >
+                <LogOut size={20} />
+    
+                Log Out
+              </button>
+    
+            </div>
+    
+          </div>
+    
         </div>
-
-        <div className="username flex flex-col mt-10 md:text-xl items-center justify-center">
-          <span className="font-bold">{user?.username}</span>
-          <span className="font-bold">{user?.email}</span>
-        </div>
-
-        <div className="flex justify-center m-5" onClick={() => {
-          trackEvent("theme_changed");
-          changeTheme();
-        }}>
-          <button className="flex gap-5 cursor-pointer border-b border-zinc-200 dark:border-zinc-800 py-2 w-full md:w-1/4 justify-center">
-            {theme ? <Moon /> : <Sun />} Theme
-          </button>
-        </div>
-
-        <div
-          className="flex justify-center m-5"
-          onClick={askNotificationPermission}
-        >
-          <button className="flex gap-5 cursor-pointer border-b border-zinc-200 dark:border-zinc-800 py-2 w-full md:w-1/4 justify-center">
-            <Bell /> Notification
-          </button>
-        </div>
-
-        <div className="flex justify-center m-5" onClick={logOut}>
-          <button className="flex gap-5 cursor-pointer border-b border-zinc-200 dark:border-zinc-800 py-2 w-full md:w-1/4 justify-center">
-            <LogOut /> Log Out
-          </button>
-        </div>
+    
       </div>
-    </div>
-  );
+    
+    </div>  );
 };
 
 export default Settings;
