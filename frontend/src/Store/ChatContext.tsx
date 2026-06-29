@@ -154,6 +154,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
     useEffect(() => {
         if (chat) getMessages(false);
         setInfoWindow([]);
+        setAssetsOpen(false);
     }, [chat]);
 
     return (
