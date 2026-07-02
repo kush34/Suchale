@@ -31,12 +31,28 @@ type EmojiReaction = {
     emoji: string;
     _id: string;
 }
+
+export type MessageType = "text" | "image" | "video" | "audio" | "file" | "gif" | "sticker";
+
+export type MessageMedia = {
+    provider?: "giphy" | "tenor" | "discord" | "custom";
+    providerMediaId?: string;
+    mediaType?: "gif" | "sticker";
+    url: string;
+    previewUrl?: string;
+    width?: number;
+    height?: number;
+    mimeType?: string;
+};
+
 export interface Message {
     _id: string,
     fromUser: string,
     toUser?: string,
     groupId: string | null,
+    type: MessageType,
     content: string,
+    media?: MessageMedia,
     isEdited: boolean,
     read: boolean,
     isDeleted: boolean,

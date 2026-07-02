@@ -5,59 +5,155 @@ import { io } from "../index";
 import sendNotification from "../utils/webpush";
 import Group from "../models/groupModel";
 
-interface SendMsgPayload {
-  fromUser: string;
-  toUser?: string;
-  content: string;
-  isGroup?: boolean;
-  groupId?: string;
+export interface SendMsgPayload {
+    fromUser: string;
+    toUser?: string;
+    groupId?: string;
+    isGroup?: boolean;
+
+    type: IMessage["type"];
+    content?: string;
+    media?: IMessage["media"];
 }
 
+const inferMessageType = (
+    mediaUrl: string,
+    media?: IMessage["media"],
+    explicitType?: IMessage["type"]
+): IMessage["type"] => {
+    if (explicitType && explicitType !== "text") return explicitType;
+
+    if (media?.mediaType === "gif") return "gif";
+    if (media?.mediaType === "sticker") return "sticker";
+
+    if (/\.(gif)(\?.*)?$/i.test(mediaUrl)) return "gif";
+    if (/\.(png|jpe?g|webp|svg)(\?.*)?$/i.test(mediaUrl)) return "image";
+    if (/\.(mp4|mov|webm|mkv|avi)(\?.*)?$/i.test(mediaUrl)) return "video";
+    if (/\.(pdf|docx?|xlsx?|pptx?|txt|zip|rar)(\?.*)?$/i.test(mediaUrl)) return "file";
+
+    return "text";
+};
+
+const buildMediaPayload = (
+    mediaUrl: string,
+    media?: IMessage["media"],
+    type?: IMessage["type"]
+): IMessage["media"] => {
+    const resolvedType = inferMessageType(mediaUrl, media, type);
+
+    return {
+        provider: media?.provider ?? "custom",
+        providerMediaId: media?.providerMediaId,
+        mediaType: resolvedType === "gif" || resolvedType === "sticker" ? resolvedType : media?.mediaType,
+        url: media?.url ?? mediaUrl,
+        previewUrl: media?.previewUrl,
+        width: media?.width,
+        height: media?.height,
+        mimeType: media?.mimeType,
+    };
+};
+
 export const sendMessage = async ({
-  fromUser,
-  toUser,
-  content,
-  isGroup = false,
-  groupId
+    fromUser,
+    toUser,
+    groupId,
+    isGroup = false,
+
+    type,
+    content = "",
+    media,
 }: SendMsgPayload): Promise<IMessage> => {
+    const resolvedContent = content || media?.url || "";
+    const resolvedType = inferMessageType(resolvedContent, media, type);
+    const resolvedMedia =
+        media || resolvedType !== "text"
+            ? buildMediaPayload(resolvedContent, media, resolvedType)
+            : undefined;
 
-  // Save message to DB
-  const newMsg = await Message.create({ fromUser, toUser, content, groupId }) as IMessage;
+    const newMsg = await Message.create({
+        fromUser,
+        toUser,
+        groupId,
 
-  // Direct message handling
-  if (!isGroup && toUser) {
-    const receiverSocketId = await redis.hget("onlineUsers", toUser);
+        type: resolvedType,
+        content: resolvedContent,
+        media: resolvedMedia,
+    }) as IMessage;
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("sendMsg", newMsg);
-    } else {
-      const dbUser = await User.findOne({ username: toUser });
-      if (dbUser?.pushSubscription) {
-        sendNotification.sendNotification(
-          dbUser.pushSubscription,
-          JSON.stringify({
-            title: "New Message",
-            body: `You received a message from ${fromUser}`,
-            icon: "/icon.png",
-            data: { url: `/chat/${fromUser}` }
-          })
+    if (!isGroup && toUser) {
+        const receiverSocketId = await redis.hget(
+            "onlineUsers",
+            toUser
         );
-      }
-    }
-  }
 
-  // Group message handling
-  if (isGroup && groupId) {
-    const senderSocketId = await redis.hget("onlineUsers", fromUser);
-    if (senderSocketId) {
-      const senderSocket = io.sockets.sockets.get(senderSocketId);
-      if (senderSocket) {
-        senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
-      }
-    }
-  }
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("sendMsg", newMsg);
+        } else {
+            const dbUser = await User.findOne({
+                username: toUser,
+            });
 
-  return newMsg;
+            if (dbUser?.pushSubscription) {
+                let notificationBody = `You received a message from ${fromUser}`;
+
+                switch (type) {
+                    case "image":
+                        notificationBody = `${fromUser} sent you an image`;
+                        break;
+
+                    case "video":
+                        notificationBody = `${fromUser} sent you a video`;
+                        break;
+
+                    case "gif":
+                        notificationBody = `${fromUser} sent you a GIF`;
+                        break;
+
+                    case "sticker":
+                        notificationBody = `${fromUser} sent you a sticker`;
+                        break;
+
+                    case "audio":
+                        notificationBody = `${fromUser} sent you an audio message`;
+                        break;
+
+                    case "file":
+                        notificationBody = `${fromUser} sent you a file`;
+                        break;
+                }
+
+                sendNotification.sendNotification(
+                    dbUser.pushSubscription,
+                    JSON.stringify({
+                        title: "New Message",
+                        body: notificationBody,
+                        icon: "/icon.png",
+                        data: {
+                            url: `/chat/${fromUser}`,
+                        },
+                    })
+                );
+            }
+        }
+    }
+
+    if (isGroup && groupId) {
+        const senderSocketId = await redis.hget(
+            "onlineUsers",
+            fromUser
+        );
+
+        if (senderSocketId) {
+            const senderSocket =
+                io.sockets.sockets.get(senderSocketId);
+
+            if (senderSocket) {
+                senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
+            }
+        }
+    }
+
+    return newMsg;
 };
 
 export const reactToMsg = async (username: string, messageId: string, emoji: string) => {
@@ -225,12 +321,17 @@ export const getMessagesService = async ({
 export const sendMediaService = async (
   fromUser: string,
   toUser: string,
-  mediaUrl: string
+  mediaUrl: string,
+  type?: IMessage["type"],
+  media?: IMessage["media"]
 ) => {
+  const resolvedType = inferMessageType(mediaUrl, media, type);
   const newMsg = await Message.create({
     fromUser,
     toUser,
+    type: resolvedType,
     content: mediaUrl,
+    media: media ?? buildMediaPayload(mediaUrl, media, resolvedType),
   });
 
   const receiverSocketId = await redis.hget("onlineUsers", toUser);
@@ -396,4 +497,3 @@ export const searchUserMsgs = async (
     data: messages
   };
 }
-

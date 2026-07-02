@@ -6,24 +6,66 @@ import { AuthRequest } from '../middlewares/verifyToken';
 export const sendMsg = async (req: Request, res: Response) => {
     try {
         const fromUser = req.username;
-        if (!fromUser) return res.status(401).send({ error: "Unauthorized" });
 
-        const { toUser, content, isGroup = false, groupId } = req.body;
+        if (!fromUser) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
 
-        // Validation
-        if (!content || content.trim() === "")
-            return res.status(400).send({ error: "content is required" });
-        if (isGroup && !groupId)
-            return res.status(400).send({ error: "groupId required" });
-        if (!isGroup && !toUser)
-            return res.status(400).send({ error: "toUser required" });
+        const {
+            toUser,
+            isGroup = false,
+            groupId,
 
-        const newMsg = await messageService.sendMessage({ fromUser, toUser, content, isGroup, groupId });
+            type = "text",
+            content = "",
+            media,
+        } = req.body;
 
-        res.status(200).json(newMsg);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("something went wrong");
+        // Recipient validation
+        if (isGroup && !groupId) {
+            return res.status(400).json({
+                error: "groupId is required",
+            });
+        }
+
+        if (!isGroup && !toUser) {
+            return res.status(400).json({
+                error: "toUser is required",
+            });
+        }
+
+        // Message validation
+        if (type === "text") {
+            if (!content.trim()) {
+                return res.status(400).json({
+                    error: "content is required",
+                });
+            }
+        } else {
+            if (!media?.url) {
+                return res.status(400).json({
+                    error: "media.url is required",
+                });
+            }
+        }
+
+        const newMsg = await messageService.sendMessage({
+            fromUser,
+            toUser,
+            groupId,
+            isGroup,
+
+            type,
+            content,
+            media,
+        });
+
+        return res.status(201).json(newMsg);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: "Something went wrong",
+        });
     }
 };
 
@@ -105,7 +147,7 @@ export const media = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { toUser, mediaUrl } = req.body;
+    const { toUser, mediaUrl, type, media } = req.body;
 
     if (!toUser || !mediaUrl) {
       return res.status(400).json({ error: "toUser and mediaUrl are required" });
@@ -119,7 +161,9 @@ export const media = async (req: Request, res: Response) => {
     const result = await messageService.sendMediaService(
       username,
       toUser,
-      mediaUrl
+      mediaUrl,
+      type,
+      media
     );
 
     return res.status(200).json(result);
@@ -211,4 +255,3 @@ export const searchUserMsgs = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
-

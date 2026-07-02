@@ -7,7 +7,6 @@ self.addEventListener("push", (event) => {
         body: data.body,
         icon: data.icon || '/icon.png',
         badge: data.icon || '/icon.png',
-        icon: data.data || {}
     });
 });
 

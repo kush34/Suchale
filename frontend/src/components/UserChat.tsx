@@ -29,6 +29,7 @@ const UserChat = () => {
     ViewChatInfo,
     infoWindow,
     sendMsg,
+    sendGif,
   } = chatCtx;
 
   const userCtx = useUser();
@@ -124,27 +125,45 @@ const UserChat = () => {
 
     try {
       const file = files[0];
+      const messageType = file.type === "image/gif"
+        ? "gif"
+        : file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+            ? "video"
+            : "file";
 
       // 1. Upload directly to Cloudinary
       const mediaUrl = await uploadToCloudinary(file);
 
-      // 2. Send URL to backend
-      const res = await api.post("/message/media", {
-        toUser: chat.username,
-        mediaUrl,
-      });
+      const mediaPayload = {
+        provider: "custom" as const,
+        mediaType: messageType === "gif" ? "gif" : undefined,
+        url: mediaUrl,
+        previewUrl: mediaUrl,
+        mimeType: file.type,
+      };
 
-      if (res.status === 200) {
-        setChatArr((prev) => [
-          ...prev,
-          {
-            fromUser: user.username,
-            toUser: chat.username,
+      const res = await api.post("/message/send", groupFlag
+        ? {
+            isGroup: true,
+            groupId: chat._id,
+            type: messageType,
             content: mediaUrl,
-          } as Message,
-        ]);
+            media: mediaPayload,
+          }
+        : {
+            toUser: chat.username,
+            isGroup: false,
+            type: messageType,
+            content: mediaUrl,
+            media: mediaPayload,
+          });
+
+      if (res.status >= 200 && res.status < 300) {
+        setChatArr((prev) => [...prev, res.data as Message]);
         trackEvent("file_shared_in_chat", {
-          chat_type: chat.username ? "direct" : "group",
+          chat_type: groupFlag ? "group" : "direct",
           recipient: chat.username || chat.name,
           file_type: file.type,
         });
@@ -236,7 +255,7 @@ const UserChat = () => {
       {loading && <LineLoader />}
       <ChatDisplay chatDivRef={chatDivRef} chatArr={chatArr} user={user} loading={loading} messagesEndRef={messagesEndRef} />
       <ToBottomBtn handleScrollToBottom={handleScrollToBottom} toBottomBtnFlag={toBottomBtnFlag} />
-      <MsgBar sendMsg={sendMsg} message={message} setMessage={setMessage} sendMedia={sendMedia} mediaInpRef={mediaInpRef} mediaTrigger={mediaTrigger} handleEmojiClick={handleEmojiClick} handleTyping={handleTyping} showPicker={showPicker} setShowPicker={setShowPicker} />
+      <MsgBar sendMsg={sendMsg} sendGif={sendGif} message={message} setMessage={setMessage} sendMedia={sendMedia} mediaInpRef={mediaInpRef} mediaTrigger={mediaTrigger} handleEmojiClick={handleEmojiClick} handleTyping={handleTyping} showPicker={showPicker} setShowPicker={setShowPicker} />
       <HoverCard hoverTopbar={hoverTopbar} infoWindow={infoWindow} mousePos={mousePos}/>
     </div>
   );

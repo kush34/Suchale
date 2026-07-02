@@ -104,8 +104,18 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       } else toast("New group message");
     };
 
+    const onGroupLegacy = (message: Message) => {
+      if (chat && "_id" in chat && String(chat._id) === String(message.groupId)) {
+        setChatArr(p => [...p, message]);
+      } else toast("New group message");
+    };
+
     socket.on("newGroupMessage", onGroup);
-    return () => { socket.off("newGroupMessage", onGroup); }
+    socket.on("sendMsgGrp", onGroupLegacy);
+    return () => {
+      socket.off("newGroupMessage", onGroup);
+      socket.off("sendMsgGrp", onGroupLegacy);
+    }
   }, [chat]);
 
   /* ================= RTC HELPERS ================= */

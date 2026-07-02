@@ -3,6 +3,7 @@ import api from '../utils/axiosConfig';
 import { UserContextType, useUser } from './UserContext';
 import { Chat, Group, Message, User } from "@/types/index";
 import { trackEvent } from "@/lib/posthog";
+import type { IGif } from "@giphy/js-types";
 
 type SendMessagePayload =
     | { content: string; isGroup: true; groupId: string }
@@ -16,6 +17,7 @@ type ChatContextType = {
     setChatArr: React.Dispatch<React.SetStateAction<Message[]>>;
 
     sendMsg: (content: string) => void;
+    sendGif: (gif: IGif) => Promise<void>;
     chatDivRef: React.RefObject<HTMLDivElement | null>;
 
     groupFlag: boolean;
@@ -52,6 +54,10 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
     const [assetsOpen, setAssetsOpen] = useState(false);
     const chatDivRef = useRef<HTMLDivElement | null>(null);
 
+    const appendOptimisticMessage = (message: Message) => {
+        setChatArr(prev => [...(prev ?? []), message]);
+    };
+
     const sendMsg = async (content: string) => {
         if (!content.trim()) return;
         if (!user || !chat) return;
@@ -78,24 +84,77 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
 
             const response = await api.post('/message/send', payload);
 
-            if (response.status === 200) {
-                const newMessage: Message = {
-                    _id: response.data._id,
-                    fromUser: user.username,
+            if (response.status >= 200 && response.status < 300) {
+                appendOptimisticMessage(response.data as Message);
+                trackEvent("message_sent", {
+                    chat_type: groupFlag ? "group" : "direct",
+                    recipient: "username" in chat ? chat.username : chat.name,
+                });
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const sendGif = async (gif: IGif) => {
+        if (!user || !chat) return;
+
+        const gifUrl =
+            gif.images?.original?.url ||
+            gif.images?.fixed_width?.url ||
+            gif.images?.downsized?.url;
+
+        if (!gifUrl) return;
+
+        const gifMessage: Message = {
+            _id: `${gif.id}-${Date.now()}`,
+            fromUser: user.username,
+            toUser: !groupFlag && "username" in chat ? chat.username : undefined,
+            groupId: groupFlag ? chat._id : null,
+            type: "gif",
+            content: gifUrl,
+            media: {
+                provider: "giphy",
+                providerMediaId: String(gif.id),
+                mediaType: "gif",
+                url: gifUrl,
+                previewUrl: gif.images?.fixed_width_small_still?.url,
+                width: Number(gif.images?.original?.width) || undefined,
+                height: Number(gif.images?.original?.height) || undefined,
+                mimeType: "image/gif",
+            },
+            isEdited: false,
+            read: false,
+            isDeleted: false,
+            reactions: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            __v: 0,
+        };
+
+        try {
+            const payload = groupFlag
+                ? {
+                    toUser: undefined,
+                    isGroup: true as const,
+                    groupId: chat._id,
+                    type: "gif" as const,
+                    content: gifUrl,
+                    media: gifMessage.media,
+                }
+                : {
                     toUser: "username" in chat ? chat.username : "",
-                    content,
-                    groupId: groupFlag ? chat._id : null,
-                    isEdited: false,
-                    read: false,
-                    isDeleted: false,
-                    reactions: [],
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    __v: 0,
+                    isGroup: false as const,
+                    type: "gif" as const,
+                    content: gifUrl,
+                    media: gifMessage.media,
                 };
 
-                setChatArr(prev => [...(prev ?? []), newMessage]);
-                trackEvent("message_sent", {
+            const response = await api.post("/message/send", payload);
+
+            if (response.status >= 200 && response.status < 300) {
+                appendOptimisticMessage((response.data as Message) ?? gifMessage);
+                trackEvent("gif_sent", {
                     chat_type: groupFlag ? "group" : "direct",
                     recipient: "username" in chat ? chat.username : chat.name,
                 });
@@ -165,6 +224,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
                 chatArr,
                 setChatArr,
                 sendMsg,
+                sendGif,
                 chatDivRef,
                 groupFlag,
                 setGroupFlag,

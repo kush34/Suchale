@@ -12,6 +12,14 @@ type Props = {
 }
 
 export default function ChatDisplay({ chatDivRef, chatArr, messagesEndRef, loading, user }: Props) {
+  const isMediaMessage = (msg: Message) => {
+    const mediaUrl = msg.media?.url || msg.content;
+    return msg.type === "gif" ||
+      msg.type === "image" ||
+      msg.type === "video" ||
+      /\.(jpeg|jpg|gif|png|webp|mp4)$/i.test(mediaUrl);
+  };
+
   return (
     <div
       ref={chatDivRef}
@@ -32,7 +40,7 @@ export default function ChatDisplay({ chatDivRef, chatArr, messagesEndRef, loadi
                 }`}
             >
               <span
-                className={`w-fit max-w-[75%] m-2 rounded ${/\.(jpeg|jpg|gif|png|webp|mp4)$/i.test(msg.content)
+                className={`w-fit max-w-[75%] m-2 rounded ${isMediaMessage(msg)
                   ? ""
                   : `${msg.fromUser === user.username
                     ? "bg-muted"

@@ -9,16 +9,19 @@ type MsgContentProps = {
 };
 
 const MsgContent = ({ msg }: MsgContentProps) => {
-  const isImage = /\.(jpeg|jpg|gif|png|webp)$/i.test(msg.content);
-  const isVideo = /\.(mp4)$/i.test(msg.content);
-  const isFile = /\.(pdf|docx|txt|rtf|odt)$/i.test(msg.content);
+  const mediaUrl = msg.media?.url || msg.content;
+  const isGif = msg.type === "gif" || msg.media?.mediaType === "gif";
+  const isImage =
+    isGif || /\.(jpeg|jpg|gif|png|webp)$/i.test(mediaUrl);
+  const isVideo = msg.type === "video" || /\.(mp4)$/i.test(mediaUrl);
+  const isFile = msg.type === "file" || /\.(pdf|docx|txt|rtf|odt)$/i.test(mediaUrl);
 
   return (
     <div className="msgContent text-xl">
       {isImage || isVideo ? (
         <div className="relative inline-block">
-          {isImage && <ChatImageViewer src={msg.content} />}
-          {isVideo && <VideoViewer src={msg.content} />}
+          {isImage && <ChatImageViewer src={mediaUrl} />}
+          {isVideo && <VideoViewer src={mediaUrl} />}
 
           <div className="absolute bottom-2 right-2 z-20">
             <MsgMeta msg={msg} />
@@ -26,7 +29,7 @@ const MsgContent = ({ msg }: MsgContentProps) => {
         </div>
       ) : isFile ? (
         <>
-          <FileViewer src={msg.content} filename={msg.content} />
+          <FileViewer src={mediaUrl} filename={mediaUrl} />
           <MsgMeta msg={msg} />
         </>
       ) : (
