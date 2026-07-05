@@ -10,6 +10,7 @@ import cors from 'cors';
 import socketHandler from "./socket";
 import cookieParser from "cookie-parser";
 import notificationRouter from "./routers/notificationRouter"
+import storyRouter from "./routers/storyRouter";
 const allowedOrigins: string[] = [
   process.env.DOMAIN_1,
   process.env.DOMAIN_2
@@ -46,7 +47,7 @@ app.use('/user', userRouter);
 app.use('/message', messageRouter);
 app.use('/post', postRouter);
 app.use('/notifications', notificationRouter);
-
+app.use('/story',storyRouter)
 app.get("/", (req, res) => res.send("Hello World!"));
 
 
