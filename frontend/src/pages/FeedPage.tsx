@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import Feed from "@/components/Feed/Feed";
 import CreatePost from "@/components/Feed/Post/CreatePost";
 import { trackEvent } from "@/lib/posthog";
+import StoryViewer from "@/components/story/story-viewer";
+import StoryDrawer from "@/components/story/story-drawer";
 
 const FeedPage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -12,8 +14,10 @@ const FeedPage = () => {
 
   return (
     <div ref={scrollContainerRef} className="w-full h-screen overflow-y-auto">
+      <StoryViewer/>
       <div className="flex flex-col justify-center items-center gap-2 mt-4 xl:mt-8 p-5 xl:p-0">
-        <CreatePost />
+        {/* <CreatePost /> */}
+        <StoryDrawer/>
         <Feed scrollContainer={scrollContainerRef} />
       </div>
     </div>

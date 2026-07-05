@@ -35,7 +35,7 @@ const LIMIT = 10;
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 const PostSkeleton = () => (
-  <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3 animate-pulse">
+  <div className="rounded-xl border-secondary border-border bg-card p-4 flex flex-col gap-3 animate-pulse">
     <div className="flex items-center gap-3">
       <div className="h-10 w-10 rounded-full bg-muted" />
       <div className="flex flex-col gap-1.5">

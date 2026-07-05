@@ -30,7 +30,7 @@ const Footer = ({
         trackEvent("post_shared", { post_id: _id, method: "copy_link" });
     }
     return (
-        <span className='flex justify-between mt-5 text-zinc-500'>
+        <span className='flex gap-10 mt-5 text-zinc-500'>
             <button
                 onClick={() => onLikeToggle()}
                 disabled={isLoading}

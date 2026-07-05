@@ -1,4 +1,4 @@
-import { Home, Inbox, Search, Settings } from 'lucide-react';
+import { Bell, Home, Inbox, Search, Settings } from 'lucide-react';
 import React from 'react'
 import { Link } from 'react-router-dom';
 
@@ -18,6 +18,11 @@ const MobileNav = () => {
             title: "Search",
             url: "/addContacts",
             icon: Search,
+        },
+        {
+            title: "Notification",
+            url: "/notification",
+            icon: Bell,
         },
         {
             title: "Settings",

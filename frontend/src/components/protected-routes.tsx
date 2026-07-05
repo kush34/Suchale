@@ -5,6 +5,7 @@ import { ChatContextProvider } from "@/Store/ChatContext";
 import { SocketProvider } from "@/Store/SocketContext";
 import Main from "./layouts/main";
 import { Outlet } from "react-router-dom";
+import { StoryProvider } from "@/Store/storyContext";
 
 export default function ProtectedRoutes() {
   return (
@@ -12,11 +13,13 @@ export default function ProtectedRoutes() {
       <ThemeContextProvider>
         <SidebarProvider>
           <ChatContextProvider>
-            <SocketProvider>
-              <Main>
-                <Outlet />
-              </Main>
-            </SocketProvider>
+            <StoryProvider>
+              <SocketProvider>
+                <Main>
+                  <Outlet />
+                </Main>
+              </SocketProvider>
+            </StoryProvider>
           </ChatContextProvider>
         </SidebarProvider>
       </ThemeContextProvider>

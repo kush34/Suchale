@@ -3,20 +3,10 @@ import * as ReactDOM from "react-dom/client";
 import "./index.css";
 import {
   BrowserRouter,
-  Routes,
-  Route,
-  Outlet,
   useLocation,
 } from "react-router-dom";
 import { Toaster } from "sonner";
-
-import { UserContextProvider } from "./Store/UserContext";
-import { ChatContextProvider } from "./Store/ChatContext";
-import { ThemeContextProvider } from "./Store/ThemeContext";
 import { registerServiceWorker } from "./utils/register-service-worker";
-import { SidebarProvider } from "./components/ui/sidebar";
-import Main from "./components/layouts/main";
-import { SocketProvider } from "./Store/SocketContext";
 import { trackEvent } from "./lib/posthog";
 import AnimatedRoutes from "./components/animated-page";
 const root = document.getElementById("root");
@@ -47,24 +37,6 @@ function RouteTracker() {
   return null;
 }
 
-function ProtectedRoutes() {
-  return (
-    <UserContextProvider>
-      <ThemeContextProvider>
-        <SidebarProvider>
-          <ChatContextProvider>
-            <SocketProvider>
-              <Main>
-                <Outlet />
-              </Main>
-            </SocketProvider>
-          </ChatContextProvider>
-        </SidebarProvider>
-      </ThemeContextProvider>
-    </UserContextProvider>
-  );
-}
-
 registerServiceWorker();
 if (root) {
   ReactDOM.createRoot(root).render(
@@ -73,7 +45,7 @@ if (root) {
       <Toaster richColors closeButton position="top-right" />
 
       <Suspense fallback={<div>Loading...</div>}>
-        <AnimatedRoutes/>
+        <AnimatedRoutes />
       </Suspense>
     </BrowserRouter>,
   );

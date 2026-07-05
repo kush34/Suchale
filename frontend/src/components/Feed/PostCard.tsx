@@ -100,7 +100,7 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
     };
 
     return (
-        <div className='p-5 rounded border-accent shadow border flex flex-col gap-2'>
+        <div className='p-5 rounded border-secondary shadow border-t flex flex-col gap-2'>
 
             <span className='flex justify-between'>
                 <Profile
