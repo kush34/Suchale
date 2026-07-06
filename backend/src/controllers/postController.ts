@@ -4,11 +4,15 @@ import User from "../models/userModel";
 import mongoose from "mongoose";
 import cloudinary from "cloudinary";
 import { notifyMentionedUsers } from "../services/notificationService";
+import { createPostValidator } from "../validators/post-validator";
+import { createPostService } from "../services/postService";
 
 type IncomingMention = {
     id: string;
     username?: string;
 };
+type IncomingHashtags = string;
+
 
 const formatMentions = (mentions: any[] = []) =>
     mentions.map((mention) => ({
@@ -21,8 +25,8 @@ const formatPostForResponse = (post: any, userId?: string) => ({
     mentions: formatMentions(post.mentions || []),
     isLiked: userId
         ? post.engagement?.likes?.some(
-              (like: any) => like.user.toString() === userId
-          )
+            (like: any) => like.user.toString() === userId
+        )
         : post.isLiked,
 });
 
@@ -62,118 +66,44 @@ export const getPresignedUrl = async (req: Request, res: Response) => {
 
 
 // CREATE POST
-export const createPost = async (req: Request, res: Response) => {
+export const createPost = async (
+    req: Request,
+    res: Response
+) => {
     try {
-        const userId = req.id;
-        const actorUsername = req.username;
-        const { content, media, mentions = [] } = req.body as {
-            content?: string;
-            media?: string[];
-            mentions?: IncomingMention[];
-        };
-        console.log(`New Post Received for ${actorUsername}`)
-        console.log("mentions", mentions);  
-        if (!userId) {
-            return res.status(401).send({ message: "Unauthorized" });
+        if (!req.id || !req.username) {
+            return res.status(401).json({
+                message: "Unauthorized",
+            });
         }
 
-        if ((!content || content.trim() === "") && (!media || media.length === 0)) {
-            return res
-                .status(400)
-                .send({ message: "Post must have either content or media." });
+        const parsed =
+            createPostValidator.safeParse(req.body);
+
+        if (!parsed.success) {
+            return res.status(400).json({
+                message: parsed.error.issues[0].message,
+            });
         }
 
-        if (!Array.isArray(mentions)) {
-            return res.status(400).send({ message: "mentions must be an array" });
-        }
-
-        const hasInvalidMention = mentions.some((mention) => {
-            const mentionId = mention?.id?.trim();
-            return !mentionId || !mongoose.isValidObjectId(mentionId);
+        const post = await createPostService({
+            userId: req.id,
+            actorUsername: req.username,
+            data: parsed.data,
         });
-
-        if (hasInvalidMention) {
-            return res.status(400).send({
-                message: "Each mention must include a valid user id.",
-            });
-        }
-
-        const seenMentionIds = new Set<string>();
-        const mentionIds = mentions
-            .map((mention) => mention?.id?.trim())
-            .filter((id): id is string => Boolean(id))
-            .filter((id) => {
-                if (seenMentionIds.has(id)) {
-                    return false;
-                }
-
-                seenMentionIds.add(id);
-                return true;
-            });
-
-        const mentionedUsers = mentionIds.length
-            ? await User.find({ _id: { $in: mentionIds } })
-                .select("_id username profilePic pushSubscription")
-                .lean()
-            : [];
-
-        if (mentionIds.length !== mentionedUsers.length) {
-            return res.status(400).send({
-                message: "One or more mentioned users were not found.",
-            });
-        }
-        console.log(`New Post contains tags : ${mentionIds}`)
-        const usersById = new Map(
-            mentionedUsers.map((user) => [user._id.toString(), user])
-        );
-        const normalizedMentions = mentionIds
-            .map((id) => usersById.get(id))
-            .filter((user): user is (typeof mentionedUsers)[number] => Boolean(user))
-            .map((user) => ({
-                userId: user._id,
-                username: user.username,
-            }));
-
-        const newPost = await Post.create({
-            user: userId,
-            content,
-            media: media || [],
-            mentions: normalizedMentions,
-        });
-
-        const populatedPost = await newPost.populate([
-            { path: "user", select: "username profilePic" },
-            { path: "mentions.userId", select: "username profilePic" },
-        ]);
-
-        if (normalizedMentions.length > 0 && actorUsername) {
-            console.log(`Notifing users for ${actorUsername} for ${normalizedMentions}`)
-            void notifyMentionedUsers({
-                actorId: userId,
-                actorUsername,
-                postId: (newPost._id as mongoose.Types.ObjectId).toString(),
-                postContent: content || "",
-                recipients: mentionedUsers
-                    .filter((user) => user._id.toString() !== userId)
-                    .map((user) => ({
-                        _id: user._id,
-                        username: user.username,
-                        pushSubscription: user.pushSubscription,
-                    })),
-            });
-        }
 
         return res.status(201).json({
             message: "Post created successfully",
-            post: formatPostForResponse(populatedPost.toObject(), userId),
+            post,
         });
+    } catch (err) {
+        console.error(err);
 
-    } catch (error) {
-        console.log("Error creating post:", error);
-        res.status(500).send({ message: "Internal Server Error" });
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
     }
 };
-
 
 // GET SINGLE POST
 export const getPost = async (req: Request, res: Response) => {

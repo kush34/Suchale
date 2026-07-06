@@ -10,6 +10,7 @@ import {
 
 import { useMentions } from "@/hooks/use-mention";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export interface Mention {
     id: string;
@@ -30,6 +31,7 @@ interface Props {
     setMentions: React.Dispatch<React.SetStateAction<Mention[]>>;
 
     placeholder?: string;
+    className?:string
 }
 
 function renderHighlightedText(
@@ -114,6 +116,7 @@ export default function MentionInput({
     mentions,
     setMentions,
     placeholder,
+    className
 }: Props) {
     const addMention = (user: User) => {
         setMentions((prev) => {
@@ -163,7 +166,7 @@ export default function MentionInput({
 
     return (
         <div className="relative">
-            <Textarea value={value} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={placeholder} ref={textareaRef}/>
+            <Textarea className={cn(className)} value={value} onChange={handleInputChange}  onKeyDown={handleKeyDown} placeholder={placeholder} ref={textareaRef}/>
             {showMentions && (
                 <div
                     onMouseDown={(e) => e.preventDefault()} // ✅ prevents textarea blur before onSelect fires

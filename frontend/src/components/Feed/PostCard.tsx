@@ -74,20 +74,36 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
         }
     };
     const renderContent = (text: string) => {
-        const parts = text.split(/(@[a-zA-Z0-9_]+)/g);
+        const parts = text.split(/(@[a-zA-Z0-9_]+|#[a-zA-Z0-9_]+)/g);
 
         return parts.map((part, index) => {
             if (part.startsWith("@")) {
+                const username = part.slice(1);
+
                 return (
                     <span
                         key={index}
-                        className="font-medium text-blue-500 hover:underline cursor-pointer"
+                        className="cursor-pointer font-medium text-blue-500 hover:underline"
                         onClick={(e) => {
                             e.stopPropagation();
-
-                            const username = part.slice(1);
-
                             navigate(`/profile/${username}`);
+                        }}
+                    >
+                        {part}
+                    </span>
+                );
+            }
+
+            if (part.startsWith("#")) {
+                const hashtag = part.slice(1);
+
+                return (
+                    <span
+                        key={index}
+                        className="cursor-pointer font-medium text-blue-500 hover:underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/hashtag/${hashtag}`);
                         }}
                     >
                         {part}

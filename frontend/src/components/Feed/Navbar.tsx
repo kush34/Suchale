@@ -1,4 +1,4 @@
-import { Bell, Home, Inbox, Search, Settings } from "lucide-react";
+import { Bell, Binoculars, Home, Inbox, Settings, Telescope } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Profile from "./Post/Profile";
@@ -6,11 +6,11 @@ import { useUser } from "@/Store/UserContext";
 import api from "@/utils/axiosConfig";
 
 const items = [
-  { title: "Home",         url: "/feed",         icon: Home     },
-  { title: "Messages",     url: "/messages",     icon: Inbox    },
-  { title: "Search",       url: "/addContacts",  icon: Search   },
-  { title: "Notification", url: "/notification", icon: Bell     },
-  { title: "Settings",     url: "/settings",     icon: Settings },
+  { title: "Home", url: "/feed", icon: Home },
+  { title: "Messages", url: "/messages", icon: Inbox },
+  { title: "Explore", url: "/explore", icon: Telescope },
+  { title: "Notification", url: "/notification", icon: Bell },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -24,7 +24,7 @@ export function AppSidebar() {
     api
       .get<{ count: number }>("/notifications/unread-count")
       .then(({ data }) => setUnreadCount(data.count))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Zero the badge as soon as the user opens the notification page
@@ -35,7 +35,13 @@ export function AppSidebar() {
   }, [location.pathname]);
 
   if (!user) return null;
+  useEffect(() => {
+    console.log("Sidebar mounted");
 
+    return () => {
+      console.log("Sidebar unmounted");
+    };
+  }, []);
   return (
     <div className="bg-background hidden xl:flex flex-col px-16 py-36 h-screen gap-24 border border-border">
       <div className="text-lg md:text-xl xl:text-2xl font-bold xl:px-3 xl:py-2 tracking-wide">

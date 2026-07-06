@@ -16,7 +16,7 @@ const MobileNav = () => {
         },
         {
             title: "Search",
-            url: "/addContacts",
+            url: "/explore",
             icon: Search,
         },
         {

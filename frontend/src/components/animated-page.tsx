@@ -1,121 +1,49 @@
-import { AnimatePresence } from "motion/react";
-import {
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
 
-import App from "@/App";
-import PageTransition from "./page-transition";
-import Register from "@/pages/Register";
-import Login from "@/pages/Login";
-import Home from "@/pages/Home";
-import { NotificationPage } from "@/pages/notification-page";
-import AddContacts from "@/pages/AddContacts";
-import Settings from "@/pages/Settings";
-import FeedPage from "@/pages/FeedPage";
-import ProfilePage from "@/pages/ProfilePage";
-import PostPage from "@/pages/PostPage";
 import ProtectedRoutes from "./protected-routes";
 
+const App = lazy(() => import("@/App"));
+const Register = lazy(() => import("@/pages/Register"));
+const Login = lazy(() => import("@/pages/Login"));
+const Home = lazy(() => import("@/pages/Home"));
+const NotificationPage = lazy(() =>
+  import("@/pages/notification-page").then((module) => ({
+    default: module.NotificationPage,
+  }))
+);
+const Settings = lazy(() => import("@/pages/Settings"));
+const FeedPage = lazy(() => import("@/pages/FeedPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const PostPage = lazy(() => import("@/pages/PostPage"));
+const Explore = lazy(() => import("@/pages/explore-page"));
+
 export default function AnimatedRoutes() {
-  const location = useLocation();
-
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route
-          path="/"
-          element={
-            <PageTransition>
-              <App />
-            </PageTransition>
-          }
-        />
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/" element={<App />} />
 
-        <Route
-          path="/register"
-          element={
-            <PageTransition>
-              <Register />
-            </PageTransition>
-          }
-        />
+        <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/login"
-          element={
-            <PageTransition>
-              <Login />
-            </PageTransition>
-          }
-        />
+        <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoutes />}>
-          <Route
-            path="/messages"
-            element={
-              <PageTransition>
-                <Home />
-              </PageTransition>
-            }
-          />
+          <Route path="/messages" element={<Home />} />
 
-          <Route
-            path="/notification"
-            element={
-              <PageTransition>
-                <NotificationPage />
-              </PageTransition>
-            }
-          />
+          <Route path="/notification" element={<NotificationPage />} />
 
-          <Route
-            path="/addContacts"
-            element={
-              <PageTransition>
-                <AddContacts />
-              </PageTransition>
-            }
-          />
+          <Route path="/explore" element={<Explore />} />
 
-          <Route
-            path="/settings"
-            element={
-              <PageTransition>
-                <Settings />
-              </PageTransition>
-            }
-          />
+          <Route path="/settings" element={<Settings />} />
 
-          <Route
-            path="/feed"
-            element={
-              <PageTransition>
-                <FeedPage />
-              </PageTransition>
-            }
-          />
+          <Route path="/feed" element={<FeedPage />} />
 
-          <Route
-            path="/profile/:username"
-            element={
-              <PageTransition>
-                <ProfilePage />
-              </PageTransition>
-            }
-          />
+          <Route path="/profile/:username" element={<ProfilePage />} />
 
-          <Route
-            path="/post/:postId"
-            element={
-              <PageTransition>
-                <PostPage />
-              </PageTransition>
-            }
-          />
+          <Route path="/post/:postId" element={<PostPage />} />
         </Route>
       </Routes>
-    </AnimatePresence>
+    </Suspense>
   );
 }
