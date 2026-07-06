@@ -18,6 +18,41 @@ type Contact = {
 };
 
 
+export type Post = {
+  _id: string;
+
+  user: User;
+
+  content: string;
+  media: string[];
+
+  mentions: {
+    userId: string;
+    username: string;
+  }[];
+
+  hashtags: string[];
+
+  engagement: {
+    likes: {
+      _id?: string;
+      user: string;
+      likedAt: string;
+    }[];
+
+    comments: {
+      _id: string;
+      userId: string;
+      content: string;
+      createdAt: string;
+    }[];
+  };
+
+  createdAt: string;
+  updatedAt: string;
+
+  __v?: number;
+};
 export interface Group {
     _id: string,
     name: string,
