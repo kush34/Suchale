@@ -1,11 +1,12 @@
 import Post from "../models/postModel";
 import User from "../models/userModel";
+import { searchRegex } from "../utils/input";
 
 // services/explore.service.ts
 export const search = async (query: string) => {
   if (!query.trim()) return [];
 
-  const regex = new RegExp(query, "i");
+  const regex = searchRegex(query);
 
   const [users, posts] = await Promise.all([
     User.find({

@@ -4,6 +4,7 @@ import redis from "../utils/redis";
 import { io } from "../index";
 import sendNotification from "../utils/webpush";
 import Group from "../models/groupModel";
+import { escapeRegExp, MAX_SEARCH_LEN } from "../utils/input";
 
 export interface SendMsgPayload {
     fromUser: string;
@@ -482,7 +483,7 @@ export const searchUserMsgs = async (
       { fromUser: username },
       { toUser: username }
     ],
-    content: { $regex: searchQuery, $options: "i" }
+    content: { $regex: escapeRegExp(searchQuery.slice(0, MAX_SEARCH_LEN)), $options: "i" }
   };
 
   if (toUser) {

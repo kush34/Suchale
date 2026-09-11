@@ -9,6 +9,7 @@ import redis from "../utils/redis";
 import sendOtp from "../controllers/sendOtp";
 import admin from "../config/firebase";
 import Post from "../models/postModel";
+import { searchRegex } from "../utils/input";
 
 interface ServiceResponse {
   statusCode: number;
@@ -273,7 +274,7 @@ export const searchUsers = async (query: string) => {
   if (!query) return [];
 
   // Case-insensitive search for usernames starting with the query
-  const users = await User.find({ username: new RegExp("^" + query, "i") })
+  const users = await User.find({ username: searchRegex(query, "^") })
     .limit(15)
     .select("username email profilePic");
 
