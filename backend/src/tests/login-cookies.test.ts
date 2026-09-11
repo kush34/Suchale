@@ -3,6 +3,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
@@ -11,6 +12,7 @@ jest.mock("../utils/redis", () => ({
   default: { hset: jest.fn(), hget: jest.fn(), hdel: jest.fn(), hgetall: jest.fn() },
 }));
 
+import User from "../models/userModel";
 import userRouter from "../routers/userRouter";
 
 const app = express();
@@ -24,10 +26,11 @@ beforeAll(async () => {
   process.env.jwt_Secret = process.env.jwt_Secret || "test-secret";
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
-  await request(app).post("/user/create").send({
+  // NOTE: /user/create was removed in #15 (OTP-only signup); seed directly.
+  await User.create({
     username: "CookieUser",
     email: "cookie@example.com",
-    password: "password123",
+    password: await bcrypt.hash("password123", 10),
   });
 }, 120000);
 
