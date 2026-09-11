@@ -176,37 +176,52 @@ export const likePost = async (req: Request, res: Response) => {
             return res.status(400).send({ message: "postId required" });
         }
 
+        if (!mongoose.isValidObjectId(postId)) {
+            return res.status(400).send({ message: "invalid postId" });
+        }
+
         // Convert userId to ObjectId for proper comparison with MongoDB
         const userObjectId = new mongoose.Types.ObjectId(userId);
 
-        const added = await Post.findOneAndUpdate(
-            {
-                _id: postId,
-                "engagement.likes.user": { $ne: userObjectId }
-            },
-            {
-                $push: {
-                    "engagement.likes": { user: userObjectId, likedAt: new Date() }
-                }
-            },
+        // ponytail: single atomic toggle — the old read-then-push/then-pull raced under double-clicks (issue #15)
+        const updated = await Post.findOneAndUpdate(
+            { _id: postId },
+            [
+                {
+                    $set: {
+                        "engagement.likes": {
+                            $cond: [
+                                { $in: [userObjectId, "$engagement.likes.user"] },
+                                {
+                                    $filter: {
+                                        input: "$engagement.likes",
+                                        as: "like",
+                                        cond: { $ne: ["$$like.user", userObjectId] },
+                                    },
+                                },
+                                {
+                                    $concatArrays: [
+                                        "$engagement.likes",
+                                        [{ user: userObjectId, likedAt: "$$NOW" }],
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            ],
             { new: true }
         );
 
-        if (added) {
-            return res.send({ message: "Liked the post", post: added });
+        if (!updated) {
+            return res.status(404).send({ message: "Post not found" });
         }
 
-        const removed = await Post.findOneAndUpdate(
-            { _id: postId },
-            {
-                $pull: {
-                    "engagement.likes": { user: userObjectId }
-                }
-            },
-            { new: true }
+        const liked = (updated.engagement.likes as any[]).some(
+            (like) => like.user.toString() === userObjectId.toString()
         );
 
-        return res.send({ message: "Removed like from post", post: removed });
+        return res.send({ message: liked ? "Liked the post" : "Removed like from post", post: updated });
 
     } catch (error) {
         console.log(`ERROR / likePost: ${error}`);

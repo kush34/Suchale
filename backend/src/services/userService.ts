@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import User, { IContact, IUser } from "../models/userModel";
+import User, { IContact } from "../models/userModel";
 import jwt from "jsonwebtoken";
 import { createUser } from "../controllers/createUser";
 import Group, { IGroup } from "../models/groupModel";
@@ -10,35 +10,9 @@ import sendOtp from "../controllers/sendOtp";
 import admin from "../config/firebase";
 import Post from "../models/postModel";
 
-interface ServiceResponse {
-  statusCode: number;
-  body: Record<string, any>;
-}
-
-const EmailToOtp = new Map<string, number>();
-
-export const registerUser = async (
-  username: string,
-  email: string,
-  password: string
-): Promise<ServiceResponse> => {
-  if (!username || !email || !password)
-    return { statusCode: 403, body: { message: "not enough data" } };
-
-  const emailExists = await User.findOne({ email });
-  if (emailExists)
-    return { statusCode: 401, body: { message: "email already exists" } };
-
-  const usernameExists = await User.findOne({ username });
-  if (usernameExists)
-    return { statusCode: 401, body: { status: "3" } };
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  await User.create({ username, email, password: hashedPassword } as IUser);
-
-  return { statusCode: 200, body: { status: "200" } };
-};
-
+const OTP_TTL_MS = Number(process.env.OTP_TTL_MS) || 10 * 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
+const EmailToOtp = new Map<string, { otp: number; expiresAt: number; attempts: number }>();
 
 interface LoginPayload {
   username: string;
@@ -95,12 +69,24 @@ export const verifyOtpService = async (payload: VerifyOtpPayload) => {
     return { status: "error", code: 401, message: "Not enough data" };
   }
 
-  if (!EmailToOtp.has(email)) {
+  const storedOtp = EmailToOtp.get(email);
+  if (!storedOtp) {
     return { status: "error", code: 400, message: "Unauthorized access" };
   }
 
-  const storedOtp = EmailToOtp.get(email);
-  if (storedOtp !== Number(otp)) {
+  // ponytail: OTPs expire and burn after a few wrong guesses (issue #15)
+  if (Date.now() > storedOtp.expiresAt) {
+    EmailToOtp.delete(email);
+    return { status: "error", code: 400, message: "OTP expired" };
+  }
+
+  if (storedOtp.attempts >= OTP_MAX_ATTEMPTS) {
+    EmailToOtp.delete(email);
+    return { status: "error", code: 400, message: "Too many attempts" };
+  }
+
+  if (storedOtp.otp !== Number(otp)) {
+    storedOtp.attempts += 1;
     return { status: "error", code: 400, message: "Invalid OTP" };
   }
 
@@ -379,7 +365,7 @@ export const sendMailService = async (email: string, username: string, password:
   }
 
   const OTP = crypto.randomInt(100000, 1000000);
-  EmailToOtp.set(email, OTP);
+  EmailToOtp.set(email, { otp: OTP, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0 });
 
   sendOtp(email, OTP);
 
@@ -553,14 +539,13 @@ export const blockUserByUsername = async (usernameToBlock: string, userId: strin
 export const followUserByUsername = async (currentUserId: string, usernameToFollow: string) => {
   const usernameToFollowDB = await User.findOne({ username: usernameToFollow });
   if (!usernameToFollowDB) return { status: 'error', code: 404, message: "username doesnt not exists." }
-  const currentUser = await User.findByIdAndUpdate(
-    currentUserId,
-    { $push: { following: usernameToFollowDB._id } },
-    { new: true }
-  )
-  if (!currentUser) return { success: "error", code: 404, message: "could not follow the request user." }
-  usernameToFollowDB.followers.push(currentUser._id);
-  await usernameToFollowDB.save();
+  if (usernameToFollowDB._id.toString() === currentUserId.toString())
+    return { status: 'error', code: 400, message: "You cannot follow yourself." }
+  // ponytail: $addToSet both sides — $push + save duplicated under double-clicks/races (issue #15)
+  await Promise.all([
+    User.findByIdAndUpdate(currentUserId, { $addToSet: { following: usernameToFollowDB._id } }),
+    User.findByIdAndUpdate(usernameToFollowDB._id, { $addToSet: { followers: currentUserId } }),
+  ]);
   return { success: "success", code: 200, message: `following user ${usernameToFollow}` };
 }
 

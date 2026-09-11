@@ -4,23 +4,6 @@ import User from '../models/userModel';
 import Post from '../models/postModel';
 
 
-interface RegisterBody {
-    username: string;
-    email: string;
-    password: string;
-}
-
-export const register = async (req: Request<{}, {}, RegisterBody>, res: Response) => {
-    try {
-        const { username, email, password } = req.body;
-        const result = await userService.registerUser(username, email, password);
-        res.status(result.statusCode).json(result.body);
-    } catch (error) {
-        console.log(`Error /user/create ${error}`)
-        res.status(500).json({ message: "something went wrong" });
-    }
-};
-
 interface LoginBody {
     username: string;
     password: string;
