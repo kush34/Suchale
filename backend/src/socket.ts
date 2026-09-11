@@ -183,8 +183,9 @@ export default function socketHandler(io: Server) {
     });
 
     socket.on("readMessages", async ({ fromUser }) => {
+      // ponytail: schema fields are fromUser/toUser (usernames), same as getMessagesService
       await Message.updateMany(
-        { from: fromUser, to: userId, read: false },
+        { fromUser, toUser: username, read: false },
         { $set: { read: true } }
       );
 

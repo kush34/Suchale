@@ -1,0 +1,121 @@
+// Regression tests for issue #11:
+// 1) blockUserByUsername must append, not overwrite blockedUsers.
+// 2) socket readMessages must mark messages read (schema: fromUser/toUser usernames).
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { io as Client } from "socket.io-client";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+
+const presence = new Map<string, string>();
+jest.mock("../utils/redis", () => ({
+  __esModule: true,
+  default: {
+    hset: jest.fn((k: string, f: string, v: string) => {
+      presence.set(`${k}:${f}`, v);
+      return Promise.resolve(1);
+    }),
+    hget: jest.fn((k: string, f: string) => Promise.resolve(presence.get(`${k}:${f}`) ?? null)),
+    hdel: jest.fn(() => Promise.resolve(1)),
+    hgetall: jest.fn(() => Promise.resolve({})),
+  },
+}));
+
+import User from "../models/userModel";
+import Message from "../models/messageModel";
+import { blockUserByUsername } from "../services/userService";
+
+const JWT_SECRET = "test-secret-11";
+process.env.jwt_Secret = JWT_SECRET;
+
+let mongo: MongoMemoryServer;
+let io: Server;
+let httpServer: any;
+let port: number;
+
+const sign = (u: any) =>
+  jwt.sign({ username: u.username, email: u.email, id: u._id }, JWT_SECRET);
+const connectClient = (token: string) =>
+  Client(`http://localhost:${port}`, {
+    transports: ["websocket"],
+    extraHeaders: { cookie: `token=${token}` },
+  });
+const awaitConnect = (c: any) =>
+  new Promise<void>((res, rej) => {
+    c.on("connect", () => res());
+    c.on("connect_error", (e: Error) => rej(e));
+  });
+
+beforeAll(async () => {
+  mongo = await MongoMemoryServer.create();
+  await mongoose.connect(mongo.getUri());
+
+  httpServer = createServer();
+  io = new Server(httpServer);
+  require("../socket").default(io);
+  await new Promise<void>((res) => httpServer.listen(() => res()));
+  port = (httpServer.address() as any).port;
+}, 120000);
+
+afterEach(async () => {
+  await User.deleteMany({});
+  await Message.deleteMany({});
+  presence.clear();
+});
+
+afterAll(async () => {
+  io.close();
+  httpServer.close();
+  await mongoose.disconnect();
+  await mongo.stop();
+});
+
+async function makeUser(username: string) {
+  return User.create({
+    username,
+    email: `${username}@example.com`,
+    password: "password123",
+  });
+}
+
+test("blocking twice keeps both users, re-block does not duplicate", async () => {
+  const me = await makeUser("Blocker");
+  const u1 = await makeUser("Blocked1");
+  const u2 = await makeUser("Blocked2");
+
+  expect((await blockUserByUsername("Blocked1", me._id.toString())).code).toBe(200);
+  expect((await blockUserByUsername("Blocked2", me._id.toString())).code).toBe(200);
+  expect((await blockUserByUsername("Blocked1", me._id.toString())).code).toBe(200);
+
+  const fresh = await User.findById(me._id);
+  const ids = fresh!.blockedUsers!.map(String);
+  expect(ids).toContain(String(u1._id));
+  expect(ids).toContain(String(u2._id));
+  expect(ids.length).toBe(2);
+});
+
+test("readMessages marks peer messages read and notifies the sender", async () => {
+  const alice = await makeUser("Alice11");
+  const bob = await makeUser("Bob11");
+
+  await Message.create({ fromUser: bob.username, toUser: alice.username, content: "hi" });
+  await Message.create({ fromUser: alice.username, toUser: bob.username, content: "yo" });
+
+  const sockA = connectClient(sign(alice));
+  const sockB = connectClient(sign(bob));
+  await Promise.all([awaitConnect(sockA), awaitConnect(sockB)]);
+
+  const seen: any[] = [];
+  sockB.on("messagesReadBy", (p) => seen.push(p));
+  sockA.emit("readMessages", { fromUser: bob.username });
+  await new Promise((r) => setTimeout(r, 1000));
+
+  // Bob->Alice now read; Alice->Bob untouched
+  expect(await Message.countDocuments({ fromUser: bob.username, read: true })).toBe(1);
+  expect(await Message.countDocuments({ fromUser: alice.username, read: false })).toBe(1);
+  expect(seen).toEqual([{ byUser: alice.username }]);
+
+  sockA.close();
+  sockB.close();
+}, 30000);

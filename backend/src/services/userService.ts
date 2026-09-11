@@ -539,9 +539,10 @@ export const blockUserByUsername = async (usernameToBlock: string, userId: strin
   const userGettingBlocked = await User.findOne({ username: usernameToBlock });
   if (!userGettingBlocked) return { status: "error", code: 404, message: "user to block does not exists." };
 
+  // ponytail: $addToSet appends without wiping previous blocks or duplicating
   const userBlockingUsername = await User.findByIdAndUpdate(
     userId,
-    { $set: { blockedUsers: userGettingBlocked._id } },
+    { $addToSet: { blockedUsers: userGettingBlocked._id } },
     { new: true }
   )
   console.log(userBlockingUsername);
