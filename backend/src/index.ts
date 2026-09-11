@@ -9,6 +9,8 @@ import postRouter from "./routers/postRouter";
 import cors from "cors";
 import socketHandler from "./socket";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import notificationRouter from "./routers/notificationRouter";
 import storyRouter from "./routers/storyRouter";
 import exploreRouter from "./routers/exploreRouter";
@@ -33,12 +35,14 @@ connectDB().catch(() => {
   if (process.env.NODE_ENV !== "test") process.exit(1);
 });
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (origin && allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));
@@ -54,6 +58,7 @@ app.use("/notifications", notificationRouter);
 app.use("/story", storyRouter);
 app.use("/explore", exploreRouter);
 app.get("/", (req, res) => res.send("Hello World!"));
+app.get("/health", (req, res) => res.status(200).json({ ok: true }));
 
 socketHandler(io);
 

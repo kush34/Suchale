@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 const presence = new Map<string, string>();
+const socketSets = new Map<string, Set<string>>();
 jest.mock("../utils/redis", () => ({
   __esModule: true,
   default: {
@@ -19,6 +20,32 @@ jest.mock("../utils/redis", () => ({
     hget: jest.fn((k: string, f: string) => Promise.resolve(presence.get(`${k}:${f}`) ?? null)),
     hdel: jest.fn(() => Promise.resolve(1)),
     hgetall: jest.fn(() => Promise.resolve({})),
+    sadd: jest.fn((k: string, ...members: string[]) => {
+      let set = socketSets.get(k);
+      if (!set) {
+        set = new Set();
+        socketSets.set(k, set);
+      }
+      let added = 0;
+      for (const m of members) {
+        if (!set.has(m)) {
+          set.add(m);
+          added += 1;
+        }
+      }
+      return Promise.resolve(added);
+    }),
+    srem: jest.fn((k: string, ...members: string[]) => {
+      const set = socketSets.get(k);
+      if (!set) return Promise.resolve(0);
+      let removed = 0;
+      for (const m of members) {
+        if (set.delete(m)) removed += 1;
+      }
+      return Promise.resolve(removed);
+    }),
+    smembers: jest.fn((k: string) => Promise.resolve([...(socketSets.get(k) ?? [])])),
+    scard: jest.fn((k: string) => Promise.resolve(socketSets.get(k)?.size ?? 0)),
   },
 }));
 
@@ -62,6 +89,7 @@ afterEach(async () => {
   await User.deleteMany({});
   await Message.deleteMany({});
   presence.clear();
+  socketSets.clear();
 });
 
 afterAll(async () => {

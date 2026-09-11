@@ -1,17 +1,18 @@
-FROM node:18-alpine
+FROM node:20-slim
 
-#creaet app dir
 WORKDIR /app
 
-#install dependencies
 COPY package*.json ./
 
-RUN npm install
-
-#bundlle app source
+RUN npm ci
 
 COPY . .
 
+RUN npm run build
+
 EXPOSE 3000
 
-CMD ["npm","run","dev"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+
+CMD ["npm","start"]
