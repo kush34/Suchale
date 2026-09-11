@@ -40,10 +40,11 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
             return res.status(Number(result.code)).json({ status: "error", message: result.message });
         }
 
-        res.cookie('token', result.token)
-        res.cookie('refreshtoken', result.refreshtoken)
+        // ponytail: same flags as firebaseTokenVerify; token travels in httpOnly cookie, not body
+        res.cookie('token', result.token, { httpOnly: true, sameSite: "none", secure: true })
+        res.cookie('refreshtoken', result.refreshtoken, { httpOnly: true, sameSite: "none", secure: true })
 
-        return res.json({ status: "success", token: result.token });
+        return res.json({ status: "success" });
     } catch (err: any) {
         console.error(err);
         return res.status(500).json({ status: "error", message: "Internal server error" });
@@ -375,8 +376,10 @@ export const unFollowUserByUsername = async (req: Request, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
-        res.cookie("token", "")
-        res.cookie("refreshtoken", "")
+        // flags must match login or the browser keeps the cookies
+        const opts = { httpOnly: true, sameSite: "none" as const, secure: true };
+        res.clearCookie("token", opts)
+        res.clearCookie("refreshtoken", opts)
         res.send({ message: "user logged out successfully" })
     } catch (error) {
         console.log(`Error: /user/logout userService:logoutUser ${error}`)

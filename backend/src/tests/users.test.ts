@@ -78,7 +78,10 @@ describe('User Routes', () => {
             });
 
         expect(res.statusCode).toBe(200);
-        jwt_token = (res.body.token)
+        // token now travels in httpOnly cookie, not body (#10)
+        jwt_token = (res.headers['set-cookie'] as unknown as string[])
+            .find((c: string) => c.startsWith('token='))!
+            .split(';')[0].split('=')[1];
     });
     it('Return Error as no username and password is provided login a new user', async () => {
         const res = await request(server)
@@ -93,7 +96,7 @@ describe('User Routes', () => {
     it('Search Users from the Database', async () => {
         const res = await request(server)
             .post('/user/search')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({
                 query: 'TestUser2',
             });
@@ -105,7 +108,7 @@ describe('User Routes', () => {
     it('GET User Profile / INFO', async () => {
         const res = await request(server)
             .get('/user/userInfo')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
 
         console.log(res.body)
         expect(res.statusCode).toBe(200);
@@ -114,13 +117,13 @@ describe('User Routes', () => {
     it('POST User Add contact', async () => {
         const res = await request(server)
             .post('/user/addContact')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(400);
 
         const res1 = await request(server)
             .post('/user/addContact')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({ contact: 'TestUser2' })
         console.log(res1.body)
         expect(res1.statusCode).toBe(200);
@@ -128,13 +131,13 @@ describe('User Routes', () => {
     it('POST User Subscribe / Notification Route', async () => {
         const res = await request(server)
             .post('/user/subscribe')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(400);
 
         const res1 = await request(server)
             .post('/user/subscribe')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({ subscription: { endpoint: 'dummyData/whichIsSentFromFrontendForNotification' } })
         console.log(res1.body)
         expect(res1.statusCode).toBe(200);
@@ -142,7 +145,7 @@ describe('User Routes', () => {
     it('GET userList: List of all the contacts users has', async () => {
         const res = await request(server)
             .get('/user/userList')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(200);
     });
@@ -156,14 +159,14 @@ describe('Message Routes', () => {
     it('POST /send : create Message, error for not all required fields', async () => {
         const res = await request(server)
             .post('/message/send')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
         expect(res.statusCode).toBe(400)
     });
 
     it('POST /send : create Message', async () => {
         const res = await request(server)
             .post('/message/send')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({ content: 'Dil mange more (..)', toUser: toUser.username, isGroup: false, groupId: null })
         console.log(res.body)
         expect(res.statusCode).toBe(200)
@@ -175,7 +178,7 @@ describe('Message Routes', () => {
     it('POST /createGroup : create new group', async () => {
         const res = await request(server)
             .post('/message/createGroup')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({ name: groupName, users: [fromUser._id, toUser._id] })
         expect(res.statusCode).toBe(200)
         expect(res.body.newGroup.name).toBe(groupName)
@@ -185,7 +188,7 @@ describe('Message Routes', () => {
     it('POST /getMessages : fetch latest Messages', async () => {
         const res = await request(server)
             .post('/message/getMessages')
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send({ toUser: toUser.username, groupId: null, isGroup: null })
         expect(res.statusCode).toBe(200)
         console.log(res.body)
@@ -196,7 +199,7 @@ describe('Message Routes', () => {
     it('GET /getMembers/:groupId : fetch Group Members', async () => {
         const res = await request(server)
             .post(`/message/getMembers/${createdGroup._id}`)
-            .set('Authorization', `Bearer ${jwt_token}`)
+            .set('Cookie', `token=${jwt_token}`)
             .send()
         expect(res.statusCode).toBe(200)
         console.log(res.body)
