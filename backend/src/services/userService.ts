@@ -9,6 +9,7 @@ import redis from "../utils/redis";
 import sendOtp from "../controllers/sendOtp";
 import admin from "../config/firebase";
 import Post from "../models/postModel";
+import { searchRegex } from "../utils/input";
 
 const OTP_TTL_MS = Number(process.env.OTP_TTL_MS) || 10 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -259,7 +260,7 @@ export const searchUsers = async (query: string) => {
   if (!query) return [];
 
   // Case-insensitive search for usernames starting with the query
-  const users = await User.find({ username: new RegExp("^" + query, "i") })
+  const users = await User.find({ username: searchRegex(query, "^") })
     .limit(15)
     .select("username email profilePic");
 

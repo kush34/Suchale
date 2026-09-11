@@ -37,13 +37,18 @@ export const getPresignedUrl = async (req: Request, res: Response) => {
     try {
         const { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME } = process.env;
 
+        if (!req.id) {
+            return res.status(401).send({ message: "Unauthorized" });
+        }
+
         if (!CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET || !CLOUDINARY_CLOUD_NAME) {
             console.log("Missing Cloudinary environment variables");
             return res.status(500).send({ message: "Internal server error" });
         }
 
         const timestamp = Math.floor(Date.now() / 1000);
-        const folder = "posts";
+        // ponytail: per-user folder so one signature can't write into another user's path (issue #16)
+        const folder = `posts/${req.id}`;
 
         const signature = cloudinary.v2.utils.api_sign_request(
             { timestamp, folder },
@@ -133,9 +138,10 @@ export const getPost = async (req: Request, res: Response) => {
 export const getFeed = async (req: Request, res: Response) => {
     try {
         const userId = req.id;
-        const page = Number(req.query.page) || 1;
+        const page = Number(req.query.page);
+        const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
         const limit = 10;
-        const skip = (page - 1) * limit;
+        const skip = (safePage - 1) * limit;
 
         const posts = await Post.find({})
             .sort({ createdAt: -1 })
@@ -150,7 +156,7 @@ export const getFeed = async (req: Request, res: Response) => {
         }));
         const totalPosts = await Post.countDocuments();
         return res.json({
-            page,
+            page: safePage,
             posts: feed,
             hasMore: skip + posts.length < totalPosts,
         });
@@ -244,6 +250,14 @@ export const commentPost = async (req: Request, res: Response) => {
             return res.status(400).send({ message: "postId and content are required" });
         }
 
+        if (!mongoose.isValidObjectId(postId)) {
+            return res.status(400).send({ message: "Invalid post ID" });
+        }
+
+        if (content.trim().length > 1000) {
+            return res.status(400).send({ message: "Comment too long (max 1000 characters)" });
+        }
+
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).send({ message: "Post not found" });
@@ -274,6 +288,10 @@ export const getPostById = async (req: Request, res: Response) => {
 
         if (!postId) {
             return res.status(400).json({ message: "postId required" });
+        }
+
+        if (!mongoose.isValidObjectId(postId)) {
+            return res.status(400).json({ message: "Invalid post ID" });
         }
 
         const post = await Post.findById(postId)

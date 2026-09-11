@@ -2,6 +2,7 @@ import User, { IUser } from '../models/userModel';
 import { Request, Response } from 'express';
 import * as messageService from "../services/messageService"
 import { AuthRequest } from '../middlewares/verifyToken';
+import { clampInt, isTruthy } from '../utils/input';
 
 // service guards throw Error("Forbidden: ...") on authz failure (issue #14)
 const authz = (res: Response, err: any) =>
@@ -134,9 +135,10 @@ export const getMessages = async (req: Request, res: Response) => {
         const username = req.username;
         if (!username) return res.status(401).send({ error: "Unauthorized" });
 
-        const { toUser, groupId, isGroup } = req.body;
-        const page: number = parseInt(req.query.page as string) || 1;
-        const limit: number = parseInt(req.query.limit as string) || 20;
+        const { toUser, groupId, isGroup: rawIsGroup } = req.body;
+        const isGroup = isTruthy(rawIsGroup);
+        const page: number = clampInt(req.query.page, 1, 1, 1000);
+        const limit: number = clampInt(req.query.limit, 20, 1, 50);
 
         const result = await messageService.getMessagesService({ username, toUser, groupId, isGroup, page, limit });
         res.status(200).json(result);

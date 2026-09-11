@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Notification from "../models/notificationModel";
 
 interface AuthRequest extends Request {
@@ -24,6 +25,10 @@ export const readNotification = async (req: AuthRequest, res: Response) => {
 
     if (!ids?.length) {
       return res.status(400).json({ message: "No notification ids provided" });
+    }
+
+    if (!ids.every((id) => mongoose.isValidObjectId(id))) {
+      return res.status(400).json({ message: "Invalid notification ids" });
     }
 
     await Notification.updateMany(
