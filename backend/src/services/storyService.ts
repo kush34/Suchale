@@ -40,17 +40,35 @@ export const createStory = async ({
     duration?: number;
   };
 }) => {
+  // ponytail: verify the asset actually came through our signed upload (issue #15) —
+  // client-supplied publicId/url alone lets anyone attach arbitrary hotlinks.
+  const asset = await cloudinary.api
+    .resource(body.publicId, { resource_type: body.resourceType })
+    .catch(() => null);
+
+  if (!asset) {
+    throw new Error("Upload not found. Upload via /story/upload-signature first.");
+  }
+
+  if (!asset.public_id.startsWith("stories/")) {
+    throw new Error("Upload is not a story asset.");
+  }
+
+  if (!asset.tags?.includes(`user:${userId}`)) {
+    throw new Error("Upload does not belong to this user.");
+  }
+
   const story = await Story.create({
     user: userId,
     caption: body.caption,
     media: {
-      publicId: body.publicId,
-      url: body.url,
-      resourceType: body.resourceType,
-      format: body.format,
-      width: body.width,
-      height: body.height,
-      duration: body.duration,
+      publicId: asset.public_id,
+      url: asset.secure_url,
+      resourceType: asset.resource_type,
+      format: asset.format,
+      width: asset.width,
+      height: asset.height,
+      duration: asset.duration,
     },
   });
 

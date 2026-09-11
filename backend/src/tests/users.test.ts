@@ -1,7 +1,9 @@
 // src/tests/users.test.ts
 import request from 'supertest';
+import bcrypt from 'bcrypt';
 import server from '../index'; // adjust path
 import mongoose from 'mongoose';
+import User from '../models/userModel';
 import { IMessage } from '../models/messageModel';
 import { IGroup } from '../models/groupModel';
 
@@ -27,7 +29,14 @@ toUser = {
 };
 
 describe('User Routes', () => {
-    it('should register a new user', async () => {
+    it('creates test users directly in DB (registration is OTP-only, /user/create removed)', async () => {
+        // ponytail: /user/create bypassed OTP (issue #15) — signup goes through sendOtp/verifyOtp
+        for (const u of [fromUser, toUser]) {
+            await User.create({ username: u.username, email: u.email, password: await bcrypt.hash(u.password, 10) });
+        }
+        expect(await User.countDocuments({})).toBe(2);
+    });
+    it('POST /user/create is gone (OTP bypass closed)', async () => {
         const res = await request(server)
             .post('/user/create')
             .send({
@@ -36,36 +45,14 @@ describe('User Routes', () => {
                 password: 'password123'
             });
 
-        expect(res.statusCode).toBe(200);
-        console.log(res.body)
-        const res2 = await request(server)
-            .post('/user/create')
-            .send({
-                username: 'TestUser2',
-                email: 'test2@example.com',
-                password: 'password123'
-            });
-        expect(res2.statusCode).toBe(200);
-        console.log(res.body)
-        // fromUser = (res2.body)
-        const res1 = await request(server)
-            .post('/user/create')
-            .send({
-                username: 'TestUser',
-                email: 'test@example.com',
-                password: 'password123'
-            });
-        // fromUser = (res1.body)
-
-        console.log("second request", res1.body)
-        expect(res1.statusCode).toBe(401);
+        expect(res.statusCode).toBe(404);
     });
     it('Return Error as no data is provided for registering a new user', async () => {
         const res = await request(server)
             .post('/user/create')
             .send();
 
-        expect(res.statusCode).toBe(403);
+        expect(res.statusCode).toBe(404);
         console.log(res.body)
     });
     it('should login a new user', async () => {
@@ -82,12 +69,12 @@ describe('User Routes', () => {
     });
     it('Return Error as no username and password is provided login a new user', async () => {
         const res = await request(server)
-            .post('/user/create')
+            .post('/user/login')
             .send({
                 email: 'test@example.com',
             });
 
-        expect(res.statusCode).toBe(403);
+        expect(res.statusCode).toBe(400);
         console.log(res.body)
     });
     it('Search Users from the Database', async () => {

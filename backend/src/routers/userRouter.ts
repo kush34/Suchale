@@ -1,11 +1,9 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
-import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, mentionUser, profilePic, register, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, mentionUser, profilePic, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
 
 const router = express.Router();
 
-
-router.post('/create', register)
 
 router.post("/sendOtp", sendMail)
 
