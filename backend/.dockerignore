@@ -1,3 +1,7 @@
 node_modules
 .env
 npm-debug.log
+# never bake credentials or build output into image layers
+secret.json
+dist
+.git
