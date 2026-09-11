@@ -25,6 +25,25 @@ const getSocketIdByUsername = (username: string) =>
 
 /* ================= CALL HANDLERS ================= */
 
+// ponytail: call participant checks (issue #14) — a stranger must not be able
+// to ring, answer, end, or inject SDP into someone else's call.
+const isObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id || "");
+
+const isBlocked = (list: any, id: any) =>
+  (list || []).some((u: any) => u.toString() === id.toString());
+
+const callParties = async (callId: string, meId: string, peerUsername: string) => {
+  if (!isObjectId(callId)) return null;
+  const [call, peer] = await Promise.all([
+    Call.findById(callId),
+    User.findOne({ username: peerUsername }).select("_id"),
+  ]);
+  if (!call || !peer) return null;
+  const ids = [call.user_id.toString(), call.to_user_id.toString()];
+  if (!ids.includes(meId.toString()) || !ids.includes(peer._id.toString())) return null;
+  return call;
+};
+
 const handleInitiateCall = async (
   socket: AuthenticatedSocket,
   { to, type }: { to: string; type: "audio" | "video" }
@@ -34,6 +53,9 @@ const handleInitiateCall = async (
 
   const toUser = await User.findOne({ username: to });
   if (!toUser) return;
+
+  const fromUser = await User.findById(socket.data.user.id).select("blockedUsers");
+  if (!fromUser || isBlocked(fromUser.blockedUsers, toUser._id) || isBlocked(toUser.blockedUsers, fromUser._id)) return;
 
   const call = await Call.create({
     user_id: socket.data.user.id,
@@ -52,6 +74,7 @@ const handleAnswerCall = async (
   socket: AuthenticatedSocket,
   { from, callId }: { from: string; callId: string }
 ) => {
+  if (!(await callParties(callId, socket.data.user.id, from))) return;
   await Call.findByIdAndUpdate(callId, { pickedAt: new Date() });
 
   const recipientSocketId = await getSocketIdByUsername(from);
@@ -67,7 +90,7 @@ const handleEndCall = async (
   socket: AuthenticatedSocket,
   { callId, to }: { callId: string; to: string }
 ) => {
-  const call = await Call.findById(callId);
+  const call = await callParties(callId, socket.data.user.id, to);
   if (!call) return;
 
   const endedAt = new Date();
@@ -91,6 +114,7 @@ const handleSendOffer = async (
   socket: AuthenticatedSocket,
   { to, callId, offer }: any
 ) => {
+  if (!(await callParties(callId, socket.data.user.id, to))) return;
   const recipientSocketId = await getSocketIdByUsername(to);
   if (!recipientSocketId) return;
 
@@ -105,6 +129,7 @@ const handleSendAnswer = async (
   socket: AuthenticatedSocket,
   { to, callId, answer }: any
 ) => {
+  if (!(await callParties(callId, socket.data.user.id, to))) return;
   const recipientSocketId = await getSocketIdByUsername(to);
   if (!recipientSocketId) return;
 
@@ -119,6 +144,7 @@ const handleSendCandidate = async (
   socket: AuthenticatedSocket,
   { to, callId, candidate }: any
 ) => {
+  if (!(await callParties(callId, socket.data.user.id, to))) return;
   const recipientSocketId = await getSocketIdByUsername(to);
   if (!recipientSocketId) return;
 
@@ -169,6 +195,11 @@ export default function socketHandler(io: Server) {
     });
 
     socket.on("sendGroupMessage", async ({ groupId, content }) => {
+      if (!groupId || !/^[0-9a-fA-F]{24}$/.test(groupId) || !content?.trim()) return;
+      // ponytail: membership check (issue #14) — Group already imported here
+      const group = await Group.findById(groupId).select("users");
+      if (!group || !group.users.some((u) => u.toString() === userId.toString())) return;
+
       const message = await Message.create({
         sender: userId,
         content,

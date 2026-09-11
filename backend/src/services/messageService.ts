@@ -1,9 +1,35 @@
 import Message, { IMessage } from "../models/messageModel";
 import User from "../models/userModel";
+import mongoose from "mongoose";
 import redis from "../utils/redis";
 import { io } from "../index";
 import sendNotification from "../utils/webpush";
 import Group from "../models/groupModel";
+
+// ponytail: single place for conversation authorization (issue #14).
+// DM rule: peer must exist, neither side may have blocked the other.
+// Group rule: requester must be a member (toString compare — includes() on
+// ObjectId arrays compares references and always misses).
+const isBlocked = (list: any, id: any) =>
+  (list || []).some((u: any) => u.toString() === id.toString());
+
+export const dmAccess = async (me: string, peer: string) => {
+  const [meDB, peerDB] = await Promise.all([
+    User.findOne({ username: me }).select("_id blockedUsers"),
+    User.findOne({ username: peer }).select("_id blockedUsers"),
+  ]);
+  if (!meDB || !peerDB) throw new Error("User not found.");
+  if (isBlocked(peerDB.blockedUsers, meDB._id) || isBlocked(meDB.blockedUsers, peerDB._id))
+    throw new Error("Forbidden: you cannot message this user.");
+};
+
+export const groupAccess = async (userId: string, groupId: string) => {
+  if (!mongoose.isValidObjectId(groupId)) throw new Error("Forbidden: not a group member.");
+  const group = await Group.findById(groupId).select("users");
+  if (!group || !group.users.some((u) => u.toString() === userId.toString()))
+    throw new Error("Forbidden: not a group member.");
+  return group;
+};
 
 export interface SendMsgPayload {
     fromUser: string;
@@ -63,6 +89,14 @@ export const sendMessage = async ({
     content = "",
     media,
 }: SendMsgPayload): Promise<IMessage> => {
+    if (isGroup && groupId) {
+        const sender = await User.findOne({ username: fromUser }).select("_id");
+        if (!sender) throw new Error("User not found.");
+        await groupAccess(sender._id.toString(), groupId);
+    } else if (toUser) {
+        await dmAccess(fromUser, toUser);
+    }
+
     const resolvedContent = content || media?.url || "";
     const resolvedType = inferMessageType(resolvedContent, media, type);
     const resolvedMedia =
@@ -165,6 +199,17 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
   const dbUser = await User.findOne({ username });
   if (!dbUser) {
     return { status: "error", code: 404, message: `User does not exist : ${username}` };
+  }
+
+  // participant check: reactor must belong to this conversation
+  if (dbMsg.groupId) {
+    try {
+      await groupAccess(dbUser._id.toString(), dbMsg.groupId.toString());
+    } catch {
+      return { status: "error", code: 403, message: "Forbidden: not a group member." };
+    }
+  } else if (dbMsg.fromUser !== username && dbMsg.toUser !== username) {
+    return { status: "error", code: 403, message: "Forbidden: not part of this conversation." };
   }
 
   if (dbMsg.fromUser.toString() === dbUser.username.toString()) {
@@ -277,8 +322,9 @@ export const getMessagesService = async ({
   let countMsgs: number = 0;
 
   if (isGroup && groupId) {
-    const group = await Group.findById(groupId);
-    if (!group) throw new Error("Group not found.");
+    const requester = await User.findOne({ username }).select("_id");
+    if (!requester) throw new Error("User not found.");
+    const group = await groupAccess(requester._id.toString(), groupId);
 
     countMsgs = await Message.countDocuments({ groupId: group._id });
 
@@ -287,6 +333,8 @@ export const getMessagesService = async ({
       .skip(skip)
       .limit(limit) as IMessage[];
   } else if (!isGroup && toUser) {
+    await dmAccess(username, toUser);
+
     countMsgs = await Message.countDocuments({
       $or: [
         { fromUser: username, toUser },
@@ -325,6 +373,8 @@ export const sendMediaService = async (
   type?: IMessage["type"],
   media?: IMessage["media"]
 ) => {
+  await dmAccess(fromUser, toUser);
+
   const resolvedType = inferMessageType(mediaUrl, media, type);
   const newMsg = await Message.create({
     fromUser,
@@ -355,6 +405,14 @@ export const getChatAssets = async (
 
   if (!username && !groupId)
     throw new Error("Chat not specified");
+
+  if (groupId) {
+    const requester = await User.findOne({ username: currentUser }).select("_id");
+    if (!requester) throw new Error("User not found.");
+    await groupAccess(requester._id.toString(), groupId);
+  } else if (username) {
+    await dmAccess(currentUser, username);
+  }
 
   const match: any = groupId
     ? {
@@ -435,6 +493,12 @@ export const getChatAssets = async (
 };
 
 export const createGroupService = async ({ name, photoURL, users, adminId }: CreateGroupPayload) => {
+  const memberIds = [...new Set([...(users || []), adminId])];
+  if (memberIds.some((id) => !mongoose.isValidObjectId(id)))
+    throw new Error("Unknown user in group members.");
+  const existing = await User.countDocuments({ _id: { $in: memberIds } });
+  if (existing !== memberIds.length) throw new Error("Unknown user in group members.");
+
   const newGroup = await Group.create({
     name,
     photoURL,
@@ -463,7 +527,11 @@ export const getMembersByGroupIdService = async (username: string, groupId: stri
 
   if (!groupDB) throw new Error("Group not found.");
   if (!userDB) throw new Error("User not found.");
-  if (!groupDB.users.includes((userDB as any)._id)) throw new Error(`User not member of ${groupDB.name}.`);
+  try {
+    await groupAccess(userDB._id.toString(), groupId);
+  } catch {
+    throw new Error(`User not member of ${groupDB.name}.`);
+  }
 
   const members = await User.find({ _id: { $in: groupDB.users } }).select("username profilePic");
 
