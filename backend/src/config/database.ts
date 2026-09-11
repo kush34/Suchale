@@ -12,6 +12,8 @@ const connectDB = async () => {
     } else {
       console.error("Unknown error", error);
     }
+    // ponytail: fail fast — serving without a DB only produces confusing 500s
+    throw error;
   }
 };
 

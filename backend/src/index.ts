@@ -28,7 +28,10 @@ const io = new Server(server, {
   },
 });
 
-connectDB();
+connectDB().catch(() => {
+  // database.ts already logged the cause; exit instead of serving without a DB
+  if (process.env.NODE_ENV !== "test") process.exit(1);
+});
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
