@@ -3,6 +3,12 @@ import { Request, Response } from 'express';
 import * as messageService from "../services/messageService"
 import { AuthRequest } from '../middlewares/verifyToken';
 
+// service guards throw Error("Forbidden: ...") on authz failure (issue #14)
+const authz = (res: Response, err: any) =>
+    err instanceof Error && err.message.startsWith("Forbidden")
+        ? res.status(403).json({ error: err.message })
+        : null;
+
 export const sendMsg = async (req: Request, res: Response) => {
     try {
         const fromUser = req.username;
@@ -63,7 +69,7 @@ export const sendMsg = async (req: Request, res: Response) => {
         return res.status(201).json(newMsg);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
+        return authz(res, err) || res.status(500).json({
             error: "Something went wrong",
         });
     }
@@ -136,7 +142,7 @@ export const getMessages = async (req: Request, res: Response) => {
         res.status(200).json(result);
     } catch (err: any) {
         console.log(`ERROR getMessages : ${err}`)
-        res.status(500).json({ message: "Something went wrong" });
+        return authz(res, err) || res.status(500).json({ message: "Something went wrong" });
     }
 };
 
@@ -169,7 +175,7 @@ export const media = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error(`ERROR media :`, err);
-    return res.status(500).json({ message: "Something went wrong" });
+    return authz(res, err) || res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -190,7 +196,7 @@ export const getChatAssets = async (
 
     return res.json(result);
   } catch (err) {
-    return res.status(500).json({
+    return authz(res, err) || res.status(500).json({
       error: err instanceof Error ? err.message : "Internal Server Error",
     });
   }
@@ -211,7 +217,7 @@ export const createGroup = async (req: Request, res: Response) => {
         res.status(200).json({ newGroup });
     } catch (err: any) {
         console.log(`ERROR createGroup : ${err}`)
-        res.status(500).json({ message: "Something went wrong" });
+        return authz(res, err) || res.status(500).json({ message: "Something went wrong" });
     }
 };
 
@@ -227,7 +233,7 @@ export const getMembersByGroupId = async (req: Request, res: Response) => {
         res.status(200).json(members);
     } catch (err: any) {
         console.log(`ERROR getMembersByGroupId : ${err}`)
-        res.status(500).json({ message: "Something went wrong" });
+        return authz(res, err) || res.status(500).json({ message: "Something went wrong" });
     }
 };
 
