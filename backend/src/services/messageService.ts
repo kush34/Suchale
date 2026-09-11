@@ -1,9 +1,9 @@
 import Message, { IMessage } from "../models/messageModel";
 import User from "../models/userModel";
 import mongoose from "mongoose";
-import redis from "../utils/redis";
 import { io } from "../index";
 import sendNotification from "../utils/webpush";
+import { getSocketIdsByUsername } from "../socket";
 import Group from "../models/groupModel";
 import { escapeRegExp, MAX_SEARCH_LEN } from "../utils/input";
 
@@ -116,13 +116,10 @@ export const sendMessage = async ({
     }) as IMessage;
 
     if (!isGroup && toUser) {
-        const receiverSocketId = await redis.hget(
-            "onlineUsers",
-            toUser
-        );
+        const receiverSocketIds = await getSocketIdsByUsername(toUser);
 
-        if (receiverSocketId) {
-            io.to(receiverSocketId).emit("sendMsg", newMsg);
+        if (receiverSocketIds.length) {
+            for (const id of receiverSocketIds) io.to(id).emit("sendMsg", newMsg);
         } else {
             const dbUser = await User.findOne({
                 username: toUser,
@@ -157,34 +154,35 @@ export const sendMessage = async ({
                         break;
                 }
 
-                sendNotification.sendNotification(
-                    dbUser.pushSubscription,
-                    JSON.stringify({
-                        title: "New Message",
-                        body: notificationBody,
-                        icon: "/icon.png",
-                        data: {
-                            url: `/chat/${fromUser}`,
-                        },
-                    })
-                );
+                try {
+                    await sendNotification.sendNotification(
+                        dbUser.pushSubscription,
+                        JSON.stringify({
+                            title: "New Message",
+                            body: notificationBody,
+                            icon: "/icon.png",
+                            data: {
+                                url: `/chat/${fromUser}`,
+                            },
+                        })
+                    );
+                } catch (error) {
+                    console.error("Failed to send push notification:", error);
+                }
             }
         }
     }
 
     if (isGroup && groupId) {
-        const senderSocketId = await redis.hget(
-            "onlineUsers",
-            fromUser
-        );
+        const senderSocketIds = await getSocketIdsByUsername(fromUser);
+        const senderSocket = senderSocketIds.length
+            ? io.sockets.sockets.get(senderSocketIds[0])
+            : undefined;
 
-        if (senderSocketId) {
-            const senderSocket =
-                io.sockets.sockets.get(senderSocketId);
-
-            if (senderSocket) {
-                senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
-            }
+        if (senderSocket) {
+            senderSocket.to(groupId).emit("sendMsgGrp", newMsg);
+        } else {
+            io.to(groupId).emit("sendMsgGrp", newMsg);
         }
     }
 
@@ -232,13 +230,15 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
   if (!updatedMsg) return { status: "error", code: 404, message: "could not find the msg." }
 
   if (updatedMsg.groupId) {
-    const senderSocketId = await redis.hget("onlineUsers", username);
-    if (senderSocketId) {
-      const senderSocket = io.sockets.sockets.get(senderSocketId);
-      if (senderSocket) {
-        console.log(`sending emoji reaction to GROUP: ${updatedMsg.groupId}`)
-        senderSocket.to(updatedMsg.groupId.toString()).emit("emojiReactionGroup", updatedMsg);
-      }
+    const senderSocketIds = await getSocketIdsByUsername(username);
+    const senderSocket = senderSocketIds.length
+      ? io.sockets.sockets.get(senderSocketIds[0])
+      : undefined;
+    if (senderSocket) {
+      console.log(`sending emoji reaction to GROUP: ${updatedMsg.groupId}`)
+      senderSocket.to(updatedMsg.groupId.toString()).emit("emojiReactionGroup", updatedMsg);
+    } else {
+      io.to(updatedMsg.groupId.toString()).emit("emojiReactionGroup", updatedMsg);
     }
   }
 
@@ -249,11 +249,11 @@ export const reactToMsg = async (username: string, messageId: string, emoji: str
         ? dbMsg.toUser
         : dbMsg.fromUser;
     if (!otherUser) return { success: "error", code: 400, message: "could not react to the msg." }
-    const receiverSocketId = await redis.hget("onlineUsers", otherUser);
-    console.log(`other user:${receiverSocketId} : ${otherUser}`)
-    if (receiverSocketId) {
+    const receiverSocketIds = await getSocketIdsByUsername(otherUser);
+    console.log(`other user:${receiverSocketIds.length} sockets : ${otherUser}`)
+    for (const id of receiverSocketIds) {
       console.log(`sending emoji reaction to DM: ${updatedMsg.groupId}`)
-      io.to(receiverSocketId).emit("emojiReactionDirect", updatedMsg);
+      io.to(id).emit("emojiReactionDirect", updatedMsg);
     }
   }
   return { status: true, code: 200, message: "Reaction added/updated", data: updatedMsg };
@@ -385,9 +385,9 @@ export const sendMediaService = async (
     media: media ?? buildMediaPayload(mediaUrl, media, resolvedType),
   });
 
-  const receiverSocketId = await redis.hget("onlineUsers", toUser);
-  if (receiverSocketId) {
-    io.to(receiverSocketId).emit("sendMsg", newMsg);
+  const receiverSocketIds = await getSocketIdsByUsername(toUser);
+  for (const id of receiverSocketIds) {
+    io.to(id).emit("sendMsg", newMsg);
   }
 
   return { url: mediaUrl, newMsg };

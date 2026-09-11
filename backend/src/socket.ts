@@ -20,8 +20,23 @@ type AuthenticatedSocket = Socket<any, any, any, SocketData>;
 
 /* ================= HELPERS ================= */
 
-const getSocketIdByUsername = (username: string) =>
-  redis.hget("onlineUsers", username);
+// ponytail: presence is keyed by socket id (issue #17) — one set of socket
+// ids per user so a second device no longer evicts the first. `onlineUsers`
+// hash is kept as a boolean map for status checks (userService hgetall).
+const userSocketsKey = (username: string) => `userSockets:${username}`;
+
+export const getSocketIdsByUsername = async (username: string): Promise<string[]> =>
+  (await redis.smembers(userSocketsKey(username))) ?? [];
+
+export const emitToUser = (
+  target: Pick<Server, "to">,
+  username: string,
+  event: string,
+  payload: any,
+) =>
+  getSocketIdsByUsername(username).then((ids) => {
+    for (const id of ids) target.to(id).emit(event, payload);
+  });
 
 /* ================= CALL HANDLERS ================= */
 
@@ -48,9 +63,6 @@ const handleInitiateCall = async (
   socket: AuthenticatedSocket,
   { to, type }: { to: string; type: "audio" | "video" }
 ) => {
-  const recipientSocketId = await getSocketIdByUsername(to);
-  if (!recipientSocketId) return;
-
   const toUser = await User.findOne({ username: to });
   if (!toUser) return;
 
@@ -63,7 +75,7 @@ const handleInitiateCall = async (
     type,
   });
 
-  socket.to(recipientSocketId).emit("incomingCall", {
+  await emitToUser(socket, to, "incomingCall", {
     from: socket.data.user.username,
     callId: call._id,
     type,
@@ -77,10 +89,7 @@ const handleAnswerCall = async (
   if (!(await callParties(callId, socket.data.user.id, from))) return;
   await Call.findByIdAndUpdate(callId, { pickedAt: new Date() });
 
-  const recipientSocketId = await getSocketIdByUsername(from);
-  if (!recipientSocketId) return;
-
-  socket.to(recipientSocketId).emit("callAnswered", {
+  await emitToUser(socket, from, "callAnswered", {
     from: socket.data.user.username,
     callId,
   });
@@ -104,10 +113,7 @@ const handleEndCall = async (
     duration,
   });
 
-  const recipientSocketId = await getSocketIdByUsername(to);
-  if (recipientSocketId) {
-    socket.to(recipientSocketId).emit("callEnded", { callId });
-  }
+  await emitToUser(socket, to, "callEnded", { callId });
 };
 
 const handleSendOffer = async (
@@ -115,10 +121,7 @@ const handleSendOffer = async (
   { to, callId, offer }: any
 ) => {
   if (!(await callParties(callId, socket.data.user.id, to))) return;
-  const recipientSocketId = await getSocketIdByUsername(to);
-  if (!recipientSocketId) return;
-
-  socket.to(recipientSocketId).emit("receiveOffer", {
+  await emitToUser(socket, to, "receiveOffer", {
     from: socket.data.user.username,
     callId,
     offer,
@@ -130,10 +133,7 @@ const handleSendAnswer = async (
   { to, callId, answer }: any
 ) => {
   if (!(await callParties(callId, socket.data.user.id, to))) return;
-  const recipientSocketId = await getSocketIdByUsername(to);
-  if (!recipientSocketId) return;
-
-  socket.to(recipientSocketId).emit("receiveAnswer", {
+  await emitToUser(socket, to, "receiveAnswer", {
     from: socket.data.user.username,
     callId,
     answer,
@@ -145,10 +145,7 @@ const handleSendCandidate = async (
   { to, callId, candidate }: any
 ) => {
   if (!(await callParties(callId, socket.data.user.id, to))) return;
-  const recipientSocketId = await getSocketIdByUsername(to);
-  if (!recipientSocketId) return;
-
-  socket.to(recipientSocketId).emit("receiveCandidate", {
+  await emitToUser(socket, to, "receiveCandidate", {
     from: socket.data.user.username,
     callId,
     candidate,
@@ -166,18 +163,20 @@ export default function socketHandler(io: Server) {
     console.log(`⚡ User connected: ${username}`);
 
     /* ===== ONLINE STATE ===== */
-    await redis.hset("onlineUsers", username, socket.id);
+    await redis.sadd(userSocketsKey(username), socket.id);
+    await redis.hset("onlineUsers", username, "1");
     await redis.hset("socketToUsername", socket.id, username);
+
+    const isFirstDevice = (await redis.scard(userSocketsKey(username))) === 1;
 
     const dbUser = await User.findById(userId).populate("contacts");
     if (dbUser) {
       const groups = await Group.find({ users: userId }).select("_id name");
       groups.forEach(group => socket.join(group._id.toString()));
 
-      for (const contact of dbUser.contacts as any) {
-        const contactSocketId = await getSocketIdByUsername(contact.username);
-        if (contactSocketId) {
-          io.to(contactSocketId).emit("friendOnline", username);
+      if (isFirstDevice) {
+        for (const contact of dbUser.contacts as any) {
+          await emitToUser(io, contact.username, "friendOnline", username);
         }
       }
     }
@@ -185,13 +184,11 @@ export default function socketHandler(io: Server) {
     /* ===== CHAT EVENTS ===== */
 
     socket.on("typing", async ({ to }) => {
-      const id = await getSocketIdByUsername(to);
-      if (id) io.to(id).emit("typing", { from: username });
+      await emitToUser(io, to, "typing", { from: username });
     });
 
     socket.on("stopTyping", async ({ to }) => {
-      const id = await getSocketIdByUsername(to);
-      if (id) io.to(id).emit("stopTyping", { from: username });
+      await emitToUser(io, to, "stopTyping", { from: username });
     });
 
     socket.on("sendGroupMessage", async ({ groupId, content }) => {
@@ -220,10 +217,7 @@ export default function socketHandler(io: Server) {
         { $set: { read: true } }
       );
 
-      const fromSocketId = await getSocketIdByUsername(fromUser);
-      if (fromSocketId) {
-        io.to(fromSocketId).emit("messagesReadBy", { byUser: username });
-      }
+      await emitToUser(io, fromUser, "messagesReadBy", { byUser: username });
     });
 
     /* ===== CALL EVENTS (SINGLE SOURCE OF TRUTH) ===== */
@@ -252,14 +246,17 @@ export default function socketHandler(io: Server) {
     socket.on("disconnect", async () => {
       console.log(`❌ Disconnected: ${username}`);
 
-      await redis.hdel("onlineUsers", username);
+      await redis.srem(userSocketsKey(username), socket.id);
       await redis.hdel("socketToUsername", socket.id);
+
+      // stay online until the last device disconnects
+      if ((await redis.scard(userSocketsKey(username))) > 0) return;
+      await redis.hdel("onlineUsers", username);
 
       if (!dbUser) return;
 
       for (const contact of dbUser.contacts as any) {
-        const id = await getSocketIdByUsername(contact.username);
-        if (id) io.to(id).emit("friendOffline", username);
+        await emitToUser(io, contact.username, "friendOffline", username);
       }
     });
   });

@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { io } from "../index";
 import Notification from "../models/notificationModel";
-import redis from "../utils/redis";
 import sendNotification from "../utils/webpush";
+import { getSocketIdsByUsername } from "../socket";
 
 type MentionRecipient = {
   _id: mongoose.Types.ObjectId;
@@ -58,7 +58,7 @@ export const notifyMentionedUsers = async ({
           read: false,
         });
 
-        const socketId = await redis.hget("onlineUsers", recipient.username);
+        const socketIds = await getSocketIdsByUsername(recipient.username);
         const notificationPayload = {
           _id: notification._id,
           recipient: recipient._id,
@@ -70,9 +70,9 @@ export const notifyMentionedUsers = async ({
           createdAt: notification.createdAt,
         };
 
-        if (socketId) {
+        if (socketIds.length) {
           console.log(`New notification to ${recipient.username}`)
-          io.to(socketId).emit("newNotification", notificationPayload);
+          for (const id of socketIds) io.to(id).emit("newNotification", notificationPayload);
         }
 
         if (recipient.pushSubscription) {

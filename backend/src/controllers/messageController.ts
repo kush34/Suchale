@@ -198,8 +198,9 @@ export const getChatAssets = async (
 
     return res.json(result);
   } catch (err) {
+    console.error(err);
     return authz(res, err) || res.status(500).json({
-      error: err instanceof Error ? err.message : "Internal Server Error",
+      error: "Internal Server Error",
     });
   }
 

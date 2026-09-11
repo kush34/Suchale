@@ -6,7 +6,10 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
-const sendNotification = (subscription, payload) => {
+const sendNotification = (
+  subscription: webpush.PushSubscription,
+  payload: string
+) => {
   return webpush.sendNotification(subscription, payload);
 };
 
