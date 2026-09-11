@@ -415,8 +415,8 @@ export const firebaseTokenVerify = async (token: string) => {
       exists = await User.findOne({ username });
     }
 
-    // Create fake password because schema requires it
-    const fakePassword = Math.random().toString(36).slice(-12);
+    // ponytail: unusable random secret, bcrypt-hashed so Firebase users can't password-login
+    const fakePassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
 
     user = await User.create({
       username,
