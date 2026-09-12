@@ -64,7 +64,7 @@ export const notifyMentionedUsers = async ({
           recipient: recipient._id,
           actor: actorId,
           post: postId,
-          type: "mention" as const,
+          type: "mention",
           message: notification.message,
           read: notification.read,
           createdAt: notification.createdAt,
