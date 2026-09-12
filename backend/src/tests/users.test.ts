@@ -1,8 +1,9 @@
 // src/tests/users.test.ts
 import request from 'supertest';
 import bcrypt from 'bcrypt';
-import server from '../index'; // adjust path
+import server, { io } from '../index'; // adjust path
 import mongoose from 'mongoose';
+import redis from '../utils/redis';
 import User from '../models/userModel';
 import { IMessage } from '../models/messageModel';
 import { IGroup } from '../models/groupModel';
@@ -12,6 +13,10 @@ interface IUser { username: string; email: string; password: string; _id?: strin
 let fromUser: IUser;
 let toUser: IUser;
 let jwt_token: string;
+
+// ponytail: strict CORS (#17) 500s origin-less requests — browsers always
+// send Origin, so tests must too
+const ORIGIN = process.env.DOMAIN_1 as string;
 
 beforeAll(async () => {
     await mongoose.connect(process.env.MONGO_URI_TEST!);
@@ -39,6 +44,7 @@ describe('User Routes', () => {
     it('POST /user/create is gone (OTP bypass closed)', async () => {
         const res = await request(server)
             .post('/user/create')
+            .set('Origin', ORIGIN)
             .send({
                 username: 'TestUser',
                 email: 'test@example.com',
@@ -50,6 +56,7 @@ describe('User Routes', () => {
     it('Return Error as no data is provided for registering a new user', async () => {
         const res = await request(server)
             .post('/user/create')
+            .set('Origin', ORIGIN)
             .send();
 
         expect(res.statusCode).toBe(404);
@@ -58,6 +65,7 @@ describe('User Routes', () => {
     it('should login a new user', async () => {
         const res = await request(server)
             .post('/user/login')
+            .set('Origin', ORIGIN)
             .send({
                 username: 'TestUser',
                 email: 'test@example.com',
@@ -73,6 +81,7 @@ describe('User Routes', () => {
     it('Return Error as no username and password is provided login a new user', async () => {
         const res = await request(server)
             .post('/user/login')
+            .set('Origin', ORIGIN)
             .send({
                 email: 'test@example.com',
             });
@@ -83,6 +92,7 @@ describe('User Routes', () => {
     it('Search Users from the Database', async () => {
         const res = await request(server)
             .post('/user/search')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send({
                 query: 'TestUser2',
@@ -95,6 +105,7 @@ describe('User Routes', () => {
     it('GET User Profile / INFO', async () => {
         const res = await request(server)
             .get('/user/userInfo')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
 
         console.log(res.body)
@@ -104,12 +115,14 @@ describe('User Routes', () => {
     it('POST User Add contact', async () => {
         const res = await request(server)
             .post('/user/addContact')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(400);
 
         const res1 = await request(server)
             .post('/user/addContact')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send({ contact: 'TestUser2' })
         console.log(res1.body)
@@ -118,12 +131,14 @@ describe('User Routes', () => {
     it('POST User Subscribe / Notification Route', async () => {
         const res = await request(server)
             .post('/user/subscribe')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(400);
 
         const res1 = await request(server)
             .post('/user/subscribe')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send({ subscription: { endpoint: 'dummyData/whichIsSentFromFrontendForNotification' } })
         console.log(res1.body)
@@ -132,6 +147,7 @@ describe('User Routes', () => {
     it('GET userList: List of all the contacts users has', async () => {
         const res = await request(server)
             .get('/user/userList')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
         console.log(res.body)
         expect(res.statusCode).toBe(200);
@@ -146,6 +162,7 @@ describe('Message Routes', () => {
     it('POST /send : create Message, error for not all required fields', async () => {
         const res = await request(server)
             .post('/message/send')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
         expect(res.statusCode).toBe(400)
     });
@@ -153,20 +170,27 @@ describe('Message Routes', () => {
     it('POST /send : create Message', async () => {
         const res = await request(server)
             .post('/message/send')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send({ content: 'Dil mange more (..)', toUser: toUser.username, isGroup: false, groupId: null })
         console.log(res.body)
-        expect(res.statusCode).toBe(200)
+        expect(res.statusCode).toBe(201)
         expect(res.body.content).toBe('Dil mange more (..)')
         expect(res.body.fromUser).toBe(fromUser.username)
         expect(res.body.toUser).toBe(toUser.username)
         sentMsg = res.body
     });
     it('POST /createGroup : create new group', async () => {
+        // ponytail: fromUser/toUser locals never get _id — resolve real ids
+        const [dbFrom, dbTo] = await Promise.all([
+            User.findOne({ username: fromUser.username }),
+            User.findOne({ username: toUser.username }),
+        ]);
         const res = await request(server)
             .post('/message/createGroup')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
-            .send({ name: groupName, users: [fromUser._id, toUser._id] })
+            .send({ name: groupName, users: [dbFrom!._id, dbTo!._id] })
         expect(res.statusCode).toBe(200)
         expect(res.body.newGroup.name).toBe(groupName)
         console.log(res.body)
@@ -175,6 +199,7 @@ describe('Message Routes', () => {
     it('POST /getMessages : fetch latest Messages', async () => {
         const res = await request(server)
             .post('/message/getMessages')
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send({ toUser: toUser.username, groupId: null, isGroup: null })
         expect(res.statusCode).toBe(200)
@@ -186,6 +211,7 @@ describe('Message Routes', () => {
     it('GET /getMembers/:groupId : fetch Group Members', async () => {
         const res = await request(server)
             .post(`/message/getMembers/${createdGroup._id}`)
+            .set('Origin', ORIGIN)
             .set('Cookie', `token=${jwt_token}`)
             .send()
         expect(res.statusCode).toBe(200)
@@ -196,4 +222,7 @@ describe('Message Routes', () => {
 afterAll(async () => {
     await mongoose?.connection?.db?.dropDatabase();
     await mongoose.connection.close();
+    // ponytail: real server import leaves io + redis handles open (#22)
+    io.close();
+    redis.disconnect();
 });
