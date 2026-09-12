@@ -74,6 +74,21 @@ const awaitConnect = (c: any) =>
     c.on("connect_error", (e: Error) => rej(e));
   });
 
+// ponytail: poll instead of fixed sleeps — fast when ready, no flakes when slow
+const waitFor = async (cond: () => Promise<boolean> | boolean, ms = 5000) => {
+  const start = Date.now();
+  while (!(await cond())) {
+    if (Date.now() - start > ms) throw new Error("timed out waiting for condition");
+    await new Promise((r) => setTimeout(r, 25));
+  }
+};
+
+const clients: any[] = [];
+const track = (c: any) => {
+  clients.push(c);
+  return c;
+};
+
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
@@ -93,8 +108,9 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  io.close();
-  httpServer.close();
+  for (const c of clients) c.disconnect?.();
+  await new Promise<void>((res) => io.close(() => res()));
+  await new Promise<void>((res) => httpServer.close(() => res()));
   await mongoose.disconnect();
   await mongo.stop();
 });
@@ -130,14 +146,17 @@ test("readMessages marks peer messages read and notifies the sender", async () =
   await Message.create({ fromUser: bob.username, toUser: alice.username, content: "hi" });
   await Message.create({ fromUser: alice.username, toUser: bob.username, content: "yo" });
 
-  const sockA = connectClient(sign(alice));
-  const sockB = connectClient(sign(bob));
+  const sockA = track(connectClient(sign(alice)));
+  const sockB = track(connectClient(sign(bob)));
   await Promise.all([awaitConnect(sockA), awaitConnect(sockB)]);
 
   const seen: any[] = [];
   sockB.on("messagesReadBy", (p) => seen.push(p));
   sockA.emit("readMessages", { fromUser: bob.username });
-  await new Promise((r) => setTimeout(r, 1000));
+  await waitFor(async () =>
+    seen.length > 0 &&
+    (await Message.countDocuments({ fromUser: bob.username, read: true })) === 1
+  );
 
   // Bob->Alice now read; Alice->Bob untouched
   expect(await Message.countDocuments({ fromUser: bob.username, read: true })).toBe(1);
