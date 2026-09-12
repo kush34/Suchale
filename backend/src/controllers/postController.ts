@@ -1,34 +1,10 @@
 import { Request, Response } from "express";
 import Post from "../models/postModel";
-import User from "../models/userModel";
 import mongoose from "mongoose";
 import cloudinary from "cloudinary";
-import { notifyMentionedUsers } from "../services/notificationService";
 import { createPostValidator } from "../validators/post-validator";
-import { createPostService } from "../services/postService";
+import { createPostService, formatMentions, formatPostForResponse } from "../services/postService";
 
-type IncomingMention = {
-    id: string;
-    username?: string;
-};
-type IncomingHashtags = string;
-
-
-const formatMentions = (mentions: any[] = []) =>
-    mentions.map((mention) => ({
-        userId: mention.userId?._id ?? mention.userId,
-        username: mention.username ?? mention.userId?.username ?? "",
-    }));
-
-const formatPostForResponse = (post: any, userId?: string) => ({
-    ...post,
-    mentions: formatMentions(post.mentions || []),
-    isLiked: userId
-        ? post.engagement?.likes?.some(
-            (like: any) => like.user.toString() === userId
-        )
-        : post.isLiked,
-});
 
 // -----------------------------
 // GET PRESIGNED URL
