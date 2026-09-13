@@ -17,7 +17,9 @@ services:
       MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/social?authSource=admin
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      NODE_ENV: ${NODE_ENV}
+      # ponytail: container must serve — a local .env with NODE_ENV=test
+      # (for jest) would skip listen and point at a localhost DB here
+      NODE_ENV: production
 
     depends_on:
       mongodb:
@@ -37,6 +39,10 @@ services:
     container_name: mongodb
     restart: unless-stopped
 
+    # ponytail: host ports for local runs (jest hits localhost directly)
+    ports:
+      - "27017:27017"
+
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -55,6 +61,16 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
+
+    # ponytail: healthcheck auths with $REDIS_PASSWORD, so it must exist
+    # inside the container too — without this redis is unhealthy forever
+    # and backend (depends_on healthy) never starts
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    # ponytail: host port for local runs (jest hits localhost directly)
+    ports:
+      - "6379:6379"
 
     command: >
       redis-server

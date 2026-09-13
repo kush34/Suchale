@@ -1,12 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type NotificationType = "mention";
-
 export interface INotification extends Document {
   recipient: mongoose.Types.ObjectId;
   actor: mongoose.Types.ObjectId;
   post: mongoose.Types.ObjectId;
-  type: NotificationType;
+  type: string;
   message: string;
   read: boolean;
   createdAt: Date;
@@ -35,10 +33,7 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ["mention"],
-      default: "mention",
       required: true,
-      index: true,
     },
     message: {
       type: String,

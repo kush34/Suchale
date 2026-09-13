@@ -13,13 +13,13 @@ type CreatePostServiceParams = {
   data: CreatePostDto;
 };
 
-const formatMentions = (mentions: any[] = []) =>
+export const formatMentions = (mentions: any[] = []) =>
     mentions.map((mention) => ({
         userId: mention.userId?._id ?? mention.userId,
         username: mention.username ?? mention.userId?.username ?? "",
     }));
-    
-const formatPostForResponse = (post: any, userId?: string) => ({
+
+export const formatPostForResponse = (post: any, userId?: string) => ({
     ...post,
     mentions: formatMentions(post.mentions || []),
     isLiked: userId
