@@ -57,7 +57,7 @@ const PostSkeleton = () => (
 );
 
 const FeedSkeleton = () => (
-  <div className="w-full xl:w-1/2 grid gap-2">
+  <div className="w-full max-w-2xl mx-auto flex flex-col">
     {Array.from({ length: 4 }).map((_, i) => (
       <PostSkeleton key={i} />
     ))}
@@ -144,7 +144,7 @@ const Feed = ({ scrollContainer }: FeedProps) => {
   if (error) return <p className="text-center py-4 text-destructive">{error}</p>;
 
   return (
-    <div className="w-full xl:w-1/2 grid gap-2">
+<div className="w-full max-w-2xl mx-auto flex flex-col">
       {posts.length === 0 ? (
         <p className="text-center py-4 text-muted-foreground">No posts yet</p>
       ) : (

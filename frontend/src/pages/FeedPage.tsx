@@ -15,17 +15,11 @@ const FeedPage = () => {
   }, []);
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className="h-screen w-full overflow-y-auto"
-    >
+    <div ref={scrollContainerRef} className="h-screen w-full overflow-y-auto">
       <StoryViewer />
 
       <div className="flex flex-col items-center justify-center gap-2 p-5 xl:mt-8 xl:p-0">
-        <CreatePost
-          open={createPostOpen}
-          onOpenChange={setCreatePostOpen}
-        />
+        <CreatePost open={createPostOpen} onOpenChange={setCreatePostOpen} />
 
         <StoryDrawer />
 
@@ -36,9 +30,9 @@ const FeedPage = () => {
       <div className="fixed bottom-1/10 right-1/10 z-50">
         <Button
           onClick={() => setCreatePostOpen(true)}
-          className="h-12 w-12 rounded-full bg-secondary shadow-lg"
+          className="h-12 w-12 rounded-full"
         >
-          <Pen className="h-5 w-5" />
+          <Pen className="h-5 w-5 text-primary" />
         </Button>
       </div>
     </div>

@@ -62,7 +62,7 @@ export default function SearchResults({
             Posts
           </h2>
 
-          <div className="space-y-5">
+          <div className="flex flex-col">
 
             {results.posts.map((post) => (
               <PostCard
