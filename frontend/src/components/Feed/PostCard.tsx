@@ -116,15 +116,15 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
     };
 
     return (
-        <div className='p-5 rounded border-secondary shadow border-t flex flex-col gap-2'>
+        <div className='py-4 border-b border-secondary flex flex-col gap-2'>
 
-            <span className='flex justify-between'>
+            <div className='flex items-center justify-between'>
                 <Profile
                     src={post.user.profilePic || './836.jpg'}
                     username={post.user.username || 'text_34'}
                 />
-                <span className='font-light'>{date}</span>
-            </span>
+                <span className='text-sm text-muted-foreground'>{date}</span>
+            </div>
             <span
                 onClick={() => {
                     trackEvent(
@@ -136,11 +136,11 @@ const PostCard = ({ post, likeToggle, source = "feed" }: PostCardProps) => {
 
                     navigate(`/post/${post._id}`);
                 }}
-                className="text-xl cursor-pointer whitespace-pre-wrap break-words"
+                className="text-[15px] leading-relaxed cursor-pointer whitespace-pre-wrap break-words"
             >
                 {renderContent(post.content)}
             </span>
-            {post.media && <Media src={post.media} />}
+            {post.media && <div className="pt-1"><Media src={post.media} /></div>}
             <Footer _id={post._id} like={likeCount} comments={post.engagement.comments.length} isLiked={liked} onLikeToggle={handleLike} isLoading={isLoading} source={source} />
         </div>
     )

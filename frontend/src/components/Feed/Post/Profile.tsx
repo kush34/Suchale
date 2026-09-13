@@ -18,10 +18,10 @@ const Profile = ({
   return (
     <div
       onClick={() => navigate(toLink)}
-      className={` ${className} cursor-pointer flex items-center gap-2 text-zinc-500`}
+      className={` ${className} cursor-pointer flex items-center gap-2`}
     >
-      <img src={src} alt="profile_image" className={`${size}  rounded-full `} />
-      <span>{username}</span>
+      <img src={src} alt="profile_image" className={`${size} rounded-full object-cover`} />
+      <span className="font-semibold text-foreground hover:underline">{username}</span>
     </div>
   );
 };
