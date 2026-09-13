@@ -38,6 +38,7 @@ interface UserProfile {
   fullName: string;
   bio: string;
   isFollowing?: boolean;
+  isBlockedByMe?: boolean;
   followers: number;
   following: number;
   posts: post[];
@@ -109,7 +110,7 @@ const ProfilePage = () => {
         toast.error(`${error.response.data.error}`)
     }
   }
-  const unFollowUser = async (usernameToFollow: String) => {
+const unFollowUser = async (usernameToFollow: String) => {
     try {
       const response = await api.post(`/user/unfollow/${usernameToFollow}`);
       if (response.status === 200) {
@@ -118,13 +119,33 @@ const ProfilePage = () => {
         setUser((prev) =>
           prev
             ? {
-              ...prev,
-              followers: Math.max(0, prev.followers - 1),
-              isFollowing: false,
-            }
+                ...prev,
+                followers: Math.max(0, prev.followers - 1),
+                isFollowing: false,
+              }
             : prev
         );
 
+      }
+    } catch (error: any) {
+      if (error.response.data.message || error.response.data.error)
+        toast.error(`${error.response.data.error}`)
+    }
+  }
+  const unBlockUser = async (usernameToUnBlock: String) => {
+    try {
+      const response = await api.post(`/user/unblockUser/${usernameToUnBlock}`);
+      if (response.status === 200) {
+        toast.success(`unblocked ${usernameToUnBlock}`);
+        trackEvent("unblock_clicked", { username: usernameToUnBlock });
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                isBlockedByMe: false,
+              }
+            : prev
+        );
       }
     } catch (error: any) {
       if (error.response.data.message || error.response.data.error)
@@ -155,7 +176,7 @@ const ProfilePage = () => {
         <div>
           <span className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">{user.username}</h1>
-            <ProfileBlock username={user.username} />
+            <ProfileBlock username={user.username} onBlocked={() => setUser((prev) => (prev ? { ...prev, isBlockedByMe: true } : prev))} />
           </span>
           <p className="text-sm">{user.fullName}</p>
           <p className="text-sm text-gray-500">{user.bio}</p>
@@ -170,6 +191,13 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {user.isBlockedByMe && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 p-4 mb-4">
+          <p className="text-sm text-red-600">You have blocked @{user.username}. Unblock to message them again.</p>
+          <Button variant="outline" onClick={() => unBlockUser(username)}>Unblock</Button>
+        </div>
+      )}
 
       {/* Posts */}
       <div className="flex flex-col gap-4">

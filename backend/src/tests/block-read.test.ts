@@ -51,7 +51,7 @@ jest.mock("../utils/redis", () => ({
 
 import User from "../models/userModel";
 import Message from "../models/messageModel";
-import { blockUserByUsername } from "../services/userService";
+import { blockUserByUsername, unblockUserByUsername } from "../services/userService";
 
 const JWT_SECRET = "test-secret-11";
 process.env.jwt_Secret = JWT_SECRET;
@@ -137,6 +137,24 @@ test("blocking twice keeps both users, re-block does not duplicate", async () =>
   expect(ids).toContain(String(u1._id));
   expect(ids).toContain(String(u2._id));
   expect(ids.length).toBe(2);
+});
+
+test("unblock removes only the targeted user, keeps other blocks", async () => {
+  const me = await makeUser("Unblocker");
+  const u1 = await makeUser("Unblocked1");
+  const u2 = await makeUser("Unblocked2");
+
+  expect((await blockUserByUsername("Unblocked1", me._id.toString())).code).toBe(200);
+  expect((await blockUserByUsername("Unblocked2", me._id.toString())).code).toBe(200);
+
+  expect((await unblockUserByUsername("Unblocked1", me._id.toString())).code).toBe(200);
+  expect((await unblockUserByUsername("Unblocked1", me._id.toString())).code).toBe(200);
+
+  const fresh = await User.findById(me._id);
+  const ids = fresh!.blockedUsers!.map(String);
+  expect(ids).toContain(String(u2._id));
+  expect(ids).not.toContain(String(u1._id));
+  expect(ids.length).toBe(1);
 });
 
 test("readMessages marks peer messages read and notifies the sender", async () => {

@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../middlewares/verifyToken";
-import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, mentionUser, profilePic, search, sendMail, subscribe, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
+import { addContact, blockUser, firebaseTokenVerify, followUserByUsername, getUserProfile, login, logoutUser, mentionUser, profilePic, search, sendMail, subscribe, unblockUser, unFollowUserByUsername, userInfo, userList, usernameCheck, verifyOtp } from "../controllers/userController";
 
 const router = express.Router();
 
@@ -32,6 +32,8 @@ router.post("/firebaseTokenVerify", firebaseTokenVerify)
 router.get("/profile/:username",verifyToken,getUserProfile)
 
 router.post("/blockUser/:usernameToBlock",verifyToken,blockUser)
+
+router.post("/unblockUser/:usernameToUnblock",verifyToken,unblockUser)
 
 router.post("/follow/:usernameToFollow",verifyToken,followUserByUsername)
 

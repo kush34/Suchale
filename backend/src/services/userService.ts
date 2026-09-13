@@ -431,6 +431,13 @@ export const getUserProfile = async (username: string, currentUserId?: string) =
     !!currentUserId &&
     user.followers.some((id) => id.toString() === currentUserId);
 
+  // ponytail: server-side block truth for the "you blocked this user" UI
+  const me = currentUserId
+    ? await User.findById(currentUserId).select("blockedUsers")
+    : null;
+  const isBlockedByMe =
+    !!me && me.blockedUsers!.some((id) => id.toString() === user._id.toString());
+
 
   const payload = {
     _id: user._id,
@@ -441,6 +448,7 @@ export const getUserProfile = async (username: string, currentUserId?: string) =
     followers: user.followers.length,
     following: user.following.length,
     isFollowing,
+    isBlockedByMe,
     posts: posts.map((p) => ({
       _id: p._id,
       media: p.media,
@@ -476,6 +484,20 @@ export const blockUserByUsername = async (usernameToBlock: string, userId: strin
   console.log(userBlockingUsername);
   if (!userBlockingUsername) return { status: "error", code: 400, message: "could not block the user." };
   return { status: "success", code: 200, message: "user blocked" };
+}
+
+export const unblockUserByUsername = async (usernameToUnblock: string, userId: string) => {
+  const userGettingUnblocked = await User.findOne({ username: usernameToUnblock });
+  if (!userGettingUnblocked) return { status: "error", code: 404, message: "user to unblock does not exists." };
+
+  // ponytail: $pull removes just this user; other blocks stay
+  const userUnblocking = await User.findByIdAndUpdate(
+    userId,
+    { $pull: { blockedUsers: userGettingUnblocked._id } },
+    { new: true }
+  );
+  if (!userUnblocking) return { status: "error", code: 400, message: "could not unblock the user." };
+  return { status: "success", code: 200, message: "user unblocked" };
 }
 
 export const followUserByUsername = async (currentUserId: string, usernameToFollow: string) => {

@@ -327,6 +327,21 @@ export const blockUser = async (req: Request, res: Response) => {
     }
 }
 
+export const unblockUser = async (req: Request, res: Response) => {
+    try {
+        const { usernameToUnblock } = req.params
+        const userId = req.id;
+        if (!usernameToUnblock) return res.status(400).send({ message: "/user/unblockUser/:usernameToUnblock is required to unblock a user." })
+
+        const result = await userService.unblockUserByUsername(usernameToUnblock.toString(), userId as string);
+        return res.status(Number(result.code)).send(result);
+
+    } catch (error) {
+        console.log(`Error: /user/unblockUser/:usernameToUnblock userService:unblockUser ${error}`)
+        return res.status(500).send({ message: "Couldnt unblock the user" })
+    }
+}
+
 export const followUserByUsername = async (req: Request, res: Response) => {
     try {
         const { usernameToFollow } = req.params;
