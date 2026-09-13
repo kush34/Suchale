@@ -200,7 +200,7 @@ const unFollowUser = async (usernameToFollow: String) => {
       )}
 
       {/* Posts */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col">
           {posts &&
           posts.map((p) => (
             <PostCard key={p._id} post={p} likeToggle={UpdateLike} source="profile" />

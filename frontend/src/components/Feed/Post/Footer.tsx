@@ -23,36 +23,35 @@ const Footer = ({
     source = "feed"
 }: PostFooterProps) => {
     const navigate = useNavigate();
-    console.log("isLiked", isLiked)
     const onCopy = () => {
         navigator.clipboard.writeText(`${import.meta.env.VITE_SITE_URL}/post/${_id}`)
         toast("Url copied")
         trackEvent("post_shared", { post_id: _id, method: "copy_link" });
     }
     return (
-        <span className='flex gap-10 mt-5 text-zinc-500'>
+        <div className='flex items-center gap-8 text-zinc-500'>
             <button
                 onClick={() => onLikeToggle()}
                 disabled={isLoading}
-                className={`flex gap-2 items-center transition-colors ${isLiked
+                className={`flex items-center gap-1.5 text-sm transition-all ${isLiked
                     ? 'text-red-500'
-                    : 'hover:text-red-400'
+                    : 'hover:text-zinc-900 dark:hover:text-zinc-100'
                     } disabled:opacity-50`}
             >
-                <Heart fill={isLiked ? "currentColor" : "none"} />
+                <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
                 {like}
             </button>
-            <button className='flex gap-2' onClick={() => {
+            <button className='flex items-center gap-1.5 text-sm hover:text-zinc-900 dark:hover:text-zinc-100' onClick={() => {
                 trackEvent(source === "feed" ? "comment_opened_from_feed" : "comment_opened", { post_id: _id });
                 navigate(`/post/${_id}`)
             }}>
-                <MessageCircle />
+                <MessageCircle size={20} />
                 {comments}
             </button>
-            <button onClick={onCopy} className='flex gap-2'>
-                <Share />
+            <button onClick={onCopy} className='flex items-center gap-1.5 text-sm hover:text-zinc-900 dark:hover:text-zinc-100'>
+                <Share size={20} />
             </button>
-        </span>
+        </div>
     )
 }
 
