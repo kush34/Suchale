@@ -15,12 +15,13 @@ import api from "@/utils/axiosConfig";
 import { EllipsisVertical } from "lucide-react";
 import { toast } from "sonner";
 
-export function ProfileBlock({ username }: { username: string }) {
+export function ProfileBlock({ username, onBlocked }: { username: string; onBlocked?: () => void }) {
   const blockUserByUsername = async () => {
     try {
       const response =  await api.post(`/user/blockUser/${username}`);
       if(response.status === 200){
         toast(`${username} blocked`)
+        onBlocked?.();
       }
     } catch (error:any) {
       toast(`${error.response.message}`)

@@ -23,14 +23,17 @@ type ChatContextType = {
     groupFlag: boolean;
     setGroupFlag: React.Dispatch<React.SetStateAction<boolean>>;
 
-    getMessages: (loadMore?: boolean) => Promise<void>;
+getMessages: (loadMore?: boolean) => Promise<void>;
 
-    loading: boolean;
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 
-    hasMore: boolean;
+  hasMore: boolean;
 
-    infoWindow: any[];
+  blockState: "none" | "blockedByMe" | "blockedByThem";
+  unblockCurrent: () => Promise<void>;
+
+  infoWindow: any[];
     setInfoWindow: React.Dispatch<React.SetStateAction<any[]>>;
   ViewChatInfo: () => void;
 
@@ -49,6 +52,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
     const [loading, setLoading] = useState<boolean>(false);
     const [chatArr, setChatArr] = useState<Message[]>([]);
     const [infoWindow, setInfoWindow] = useState<any[]>([]);
+    const [blockState, setBlockState] = useState<"none" | "blockedByMe" | "blockedByThem">("none");
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [assetsOpen, setAssetsOpen] = useState(false);
@@ -191,10 +195,40 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
             }
 
             setHasMore(res.data.hasMore);
-        } catch (error) {
+        } catch (error: any) {
             console.log(error);
+
+            if (
+                !groupFlag &&
+                chat &&
+                "username" in chat &&
+                error?.response?.status === 403 &&
+                String(error?.response?.data?.error || "").startsWith("Forbidden")
+            ) {
+                try {
+                    const prof = await api.get(`/user/profile/${chat.username}`);
+                    setBlockState(prof.data?.data?.user?.isBlockedByMe ? "blockedByMe" : "blockedByThem");
+                } catch {
+                    // leave blockState untouched rather than guess
+                }
+            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const unblockCurrent = async () => {
+        if (!chat || !("username" in chat)) return;
+
+        try {
+            const res = await api.post(`/user/unblockUser/${chat.username}`);
+            if (res.status === 200) {
+                setBlockState("none");
+                setChatArr([]);
+                await getMessages(false);
+            }
+        } catch (error) {
+            console.log(error);
         }
     };
 
@@ -212,6 +246,7 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         if (chat) getMessages(false);
+        setBlockState("none");
         setInfoWindow([]);
         setAssetsOpen(false);
     }, [chat]);
@@ -232,6 +267,8 @@ export const ChatContextProvider = ({ children }: { children: React.ReactNode })
                 loading,
                 setLoading,
                 hasMore,
+                blockState,
+                unblockCurrent,
                 infoWindow,
                 setInfoWindow,
                 ViewChatInfo,

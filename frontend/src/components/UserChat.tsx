@@ -6,6 +6,7 @@ import api from "../utils/axiosConfig";
 import LineLoader from "../loaders/LineLoader";
 import { Message } from "@/types";
 import MsgBar from "@/components/user-chat/msg-bar";
+import { Button } from "@/components/ui/button";
 import ToBottomBtn from "@/components/user-chat/to-bottom-chat.btn";
 import TopBar from "@/components/user-chat/top-bar";
 import ChatDisplay from "@/components/user-chat/chat-display";
@@ -30,6 +31,8 @@ const UserChat = () => {
     infoWindow,
     sendMsg,
     sendGif,
+    blockState,
+    unblockCurrent,
   } = chatCtx;
 
   const userCtx = useUser();
@@ -255,7 +258,20 @@ const UserChat = () => {
       {loading && <LineLoader />}
       <ChatDisplay chatDivRef={chatDivRef} chatArr={chatArr} user={user} loading={loading} messagesEndRef={messagesEndRef} />
       <ToBottomBtn handleScrollToBottom={handleScrollToBottom} toBottomBtnFlag={toBottomBtnFlag} />
-      <MsgBar sendMsg={sendMsg} sendGif={sendGif} message={message} setMessage={setMessage} sendMedia={sendMedia} mediaInpRef={mediaInpRef} mediaTrigger={mediaTrigger} handleEmojiClick={handleEmojiClick} handleTyping={handleTyping} showPicker={showPicker} setShowPicker={setShowPicker} />
+      {!groupFlag && blockState !== "none" ? (
+        <div className="px-5 py-4 border-t bg-muted text-center">
+          {blockState === "blockedByMe" ? (
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-sm text-muted-foreground">You have blocked this user.</span>
+              <Button size="sm" onClick={unblockCurrent}>Unblock</Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">You can't message this user.</p>
+          )}
+        </div>
+      ) : (
+        <MsgBar sendMsg={sendMsg} sendGif={sendGif} message={message} setMessage={setMessage} sendMedia={sendMedia} mediaInpRef={mediaInpRef} mediaTrigger={mediaTrigger} handleEmojiClick={handleEmojiClick} handleTyping={handleTyping} showPicker={showPicker} setShowPicker={setShowPicker} />
+      )}
       <HoverCard hoverTopbar={hoverTopbar} infoWindow={infoWindow} mousePos={mousePos}/>
     </div>
   );
