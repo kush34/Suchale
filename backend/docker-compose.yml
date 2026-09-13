@@ -39,6 +39,10 @@ services:
     container_name: mongodb
     restart: unless-stopped
 
+    # ponytail: host ports for local runs (jest hits localhost directly)
+    ports:
+      - "27017:27017"
+
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -63,6 +67,10 @@ services:
     # and backend (depends_on healthy) never starts
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    # ponytail: host port for local runs (jest hits localhost directly)
+    ports:
+      - "6379:6379"
 
     command: >
       redis-server
